@@ -5,9 +5,9 @@ CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0
 INCLUDES    += -I ../include
 GPU_OPTS   = -D lgWARP=5
 
-SOURCES_CPP =ProjectMain.cpp ProjHelperFun.cpp ProjCoreOrig.cpp 
-HELPERS     =ProhHelperFun.h ../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
-OBJECTS     =ProjectMain.o ProjHelperFun.o  ProjCoreOrig.o
+SOURCES_CPP =ProjectMain.cpp ProjCoreOrig.cpp 
+HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
+OBJECTS     =ProjectMain.o ProjCoreOrig.o
 EXECUTABLE  =runproject
 
 

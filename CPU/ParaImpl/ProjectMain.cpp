@@ -1,6 +1,7 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
 
+#include "ProjHelperFun.cpp"
 //#include "ProjHelperFun.h"
 
 typedef unsigned int uint;

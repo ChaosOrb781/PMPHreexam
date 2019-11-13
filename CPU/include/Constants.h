@@ -5,9 +5,14 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
-#include "Constants.h"
 
 using namespace std;
+
+#if (WITH_FLOATS==0)
+    typedef double REAL;
+#else
+    typedef float  REAL;
+#endif
 
 struct PrivGlobs {
 
@@ -62,11 +67,5 @@ struct PrivGlobs {
 
     }
 } __attribute__ ((aligned (128)));
-
-#if (WITH_FLOATS==0)
-    typedef double REAL;
-#else
-    typedef float  REAL;
-#endif
 
 #endif // CONSTANTS
