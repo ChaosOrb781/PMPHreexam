@@ -3,6 +3,21 @@
 
 #include "ProjHelperFun.h"
 
+typedef unsigned uint;
+
+bool compare_validate(REAL* result, REAL* expected, uint size) {
+    bool isvalid = true;
+    for (int i = 0; i < size; i++) {
+        float err = fabs(result[i] - expected[i]);
+        //d != d -> nan check
+        if ( result[i] != result[i] || err > 0.00001 ) {
+            cout << "Error at index [" << i << "] expected: " << expected[i] << " got: " << result[i] << endl;
+            isvalid = false;
+        }
+    }
+    return isvalid;
+}
+
 int main()
 {
     unsigned int OUTER_LOOP_COUNT, NUM_X, NUM_Y, NUM_T; 
