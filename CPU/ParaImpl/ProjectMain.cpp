@@ -1,9 +1,9 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
 
-#include "ProjHelperFun.h"
+//#include "ProjHelperFun.h"
 
-typedef unsigned uint;
+typedef unsigned int uint;
 
 bool compare_validate(REAL* result, REAL* expected, uint size) {
     bool isvalid = true;
@@ -20,33 +20,36 @@ bool compare_validate(REAL* result, REAL* expected, uint size) {
 
 int main()
 {
-    unsigned int OUTER_LOOP_COUNT, NUM_X, NUM_Y, NUM_T; 
+    unsigned int outer, numX, numY, numT; 
 	const REAL s0 = 0.03, strike = 0.03, t = 5.0, alpha = 0.2, nu = 0.6, beta = 0.5;
 
-    readDataSet( OUTER_LOOP_COUNT, NUM_X, NUM_Y, NUM_T ); 
+    readDataSet( outer, numX, numY, numT ); 
 
     const int Ps = get_CPU_num_threads();
-    REAL* res = (REAL*)malloc(OUTER_LOOP_COUNT*sizeof(REAL));
+    REAL* res = (REAL*)malloc(outer*sizeof(REAL));
+    unsigned long int origTime = OriginalProgram(res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+    
+    // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
+    bool is_valid = validate ( res, outer );
+    writeStatsAndResult( is_valid, res, outer, numX, numY, numT, false, 1/*Ps*/, origTime );
 
-    {   // Original Program (Sequential CPU Execution)
-        cout<<"\n// Running Original, Sequential Project Program"<<endl;
+    // If initial original program is correct, run rest
+    if (is_valid) {
 
-        unsigned long int elapsed = 0;
-        struct timeval t_start, t_end, t_diff;
-        gettimeofday(&t_start, NULL);
-
-        run_OrigCPU( OUTER_LOOP_COUNT, NUM_X, NUM_Y, NUM_T, s0, t, alpha, nu, beta, res );
-
-        gettimeofday(&t_end, NULL);
-        timeval_subtract(&t_diff, &t_end, &t_start);
-        elapsed = t_diff.tv_sec*1e6+t_diff.tv_usec;
-
-        // validation and writeback of the result
-        bool is_valid = validate   ( res, OUTER_LOOP_COUNT );
-        writeStatsAndResult( is_valid, res, OUTER_LOOP_COUNT, 
-                             NUM_X, NUM_Y, NUM_T, false, 1/*Ps*/, elapsed );        
     }
 
     return 0;
+}
+
+unsigned long int OriginalProgram(REAL* res, uint outer, uint numX, uint numY, uint numT, REAL s0, REAL t, REAL alpha, REAL nu, REAL beta) {
+    cout<<"\n// Running Original, Sequential Project Program"<<endl;
+    struct timeval t_start, t_end, t_diff;
+    gettimeofday(&t_start, NULL);
+
+    run_OrigCPU( outer, numX, numY, numT, s0, t, alpha, nu, beta, res );
+
+    gettimeofday(&t_end, NULL);
+    timeval_subtract(&t_diff, &t_end, &t_start);
+    return t_diff.tv_sec*1e6+t_diff.tv_usec;
 }
 
