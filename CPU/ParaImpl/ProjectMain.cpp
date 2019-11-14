@@ -21,8 +21,8 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) 
     {
-    //76 characters long
-    printf("\n[Running %-30s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
+    //61 characters long
+    printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
 

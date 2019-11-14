@@ -230,14 +230,14 @@ void write_scal( const float * r, const char* msg ) {
 }
 
 template<class T>
-void write_1Darr( const T* ptr, const int& N, const char* msg ) {
-    fprintf(stdout, "[ ");
+void write_1Darr( const T* ptr, const int& N ) {
+    fprintf(stdout, "Result: [ ");
     for( int i = 0; i < N-1; i ++ ) {
         write_scal(&ptr[i], NULL);
         fprintf(stdout, ", ");
     }
     write_scal(&ptr[N-1], NULL);
-    if (msg) fprintf(stdout, " ]\t//%s\n\n", msg);
+    if (msg) fprintf(stdout, " ]\t\n");
     else     fprintf(stdout, " ]");
 }
 

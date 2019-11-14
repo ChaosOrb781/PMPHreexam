@@ -14,7 +14,7 @@ int   run_SimpleParallel(
 ) {
 #pragma omp parallel for
     for( unsigned i = 0; i < outer; ++ i ) {
-        REAL strike;
+        REAL strike = i * 0.001;
         PrivGlobs    globs(numX, numY, numT);
         res[i] = value( globs, s0, strike, t,
                         alpha, nu,    beta,

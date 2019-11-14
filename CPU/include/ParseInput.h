@@ -127,12 +127,11 @@ bool validate( const REAL* res, const int& N ) {
 void writeStatsAndResult(   const bool& valid, const REAL* data, const uint outer,
                             const bool& is_gpu, ReturnStat* me, ReturnStat* other  
 ) {
-    printf("|_%15s_|_%15s_|_%15s_|_%15s_|\n", "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
-    printf("|%17d|%17d|%17d|%14.3f|\n", valid, me->numthreads, me->time, me->Speedup(other));
+    printf("|_%s_|_%s_|_%s_|_%s_|\n", "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
+    printf("|%10d|%14d|%12d|%4.3f|\n", valid, me->numthreads, me->time, me->Speedup(other));
 
     // write the result
-    write_1Darr( data, static_cast<int>(outer), 
-                       "PMPH Project Result"  );
+    write_1Darr( data, static_cast<int>(outer));
 }
 
 #if 0
