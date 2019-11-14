@@ -1,6 +1,5 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
-
 #include "OriginalAlgorithm.h"
 
 typedef unsigned int uint;
