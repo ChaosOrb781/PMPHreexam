@@ -26,11 +26,11 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
 
-    f(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    int procs = f(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
 
     gettimeofday(&t_end, NULL);
     timeval_subtract(&t_diff, &t_end, &t_start);
-    return new ReturnStat(t_diff.tv_sec*1e6+t_diff.tv_usec, 1);
+    return new ReturnStat(t_diff.tv_sec*1e6+t_diff.tv_usec, procs);
 }
 
 int main()

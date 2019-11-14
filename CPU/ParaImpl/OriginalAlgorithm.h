@@ -251,6 +251,7 @@ int   run_Original(
                         alpha, nu,    beta,
                         numX,  numY,  numT );
     }
+    return 1;
 }
 
 //#endif // PROJ_CORE_ORIG
