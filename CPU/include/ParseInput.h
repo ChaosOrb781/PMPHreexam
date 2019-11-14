@@ -124,7 +124,7 @@ bool validate( const REAL* res, const int& N ) {
     return is_valid;
 }
 
-void writeStatsAndResult(   const bool& valid, const REAL* data,
+void writeStatsAndResult(   const bool& valid, const REAL* data, const uint outer,
                             const bool& is_gpu, ReturnStat* me, ReturnStat* other  
 ) {
     printf("|_%15s_|_%15s_|_%15s_|_%15s_|\n", "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");

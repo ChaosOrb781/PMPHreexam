@@ -44,7 +44,7 @@ int main()
     ReturnStat* originalStat = RunStatsOnProgram("Original", run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
-    writeStatsAndResult( is_valid, res_original, false, originalStat, originalStat );
+    writeStatsAndResult( is_valid, res_original, outer, false, originalStat, originalStat );
 
     // If initial original program is correct, run rest
     if (is_valid) {
@@ -52,7 +52,7 @@ int main()
         ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
         bool is_valid = compare_validate ( res_simpleParallel, res_original, outer );
-        writeStatsAndResult( is_valid, res_simpleParallel, false, simpelParallelStat, originalStat );
+        writeStatsAndResult( is_valid, res_simpleParallel, outer, false, simpelParallelStat, originalStat );
     }
 
     return 0;
