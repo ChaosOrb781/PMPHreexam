@@ -14,7 +14,6 @@ int   run_SimpleParallel(
                       REAL*  res   // [outer] RESULT
 ) {
     int procs = 0;
-    omp_set_dynamic(32);
 #pragma omp parallel for
     for( unsigned i = 0; i < outer; ++ i ) {
         {
@@ -43,7 +42,6 @@ int   run_SimpleParallelStatic(
                       REAL*  res   // [outer] RESULT
 ) {
     int procs = 0;
-    omp_set_dynamic(32);
 #pragma omp parallel for schedule(static)
     for( unsigned i = 0; i < outer; ++ i ) {
         {
