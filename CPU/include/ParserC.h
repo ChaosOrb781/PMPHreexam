@@ -237,8 +237,7 @@ void write_1Darr( const T* ptr, const int& N ) {
         fprintf(stdout, ", ");
     }
     write_scal(&ptr[N-1], NULL);
-    if (msg) fprintf(stdout, " ]\t\n");
-    else     fprintf(stdout, " ]");
+    fprintf(stdout, " ]\n");
 }
 
 template<class T>
