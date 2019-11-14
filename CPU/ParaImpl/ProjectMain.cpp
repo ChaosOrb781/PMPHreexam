@@ -2,7 +2,7 @@
 #include "ParseInput.h"
 #include "SimpleParallelAlgorithm.h"
 
-using fun = int (const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
+typedef int (*fun)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
 
 bool compare_validate(REAL* result, REAL* expected, uint size) {
     bool isvalid = true;
