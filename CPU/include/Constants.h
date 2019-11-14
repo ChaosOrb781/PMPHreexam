@@ -8,6 +8,8 @@
 
 using namespace std;
 
+typedef unsigned int uint;
+
 #if (WITH_FLOATS==0)
     typedef double REAL;
 #else
@@ -67,5 +69,20 @@ struct PrivGlobs {
 
     }
 } __attribute__ ((aligned (128)));
+
+class ReturnStat {
+    public: 
+        unsigned long int time;
+        uint numthreads;
+
+        ReturnStat(unsigned long int timeTaken, uint numberOfThreads) {
+            time = timeTaken;
+            numthreads = numberOfThreads;
+        }
+
+        double Speedup(ReturnStat other) {
+            return ((double) other.time) / ((double) this->time);
+        }
+};
 
 #endif // CONSTANTS

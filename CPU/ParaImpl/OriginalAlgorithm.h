@@ -230,17 +230,17 @@ REAL   value(   PrivGlobs    globs,
     return globs.myResult[globs.myXindex][globs.myYindex];
 }
 
-void   run_OrigCPU(  
-                const unsigned int&   outer,
-                const unsigned int&   numX,
-                const unsigned int&   numY,
-                const unsigned int&   numT,
-                const REAL&           s0,
-                const REAL&           t, 
-                const REAL&           alpha, 
-                const REAL&           nu, 
-                const REAL&           beta,
-                      REAL*           res   // [outer] RESULT
+int   run_Original(  
+                const uint   outer,
+                const uint   numX,
+                const uint   numY,
+                const uint   numT,
+                const REAL   s0,
+                const REAL   t, 
+                const REAL   alpha, 
+                const REAL   nu, 
+                const REAL   beta,
+                      REAL*  res   // [outer] RESULT
 ) {
     REAL strike;
     PrivGlobs    globs(numX, numY, numT);

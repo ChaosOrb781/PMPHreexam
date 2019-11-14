@@ -127,8 +127,7 @@ bool validate( const REAL* res, const int& N ) {
 void writeStatsAndResult(   const bool& valid, const REAL* data,  
                             const int & outer, const int & num_X,
                             const int & num_Y, const int & num_T,
-                            const bool& is_gpu,const int & P,     
-                            const unsigned long int& elapsed  
+                            const bool& is_gpu, const ReturnStat& me, const ReturnStat& other  
 ) {
     // print stats to stdout
     fprintf(stdout, "// OUTER=%d, NUM_X=%d, NUM_Y=%d, NUM_T=%d.\n", 
@@ -137,9 +136,10 @@ void writeStatsAndResult(   const bool& valid, const REAL* data,
     if(valid) { fprintf(stdout, "1\t\t// VALID   Result,\n"); } 
     else      { fprintf(stdout, "0\t\t// INVALID Result,\n"); }
 
-    fprintf(stdout, "%ld\t\t// Runtime in microseconds,\n", elapsed);
-    if(is_gpu) fprintf(stdout, "%d\t\t// GPU Threads,\n\n", P);
-    else       fprintf(stdout, "%d\t\t// CPU Threads,\n\n", P);
+    fprintf(stdout, "%ld\t\t// Runtime in microseconds,\n", me.time);
+    fprintf(stdout, "%0.3f\t\t// Speedup from other,\n", me.Speedup(other));
+    if(is_gpu) fprintf(stdout, "%d\t\t// GPU Threads,\n\n", me.numthreads);
+    else       fprintf(stdout, "%d\t\t// CPU Threads,\n\n", me.numthreads);
 
     // write the result
     write_1Darr( data, static_cast<int>(outer), 

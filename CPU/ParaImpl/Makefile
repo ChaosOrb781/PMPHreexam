@@ -6,7 +6,7 @@ INCLUDES    += -I ../include
 GPU_OPTS   = -D lgWARP=5
 
 SOURCES_CPP =ProjectMain.cpp
-HELPERS     =OriginalAlgorithm.h ../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
+HELPERS     =SimpleParallelAlgorithm.h OriginalAlgorithm.h ../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
 OBJECTS     =ProjectMain.o
 EXECUTABLE  =runproject
 
