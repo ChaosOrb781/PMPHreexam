@@ -18,6 +18,18 @@ bool compare_validate(REAL* result, REAL* expected, uint size) {
     return isvalid;
 }
 
+unsigned long int OriginalProgram(REAL* res, uint outer, uint numX, uint numY, uint numT, REAL s0, REAL t, REAL alpha, REAL nu, REAL beta) {
+    cout<<"\n// Running Original, Sequential Project Program"<<endl;
+    struct timeval t_start, t_end, t_diff;
+    gettimeofday(&t_start, NULL);
+
+    run_OrigCPU( outer, numX, numY, numT, s0, t, alpha, nu, beta, res );
+
+    gettimeofday(&t_end, NULL);
+    timeval_subtract(&t_diff, &t_end, &t_start);
+    return t_diff.tv_sec*1e6+t_diff.tv_usec;
+}
+
 int main()
 {
     unsigned int outer, numX, numY, numT; 
@@ -36,20 +48,8 @@ int main()
     // If initial original program is correct, run rest
     if (is_valid) {
         REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
+        
     }
 
     return 0;
 }
-
-unsigned long int OriginalProgram(REAL* res, uint outer, uint numX, uint numY, uint numT, REAL s0, REAL t, REAL alpha, REAL nu, REAL beta) {
-    cout<<"\n// Running Original, Sequential Project Program"<<endl;
-    struct timeval t_start, t_end, t_diff;
-    gettimeofday(&t_start, NULL);
-
-    run_OrigCPU( outer, numX, numY, numT, s0, t, alpha, nu, beta, res );
-
-    gettimeofday(&t_end, NULL);
-    timeval_subtract(&t_diff, &t_end, &t_start);
-    return t_diff.tv_sec*1e6+t_diff.tv_usec;
-}
-
