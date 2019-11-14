@@ -74,8 +74,7 @@ int   run_SimpleParallelDynamic(
 #pragma omp parallel for schedule(dynamic)
     for( unsigned i = 0; i < outer; ++ i ) {
         {
-            int th_id = omp_get_thread_num();
-            if(th_id == 0 && procs == 0) { procs = omp_get_num_threads(); }
+            if(procs == 0) { procs = omp_get_num_threads(); }
         }
         REAL strike = i * 0.001;
         PrivGlobs    globs(numX, numY, numT);
