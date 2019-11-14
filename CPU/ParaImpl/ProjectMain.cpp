@@ -1,8 +1,7 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
 
-#include "ProjHelperFun.cpp"
-//#include "ProjHelperFun.h"
+#include "OriginalAlgorithm.h"
 
 typedef unsigned int uint;
 
@@ -27,16 +26,16 @@ int main()
     readDataSet( outer, numX, numY, numT ); 
 
     const int Ps = get_CPU_num_threads();
-    REAL* res = (REAL*)malloc(outer*sizeof(REAL));
-    unsigned long int origTime = OriginalProgram(res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+    REAL* res_orig = (REAL*)malloc(outer*sizeof(REAL));
+    unsigned long int origTime = OriginalProgram(res_orig, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
-    bool is_valid = validate ( res, outer );
-    writeStatsAndResult( is_valid, res, outer, numX, numY, numT, false, 1/*Ps*/, origTime );
+    bool is_valid = validate ( res_orig, outer );
+    writeStatsAndResult( is_valid, res_orig, outer, numX, numY, numT, false, 1/*Ps*/, origTime );
 
     // If initial original program is correct, run rest
     if (is_valid) {
-
+        REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
     }
 
     return 0;
