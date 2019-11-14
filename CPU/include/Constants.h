@@ -80,8 +80,8 @@ class ReturnStat {
             numthreads = numberOfThreads;
         }
 
-        double Speedup(ReturnStat other) {
-            return ((double) other.time) / ((double) this->time);
+        double Speedup(ReturnStat* other) {
+            return ((double) other->time) / ((double) this->time);
         }
 };
 
