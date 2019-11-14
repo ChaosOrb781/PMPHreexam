@@ -51,19 +51,19 @@ int main()
         REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
-        bool is_valid = compare_validate ( res_simpleParallel, res_original, outer );
+        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallel, outer, false, simpelParallelStat, originalStat );
 
         REAL* res_simpleParallelStatic = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelStaticStat = RunStatsOnProgram("SimpleParallelStatic", run_SimpleParallelStatic, res_simpleParallelStatic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
-        bool is_valid = compare_validate ( res_simpleParallel, res_original, outer );
+        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallelStatic, outer, false, simpelParallelStaticStat, originalStat );
 
         REAL* res_simpleParallelDynamic = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelDynamicStat = RunStatsOnProgram("SimpleParallelDyanmic", run_SimpleParallelDynamic, res_simpleParallelDynamic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
-        bool is_valid = compare_validate ( res_simpleParallel, res_original, outer );
+        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallelDynamic, outer, false, simpelParallelDynamicStat, originalStat );
     }
 
