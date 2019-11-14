@@ -21,8 +21,8 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) 
     {
-    cout<<"\n// Running " << name << ", Sequential Project Program"<<endl;
-
+    //76 characters long
+    printf("\n[Running %-30s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
 
@@ -44,7 +44,7 @@ int main()
     ReturnStat* originalStat = RunStatsOnProgram("Original", run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
-    writeStatsAndResult( is_valid, res_original, outer, numX, numY, numT, false, originalStat, originalStat );
+    writeStatsAndResult( is_valid, res_original, false, originalStat, originalStat );
 
     // If initial original program is correct, run rest
     if (is_valid) {
@@ -52,7 +52,7 @@ int main()
         ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
         bool is_valid = compare_validate ( res_simpleParallel, res_original, outer );
-        writeStatsAndResult( is_valid, res_simpleParallel, outer, numX, numY, numT, false, simpelParallelStat, originalStat );
+        writeStatsAndResult( is_valid, res_simpleParallel, false, simpelParallelStat, originalStat );
     }
 
     return 0;

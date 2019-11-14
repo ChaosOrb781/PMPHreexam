@@ -12,12 +12,10 @@ int   run_SimpleParallel(
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
 ) {
-    REAL strike;
-    PrivGlobs    globs(numX, numY, numT);
-
-#pragma omp parallel for private(globs, strike)
+#pragma omp parallel for
     for( unsigned i = 0; i < outer; ++ i ) {
-        strike = 0.001*i;
+        REAL strike;
+        PrivGlobs    globs(numX, numY, numT);
         res[i] = value( globs, s0, strike, t,
                         alpha, nu,    beta,
                         numX,  numY,  numT );
