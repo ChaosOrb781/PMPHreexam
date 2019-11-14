@@ -128,7 +128,7 @@ void writeStatsAndResult(   const bool& valid, const REAL* data, const uint oute
                             const bool& is_gpu, ReturnStat* me, ReturnStat* other  
 ) {
     printf("|_%s_|_%s_|_%s_|_%s_|\n", "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
-    printf("|%10d|%14d|%12d|%4.3f|\n", valid, me->numthreads, me->time, me->Speedup(other));
+    printf("|%10d|%14d|%12d|%7.3f|\n", valid, me->numthreads, me->time, me->Speedup(other));
 
     // write the result
     write_1Darr( data, static_cast<int>(outer));
