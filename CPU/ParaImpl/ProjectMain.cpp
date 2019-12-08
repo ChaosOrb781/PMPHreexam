@@ -2,6 +2,9 @@
 #include "ParseInput.h"
 #include "SimpleParallelAlgorithm.h"
 
+#define RUN_ALL false //will enable all and also experimental tests
+#define RUN_CPU_EXPERIMENTAL false
+
 typedef int (*fun)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
 
 bool compare_validate(REAL* result, REAL* expected, uint size) {
@@ -50,21 +53,22 @@ int main()
     if (is_valid) {
         REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
         is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallel, outer, false, simpelParallelStat, originalStat );
 
+#if RUN_CPU_EXPERIMENTAL || RUN_ALL
         REAL* res_simpleParallelStatic = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelStaticStat = RunStatsOnProgram("SimpleParallelStatic", run_SimpleParallelStatic, res_simpleParallelStatic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
         is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallelStatic, outer, false, simpelParallelStaticStat, originalStat );
 
         REAL* res_simpleParallelDynamic = (REAL*)malloc(outer*sizeof(REAL));
-        ReturnStat* simpelParallelDynamicStat = RunStatsOnProgram("SimpleParallelDyanmic", run_SimpleParallelDynamic, res_simpleParallelDynamic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
+        ReturnStat* simpelParallelDynamicStat = RunStatsOnProgram("SimpleParallelDynamic", run_SimpleParallelDynamic, res_simpleParallelDynamic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         is_valid = compare_validate ( res_simpleParallel, res_original, outer );
         writeStatsAndResult( is_valid, res_simpleParallelDynamic, outer, false, simpelParallelDynamicStat, originalStat );
+#endif
+
+        
     }
 
     return 0;
