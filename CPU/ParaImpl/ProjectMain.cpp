@@ -1,6 +1,5 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
-#include "SimpleParallelAlgorithm.h"
 #include "OptimizedOriginalAlgorithm.h"
 
 #define RUN_ALL false //will enable all and also experimental tests
