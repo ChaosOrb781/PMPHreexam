@@ -1,5 +1,3 @@
-#include "Constants.h"
-#include "TridagPar.h"
 #include "OriginalAlgorithm.h"
 
 /* Indifferent 
