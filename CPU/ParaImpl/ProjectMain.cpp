@@ -1,9 +1,10 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
 #include "SimpleParallelAlgorithm.h"
+#include "OptimizedOriginalAlgorithm.h"
 
 #define RUN_ALL false //will enable all and also experimental tests
-#define RUN_CPU_EXPERIMENTAL false
+#define RUN_CPU_EXPERIMENTAL true
 
 typedef int (*fun)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
 
@@ -51,6 +52,14 @@ int main()
 
     // If initial original program is correct, run rest
     if (is_valid) {
+        //Miniscule original program
+#if RUN_CPU_EXPERIMENTAL || RUN_ALL
+        REAL* res_optimizedOriginal = (REAL*)malloc(outer*sizeof(REAL));
+        ReturnStat* optimizedOriginalStat = RunStatsOnProgram("OptimizedOriginal", run_OptimizedOriginal, res_optimizedOriginal, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        is_valid = compare_validate ( res_optimizedOriginal, res_original, outer );
+        writeStatsAndResult( is_valid, res_optimizedOriginal, outer, false, optimizedOriginalStat, originalStat );
+#endif
+        //Simple parallized programs
         REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
         ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         is_valid = compare_validate ( res_simpleParallel, res_original, outer );

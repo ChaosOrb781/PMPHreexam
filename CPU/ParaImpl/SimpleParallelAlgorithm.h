@@ -1,4 +1,4 @@
-#include "OriginalAlgorithm.h"
+#include "OptimizedOriginalAlgorithm.h"
 #include <omp.h>
 
 int   run_SimpleParallel(  
