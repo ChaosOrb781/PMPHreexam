@@ -26,8 +26,8 @@ REAL   value_interchanged(
     initOperator(globs.myY, globs.myDyy);
     REAL strike = 0.001 * outer_i;
     setPayoff(strike, globs);
-		updateParams(outer_i, alpha, beta, nu, globs);
-		rollback(outer_i, globs);
+		updateParams(i, alpha, beta, nu, globs);
+		rollback(i, globs);
     res[outer_i] = globs.myResult[globs.myXindex][globs.myYindex];
 	}
 }
