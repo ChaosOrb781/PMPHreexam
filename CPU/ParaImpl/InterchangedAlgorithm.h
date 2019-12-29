@@ -14,6 +14,7 @@ REAL   value_interchanged(
 	const unsigned int numX,
 	const unsigned int numY,
 	const unsigned int numT,
+  const unsigned int outer,
   REAL* res
 ) {
 
@@ -46,7 +47,7 @@ int   run_Interchanged(
 	for (unsigned i = numT - 2; i >= 0; --i) {
 		value_interchanged(i, s0, t,
 			alpha, nu, beta,
-			numX, numY, numT, res);
+			numX, numY, numT, outer, res);
 	}
 	return 1;
 }
