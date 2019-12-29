@@ -4,28 +4,27 @@
 #include "OriginalAlgorithm.h"
 
 REAL   value_interchanged(PrivGlobs    globs,
-	const REAL s0,
-	const REAL strike,
+  int outer_i,
+  const REAL s0,
+	//const REAL strike,
 	const REAL t,
 	const REAL alpha,
 	const REAL nu,
 	const REAL beta,
 	const unsigned int numX,
 	const unsigned int numY,
-	const unsigned int numT
+	const unsigned int numT,
+  REAL* res
 ) {
-	initGrid(s0, alpha, nu, t, numX, numY, numT, globs);
-	initOperator(globs.myX, globs.myDxx);
-	initOperator(globs.myY, globs.myDyy);
 
-	setPayoff(strike, globs);
-	for (int i = globs.myTimeline.size() - 2; i >= 0; --i)
+	for (int i = 0; i < outer; ++i)
 	{
-		updateParams(i, alpha, beta, nu, globs);
-		rollback(i, globs);
+    REAL strike = 0.001 * outer_i;
+    setPayoff(strike, globs);
+		updateParams(outer_i, alpha, beta, nu, globs);
+		rollback(outer_i, globs);
+    res[outer_i] = globs.myResult[globs.myXindex][globs.myYindex];
 	}
-
-	return globs.myResult[globs.myXindex][globs.myYindex];
 }
 
 int   run_Interchanged(
@@ -40,14 +39,14 @@ int   run_Interchanged(
 	const REAL   beta,
 	REAL* res   // [outer] RESULT
 ) {
-	REAL strike;
-	PrivGlobs    globs(numX, numY, numT);
-
-	for (unsigned i = 0; i < outer; ++i) {
-		strike = 0.001 * i;
-		res[i] = value_interchanged(globs, s0, strike, t,
+  initGrid(s0, alpha, nu, t, numX, numY, numT, globs);
+  initOperator(globs.myX, globs.myDxx);
+  initOperator(globs.myY, globs.myDyy);
+	for (unsigned i = numT - 2; i >= 0; --i) {
+    PrivGlobs globs(numX, numY, numT);
+		value_interchanged(globs, i, s0, t,
 			alpha, nu, beta,
-			numX, numY, numT);
+			numX, numY, numT, res);
 	}
 	return 1;
 }
