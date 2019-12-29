@@ -3,7 +3,7 @@
 
 #include "OriginalAlgorithm.h"
 
-REAL   value_interchanged(PrivGlobs    globs,
+REAL   value_interchanged(
   int outer_i,
   const REAL s0,
 	//const REAL strike,
@@ -19,6 +19,10 @@ REAL   value_interchanged(PrivGlobs    globs,
 
 	for (int i = 0; i < outer; ++i)
 	{
+    PrivGlobs globs(numX, numY, numT);
+    initGrid(s0, alpha, nu, t, numX, numY, numT, globs);
+    initOperator(globs.myX, globs.myDxx);
+    initOperator(globs.myY, globs.myDyy);
     REAL strike = 0.001 * outer_i;
     setPayoff(strike, globs);
 		updateParams(outer_i, alpha, beta, nu, globs);
@@ -39,12 +43,8 @@ int   run_Interchanged(
 	const REAL   beta,
 	REAL* res   // [outer] RESULT
 ) {
-  initGrid(s0, alpha, nu, t, numX, numY, numT, globs);
-  initOperator(globs.myX, globs.myDxx);
-  initOperator(globs.myY, globs.myDyy);
 	for (unsigned i = numT - 2; i >= 0; --i) {
-    PrivGlobs globs(numX, numY, numT);
-		value_interchanged(globs, i, s0, t,
+		value_interchanged(i, s0, t,
 			alpha, nu, beta,
 			numX, numY, numT, res);
 	}
