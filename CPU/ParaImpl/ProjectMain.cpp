@@ -38,12 +38,12 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     return new ReturnStat(t_diff.tv_sec*1e6+t_diff.tv_usec, procs);
 }
 
-void RunTestOnProgram(const char* title, fun f, REAL* expected, REAL* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
+void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
 	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) {
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
 	ReturnStat* returnstatus = RunStatsOnProgram(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-	is_valid = compare_validate(res, expected, outer);
-	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expected);
+	bool is_valid = compare_validate(res, expected, outer);
+	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expectedStats);
 }
 
 
