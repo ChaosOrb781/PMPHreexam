@@ -1,4 +1,7 @@
-#include "OptimizedOriginalAlgorithm.h"
+#ifndef SIMPLE_PARALLEL_ALGORITHM
+#define SIMPLE_PARALLEL_ALGORITHM
+
+#include "OriginalAlgorithm.h"
 #include <omp.h>
 
 int   run_SimpleParallel(  
@@ -85,4 +88,4 @@ int   run_SimpleParallelDynamic(
     return procs;
 }
 
-//#endif // PROJ_CORE_ORIG
+#endif

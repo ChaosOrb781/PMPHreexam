@@ -1,3 +1,6 @@
+#ifndef ORIGINAL_ALGORITHM
+#define ORIGINAL_ALGORITHM
+
 #include "Constants.h"
 #include "TridagPar.h"
 
@@ -254,4 +257,4 @@ int   run_Original(
     return 1;
 }
 
-//#endif // PROJ_CORE_ORIG
+#endif

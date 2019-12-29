@@ -1,6 +1,8 @@
 #include "OpenmpUtil.h"
 #include "ParseInput.h"
+#include "OriginalAlgorithm.h"
 #include "SimpleParallelAlgorithm.h"
+#include "InterchangedAlgorithm.h"
 
 #define RUN_ALL false //will enable all and also experimental tests
 #define RUN_CPU_EXPERIMENTAL true
@@ -36,6 +38,15 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     return new ReturnStat(t_diff.tv_sec*1e6+t_diff.tv_usec, procs);
 }
 
+void RunTestOnProgram(const char* title, fun f, REAL* expected, REAL* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
+	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) {
+	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
+	ReturnStat* returnstatus = RunStatsOnProgram(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+	is_valid = compare_validate(res, expected, outer);
+	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expected);
+}
+
+
 int main()
 {
     unsigned int outer, numX, numY, numT; 
@@ -51,32 +62,17 @@ int main()
 
     // If initial original program is correct, run rest
     if (is_valid) {
-        //Miniscule original program
-#if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        REAL* res_optimizedOriginal = (REAL*)malloc(outer*sizeof(REAL));
-        ReturnStat* optimizedOriginalStat = RunStatsOnProgram("OptimizedOriginal", run_OptimizedOriginal, res_optimizedOriginal, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        is_valid = compare_validate ( res_optimizedOriginal, res_original, outer );
-        writeStatsAndResult( is_valid, res_optimizedOriginal, outer, false, optimizedOriginalStat, originalStat );
-#endif
         //Simple parallized programs
-        REAL* res_simpleParallel = (REAL*)malloc(outer*sizeof(REAL));
-        ReturnStat* simpelParallelStat = RunStatsOnProgram("SimpleParallel", run_SimpleParallel, res_simpleParallel, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
-        writeStatsAndResult( is_valid, res_simpleParallel, outer, false, simpelParallelStat, originalStat );
+        RunTestOnProgram("SimpleParallel", run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        REAL* res_simpleParallelStatic = (REAL*)malloc(outer*sizeof(REAL));
-        ReturnStat* simpelParallelStaticStat = RunStatsOnProgram("SimpleParallelStatic", run_SimpleParallelStatic, res_simpleParallelStatic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
-        writeStatsAndResult( is_valid, res_simpleParallelStatic, outer, false, simpelParallelStaticStat, originalStat );
-
-        REAL* res_simpleParallelDynamic = (REAL*)malloc(outer*sizeof(REAL));
-        ReturnStat* simpelParallelDynamicStat = RunStatsOnProgram("SimpleParallelDynamic", run_SimpleParallelDynamic, res_simpleParallelDynamic, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-        is_valid = compare_validate ( res_simpleParallel, res_original, outer );
-        writeStatsAndResult( is_valid, res_simpleParallelDynamic, outer, false, simpelParallelDynamicStat, originalStat );
+        RunTestOnProgram("SimpleParallelStatic", run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram("SimpleParallelDynamic", run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 
-        
+#if RUN_CPU_EXPERIMENTAL || RUN_ALL
+		RunTestOnProgram("SimpleInterchanged", run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+#endif  
     }
 
     return 0;
