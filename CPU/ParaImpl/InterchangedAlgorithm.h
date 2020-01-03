@@ -15,19 +15,27 @@ int   run_Interchanged(
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
 ) {
-	PrivGlobs    globs(numX, numY, numT);
-	initGrid(s0,alpha,nu,t, numX, numY, numT, globs);
-	initOperator(globs.myX,globs.myDxx);
-	initOperator(globs.myY,globs.myDyy);
-	for(int j = numT-2;j>=0;--j) {
-		for( unsigned i = 0; i < outer; ++ i ) {
-			REAL strike = 0.001*i;
-			setPayoff(strike, globs);
-			updateParams(j,alpha,beta,nu,globs);
-			rollback(j, globs);
-			res[i] = globs.myResult[globs.myXindex][globs.myYindex];
-		}
+
+	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * numT);
+	for( unsigned i = 0; i < numT; ++ i ) {
+		PrivGlobs globs(numX, numY, numY);
+		globstastic[i] = globs;
 	}
+	for( unsigned i = 0; i < outer; ++ i ) {
+		REAL strike = 0.001*i;
+        strike = 0.001*i;
+		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
+		initOperator(globstastic[i].myX,globstastic[i].myDxx);
+		initOperator(globstastic[i].myY,globstastic[i].myDyy);
+
+		setPayoff(strike, globstastic[i]);
+		for(int j = numT-2;j>=0;--j)
+		{
+			updateParams(j,alpha,beta,nu,globstastic[i]);
+			rollback(j, globstastic[i]);
+		}
+        res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
+    }
     return 1;
 }
 
