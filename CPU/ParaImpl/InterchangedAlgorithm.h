@@ -20,6 +20,7 @@ int   run_Interchanged(
 	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * outer);
 	
 	for( unsigned i = 0; i < outer; ++ i ) {
+		cout << "Starting initialization of " << i << endl;
 		PrivGlobs globs(numX, numY, numY);
 		initGrid(s0,alpha,nu,t, numX, numY, numT, globs);
 		initOperator(globs.myX,globs.myDxx);
