@@ -15,7 +15,7 @@ int   run_Interchanged(
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
 ) {
-	for(int j = numT-2;j>=0;--j)
+	for(int j = numT-2;j>=0;--j) {
 		for( unsigned i = 0; i < outer; ++ i ) {
 			REAL strike = 0.001*i;
 			PrivGlobs    globs(numX, numY, numT);
