@@ -17,16 +17,15 @@ int   run_Interchanged(
 ) {
 
 	cout << "Starting interchange algorithm... " << endl;
-	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * outer);
-	
+	vector<PrivGlobs> globstastic;
 	for( unsigned i = 0; i < outer; ++ i ) {
 		cout << "Starting initialization of " << i << endl;
-		globstastic[i] = *new PrivGlobs(numX, numY, numY);
-		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
-		initOperator(globstastic[i].myX,globstastic[i].myDxx);
-		initOperator(globstastic[i].myY,globstastic[i].myDyy);
+		globstastic.push_back(PrivGlobs(numX, numY, numY));
+		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic.end);
+		initOperator(globstastic.end.myX,globstastic.end.myDxx);
+		initOperator(globstastic.end.myY,globstastic.end.myDyy);
 		REAL strike = 0.001*i;
-		setPayoff(strike, globstastic[i]);
+		setPayoff(strike, globstastic.end);
 		cout << "Ended initialization of " << i << endl;
 	}
 	for( unsigned i = 0; i < outer; ++ i ) {
@@ -41,7 +40,6 @@ int   run_Interchanged(
         res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
     }
 	cout << "Ending interchange algorithm... " << endl;
-	free(globstastic);
     return 1;
 }
 
