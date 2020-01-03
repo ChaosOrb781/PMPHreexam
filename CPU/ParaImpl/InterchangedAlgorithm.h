@@ -14,7 +14,7 @@ int   run_Interchanged(
                 const REAL   nu, 
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
-) {}
+) {
 	//cout << "Starting interchange algorithm... " << endl;
 	vector<PrivGlobs> globstastic;
 	for( unsigned i = 0; i < outer; ++ i ) {
