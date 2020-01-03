@@ -16,26 +16,28 @@ int   run_Interchanged(
                       REAL*  res   // [outer] RESULT
 ) {
 
-	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * numT);
-	for( unsigned i = 0; i < numT; ++ i ) {
-		PrivGlobs globs(numX, numY, numY);
-		globstastic[i] = globs;
+	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * outer * numT);
+	
+	for( unsigned i = 0; i < outer; ++ i ) {
+		for( unsigned j = 0; j < numT; ++ j ) {
+			PrivGlobs globs(numX, numY, numY);
+			initGrid(s0,alpha,nu,t, numX, numY, numT, globs);
+			initOperator(globs.myX,globs.myDxx);
+			initOperator(globs.myY,globs.myDyy);
+			REAL strike = 0.001*i;
+			setPayoff(strike, globs);
+			globstastic[i * numT + j] = globs;
+		}
 	}
 	for( unsigned i = 0; i < outer; ++ i ) {
-		REAL strike = 0.001*i;
-        strike = 0.001*i;
-		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
-		initOperator(globstastic[i].myX,globstastic[i].myDxx);
-		initOperator(globstastic[i].myY,globstastic[i].myDyy);
-
-		setPayoff(strike, globstastic[i]);
 		for(int j = numT-2;j>=0;--j)
 		{
-			updateParams(j,alpha,beta,nu,globstastic[i]);
-			rollback(j, globstastic[i]);
+			updateParams(j,alpha,beta,nu,globstastic[i * numT + j]);
+			rollback(j, globstastic[i * numT + j]);
 		}
-        res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
+        res[i] = globstastic[i * numT + j].myResult[globstastic[i * numT + j].myXindex][globstastic[i * numT + j].myYindex];
     }
+	free(globstastic);
     return 1;
 }
 
