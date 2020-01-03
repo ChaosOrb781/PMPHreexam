@@ -24,8 +24,7 @@ int   run_Interchanged(
 		REAL strike = 0.001*i;
 		setPayoff(strike, globstastic[i]);
 	}
-	for(int j = numT-2;j>=0;--j)
-		{
+	for(int j = 0;j<=numT-2;++j) {
 		for( unsigned i = 0; i < outer; ++ i ) {
 			{
 				updateParams(j,alpha,beta,nu,globstastic[i]);
