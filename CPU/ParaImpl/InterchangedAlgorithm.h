@@ -16,6 +16,7 @@ int   run_Interchanged(
                       REAL*  res   // [outer] RESULT
 ) {
 
+	cout << "Starting interchange algorithm... " << endl;
 	PrivGlobs* globstastic = (PrivGlobs*) malloc(sizeof(PrivGlobs) * outer);
 	
 	for( unsigned i = 0; i < outer; ++ i ) {
@@ -26,15 +27,20 @@ int   run_Interchanged(
 		REAL strike = 0.001*i;
 		setPayoff(strike, globs);
 		globstastic[i] = globs;
+		cout << "Ended initialization of " << i << endl;
 	}
 	for( unsigned i = 0; i < outer; ++ i ) {
+		cout << "Started process for " << i << endl;
 		for(int j = numT-2;j>=0;--j)
 		{
+			cout << "   Subprocess " << j << endl;
 			updateParams(j,alpha,beta,nu,globstastic[i]);
 			rollback(j, globstastic[i]);
 		}
+		cout << "Ended process for " << i << endl;
         res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
     }
+	cout << "Ending interchange algorithm... " << endl;
 	free(globstastic);
     return 1;
 }
