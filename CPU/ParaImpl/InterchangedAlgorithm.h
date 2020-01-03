@@ -21,15 +21,15 @@ int   run_Interchanged(
 	for( unsigned i = 0; i < outer; ++ i ) {
 		cout << "Starting initialization of " << i << endl;
 		globstastic.push_back(PrivGlobs(numX, numY, numY));
-		initGrid(s0,alpha,nu,t, numX, numY, numT, *globstastic.end());
-		initOperator(globstastic.end()->myX,globstastic.end()->myDxx);
-		initOperator(globstastic.end()->myY,globstastic.end()->myDyy);
-		REAL strike = 0.001*i;
-		setPayoff(strike, *globstastic.end());
 		cout << "Ended initialization of " << i << endl;
 	}
 	for( unsigned i = 0; i < outer; ++ i ) {
 		cout << "Started process for " << i << endl;
+		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
+		initOperator(globstastic[i].myX,globstastic[i].myDxx);
+		initOperator(globstastic[i].myY,globstastic[i].myDyy);
+		REAL strike = 0.001*i;
+		setPayoff(strike, globstastic[i]);
 		for(int j = numT-2;j>=0;--j)
 		{
 			cout << "   Subprocess " << j << endl;
