@@ -21,13 +21,12 @@ int   run_Interchanged(
 	
 	for( unsigned i = 0; i < outer; ++ i ) {
 		cout << "Starting initialization of " << i << endl;
-		PrivGlobs* globs = new PrivGlobs(numX, numY, numY);
-		initGrid(s0,alpha,nu,t, numX, numY, numT, *globs);
-		initOperator(globs->myX,globs->myDxx);
-		initOperator(globs->myY,globs->myDyy);
+		globstastic[i] = *new PrivGlobs(numX, numY, numY);
+		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
+		initOperator(globstastic[i].myX,globstastic[i].myDxx);
+		initOperator(globstastic[i].myY,globstastic[i].myDyy);
 		REAL strike = 0.001*i;
-		setPayoff(strike, *globs);
-		globstastic[i] = *globs;
+		setPayoff(strike, globstastic[i]);
 		cout << "Ended initialization of " << i << endl;
 	}
 	for( unsigned i = 0; i < outer; ++ i ) {
