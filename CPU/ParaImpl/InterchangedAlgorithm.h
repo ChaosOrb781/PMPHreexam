@@ -30,8 +30,6 @@ int   run_Interchanged(
 			updateParams(i,alpha,beta,nu,globs);
 			rollback(i, globs);
 		}
-
-		return 
         res[i] = globs.myResult[globs.myXindex][globs.myYindex];
     }
     return 1;
