@@ -15,15 +15,13 @@ int   run_Interchanged(
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
 ) {
+	PrivGlobs    globs(numX, numY, numT);
+	initGrid(s0,alpha,nu,t, numX, numY, numT, globs);
+	initOperator(globs.myX,globs.myDxx);
+	initOperator(globs.myY,globs.myDyy);
 	for(int j = numT-2;j>=0;--j) {
 		for( unsigned i = 0; i < outer; ++ i ) {
 			REAL strike = 0.001*i;
-			PrivGlobs    globs(numX, numY, numT);
-			strike = 0.001*i;
-			initGrid(s0,alpha,nu,t, numX, numY, numT, globs);
-			initOperator(globs.myX,globs.myDxx);
-			initOperator(globs.myY,globs.myDyy);
-
 			setPayoff(strike, globs);
 			updateParams(j,alpha,beta,nu,globs);
 			rollback(j, globs);
