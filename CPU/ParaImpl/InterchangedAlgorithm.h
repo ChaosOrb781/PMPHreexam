@@ -14,9 +14,8 @@ int   run_Interchanged(
                 const REAL   nu, 
                 const REAL   beta,
                       REAL*  res   // [outer] RESULT
-) {
-
-	cout << "Starting interchange algorithm... " << endl;
+) {}
+	//cout << "Starting interchange algorithm... " << endl;
 	vector<PrivGlobs> globstastic;
 	for( unsigned i = 0; i < outer; ++ i ) {
 		//cout << "Starting initialization of " << i << endl;
@@ -37,6 +36,8 @@ int   run_Interchanged(
 			rollback(j, globstastic[i]);
 		}
 		//cout << "Ended process for " << i << endl;
+    }
+	for( unsigned i = 0; i < outer; ++ i ) {
         res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
     }
 	//cout << "Ending interchange algorithm... " << endl;
