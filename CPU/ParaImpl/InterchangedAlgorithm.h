@@ -54,9 +54,11 @@ int   run_InterchangedParallel(
 	int procs = 0;
 	
 	vector<PrivGlobs> globstastic;
+	globstastic.resize(outer);
 #pragma omp parallel for
 	for( unsigned i = 0; i < outer; ++ i ) {
-		globstastic.push_back(PrivGlobs(numX, numY, numY));
+		PrivGlobs glob(numX, numY, numY);
+		globstastic[i] = glob;
 		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
 		initOperator(globstastic[i].myX,globstastic[i].myDxx);
 		initOperator(globstastic[i].myY,globstastic[i].myDyy);
