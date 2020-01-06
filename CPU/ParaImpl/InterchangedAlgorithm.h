@@ -221,6 +221,7 @@ int   run_InterchangedParallel(
     return procs;
 }
 
+/*
 int   run_InterchangedParallelAlternative(  
                 const uint   outer,
                 const uint   numX,
@@ -250,7 +251,7 @@ int   run_InterchangedParallelAlternative(
 #pragma omp parallel for
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		REAL strike = 0.001*i;
-		setPayoff(strike, globstastic[i]);
+		setPayoff_Alt(strike, globstastic[i]);
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
@@ -268,6 +269,6 @@ int   run_InterchangedParallelAlternative(
         res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
     }
     return procs;
-}
+}*/
 
 #endif
