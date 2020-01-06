@@ -4,7 +4,7 @@
 #include "OriginalAlgorithm.h"
 #include <omp.h>
 
-void setPayoff_Alt(const REAL strike, PrivGlobs& globs, vector< vector<REAL> > myResult)
+void setPayoff_Alt(const REAL strike, PrivGlobs& globs, vector< vector<REAL> >& myResult)
 {
 	for(unsigned i=0;i<globs.myX.size();++i)
 	{
@@ -15,7 +15,7 @@ void setPayoff_Alt(const REAL strike, PrivGlobs& globs, vector< vector<REAL> > m
 }
 
 void
-rollback_Alt( const unsigned g, PrivGlobs& globs, vector< vector<REAL> > myResult ) {
+rollback_Alt( const unsigned g, PrivGlobs& globs, vector< vector<REAL> >& myResult ) {
     unsigned numX = globs.myX.size(),
              numY = globs.myY.size();
 
