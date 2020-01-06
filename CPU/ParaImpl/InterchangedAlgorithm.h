@@ -255,7 +255,13 @@ int   run_InterchangedParallelAlternative(
 #pragma omp parallel for
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		REAL strike = 0.001*i;
-		setPayoff_Alt(strike, constantGlobs, myResult[i]);
+		for(unsigned j=0;j<constantGlobs.myX.size();++j)
+		{
+			REAL payoff = max(constantGlobs.myX[j]-strike, (REAL)0.0);
+			for(unsigned k=0;k<constantGlobs.myY.size();++k)
+				myResult[i][j][k] = payoff;
+		}
+		//setPayoff_Alt(strike, constantGlobs, myResult[i]);
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
