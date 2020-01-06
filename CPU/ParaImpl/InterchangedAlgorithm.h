@@ -252,7 +252,7 @@ int   run_InterchangedParallelAlternative(
 	initOperator(constantGlobs.myX,constantGlobs.myDxx);
 	initOperator(constantGlobs.myY,constantGlobs.myDyy);
 
-#pragma omp parallel for collapse(3) schedule(static)
+#pragma omp parallel for schedule(static)
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		//for(unsigned j=0;j<constantGlobs.myX.size();++j) {
 		//	for(unsigned k=0;k<constantGlobs.myY.size();++k) {
