@@ -1,7 +1,5 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11
-CUDA       = nvcc
-CUDAFLAGS  = -O3 -c
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include
@@ -14,11 +12,8 @@ EXECUTABLE  =runproject
 
 default: compile run
 
-#.cpp.o: $(SOURCES_CPP) $(HELPERS)
-#	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
-
-%.o: %.cu
-	$(CUDA) $(CUDAFLAGS) $(INCLUDES) $< -o $@ 
+.cu.o: $(SOURCES_CU) $(HELPERS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
