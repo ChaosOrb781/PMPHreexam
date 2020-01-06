@@ -251,15 +251,13 @@ int   run_InterchangedParallelAlternative(
 	initGrid(s0,alpha,nu,t, numX, numY, numT, constantGlobs);
 	initOperator(constantGlobs.myX,constantGlobs.myDxx);
 	initOperator(constantGlobs.myY,constantGlobs.myDyy);
-	
+
 #pragma omp parallel for collapse(3)
 	for ( unsigned i = 0; i < outer; ++ i ) {
-		REAL strike = 0.001*i;
-		for(unsigned j=0;j<constantGlobs.myX.size();++j)
-		{
-			REAL payoff = max(constantGlobs.myX[j]-strike, (REAL)0.0);
-			for(unsigned k=0;k<constantGlobs.myY.size();++k)
-				myResult[i][j][k] = payoff;
+		for(unsigned j=0;j<constantGlobs.myX.size();++j) {
+			for(unsigned k=0;k<constantGlobs.myY.size();++k) {
+				myResult[i][j][k] = max(constantGlobs.myX[j]-0.001*i, (REAL)0.0);
+			}
 		}
 		//setPayoff_Alt(strike, constantGlobs, myResult[i]);
 	}
