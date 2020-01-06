@@ -12,15 +12,14 @@ OBJECTS     =ProjectMain.o
 EXECUTABLE  =runproject
 
 
-default: cpu
+default: compile run
 
-.cpp.o: $(SOURCES_CPP) $(HELPERS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+#.cpp.o: $(SOURCES_CPP) $(HELPERS)
+#	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 %.o: %.cu
 	$(CUDA) $(CUDAFLAGS) $(INCLUDES) $< -o $@ 
 
-cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
 
