@@ -33,7 +33,7 @@ rollback_Alt( const unsigned g, PrivGlobs& globs, vector< vector<REAL> >& myResu
     //	explicit x
     for(i=0;i<numX;i++) {
         for(j=0;j<numY;j++) {
-            u[j][i] = dtInv*globs.myResult[i][j];
+            u[j][i] = dtInv*myResult[i][j];
 
             if(i > 0) { 
               u[j][i] += 0.5*( 0.5*globs.myVarX[i][j]*globs.myDxx[i][0] ) 
