@@ -77,7 +77,7 @@ int main()
 #endif  
 		RunTestOnProgram("Parallel Interchanged", run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        //RunTestOnProgram("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
     }
 

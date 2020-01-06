@@ -221,7 +221,6 @@ int   run_InterchangedParallel(
     return procs;
 }
 
-/*
 int   run_InterchangedParallelAlternative(  
                 const uint   outer,
                 const uint   numX,
@@ -238,10 +237,13 @@ int   run_InterchangedParallelAlternative(
 	
 	PrivGlobs constantGlobs(numX, numY, numT);
 	//Only non-constant throughout parallel operations for each sequential iteration
-	vector<vector<REAL>> myResult;
-	myResult.resize(numX);
-	for (unsigned i = 0; i < numX; ++i) {
-		myResult[i].resize(numY);
+	vector < vector< vector<REAL> > > myResult;
+	myResult.resize(outer);
+	for (unsigned i = 0; i < outer; ++i ) {
+		myResult[i].resize(numX);
+		for (unsigned j = 0; j < numX; ++j) {
+			myResult[i][j].resize(numY);
+		}
 	}
 
 	initGrid(s0,alpha,nu,t, numX, numY, numT, constantGlobs);
@@ -251,13 +253,13 @@ int   run_InterchangedParallelAlternative(
 #pragma omp parallel for
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		REAL strike = 0.001*i;
-		setPayoff_Alt(strike, globstastic[i]);
+		setPayoff_Alt(strike, constantGlobs, myResult[i]);
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
 #pragma omp parallel for
 		for( unsigned i = 0; i < outer; ++ i ) {
-			rollback(j, globstastic[i]);
+			rollback_Alt(j, constantGlobs, myResult[i]);
 		}
     }
 #pragma omp parallel for
@@ -266,9 +268,9 @@ int   run_InterchangedParallelAlternative(
             int th_id = omp_get_thread_num();
             if(th_id == 0) { procs = omp_get_num_threads(); }
         }
-        res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
+        res[i] = myResult[i][constantGlobs.myXindex][constantGlobs.myYindex];
     }
     return procs;
-}*/
+}
 
 #endif
