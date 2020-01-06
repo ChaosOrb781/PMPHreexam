@@ -16,7 +16,7 @@ default: compile run
 #	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 %.o: %.cu
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $<
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
