@@ -240,7 +240,7 @@ int   run_InterchangedParallelAlternative(
 	vector < vector< vector<REAL> > > myResult;
 	myResult.resize(outer);
 	//Cannot collapse loop due to inner depends on the result in the outer loop
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
 	for (unsigned i = 0; i < outer; ++i ) {
 		myResult[i].resize(numX);
 		for (unsigned j = 0; j < numX; ++j) {
@@ -252,7 +252,7 @@ int   run_InterchangedParallelAlternative(
 	initOperator(constantGlobs.myX,constantGlobs.myDxx);
 	initOperator(constantGlobs.myY,constantGlobs.myDyy);
 
-#pragma omp parallel for collapse(3)
+#pragma omp parallel for collapse(3) schedule(static)
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		for(unsigned j=0;j<constantGlobs.myX.size();++j) {
 			for(unsigned k=0;k<constantGlobs.myY.size();++k) {
@@ -263,12 +263,12 @@ int   run_InterchangedParallelAlternative(
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
 		for( unsigned i = 0; i < outer; ++ i ) {
 			rollback_Alt(j, constantGlobs, myResult[i]);
 		}
     }
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
 	for( unsigned i = 0; i < outer; ++ i ) {
 		{
             int th_id = omp_get_thread_num();
