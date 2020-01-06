@@ -254,12 +254,12 @@ int   run_InterchangedParallelAlternative(
 
 #pragma omp parallel for collapse(3) schedule(static)
 	for ( unsigned i = 0; i < outer; ++ i ) {
-		for(unsigned j=0;j<constantGlobs.myX.size();++j) {
-			for(unsigned k=0;k<constantGlobs.myY.size();++k) {
-				myResult[i][j][k] = max(constantGlobs.myX[j]-0.001*i, (REAL)0.0);
-			}
-		}
-		//setPayoff_Alt(strike, constantGlobs, myResult[i]);
+		//for(unsigned j=0;j<constantGlobs.myX.size();++j) {
+		//	for(unsigned k=0;k<constantGlobs.myY.size();++k) {
+		//		myResult[i][j][k] = max(constantGlobs.myX[j]-0.001*i, (REAL)0.0);
+		//	}
+		//}
+		setPayoff_Alt(0.001 * i, constantGlobs, myResult[i]);
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
