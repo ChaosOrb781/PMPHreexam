@@ -1,11 +1,12 @@
 CXX        = g++
-LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11
+CUDA       = nvcc
+CUDAFLAGS  = -O3 -c
+LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
-INCLUDES    += -I ../include
-GPU_OPTS   = -D lgWARP=5
+INCLUDES  += -I ../include
 
-SOURCES_CPP =ProjectMain.cpp
+SOURCES_CPP =ProjectMain.cu
 HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
 OBJECTS     =ProjectMain.o
 EXECUTABLE  =runproject
@@ -14,8 +15,10 @@ EXECUTABLE  =runproject
 default: cpu
 
 .cpp.o: $(SOURCES_CPP) $(HELPERS)
-	$(CXX) $(CXXFLAGS) $(GPU_OPTS) $(INCLUDES) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
+%.o: %.cu
+	$(COMPILER) $(CFLAGS) $< -o $@ 
 
 cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
