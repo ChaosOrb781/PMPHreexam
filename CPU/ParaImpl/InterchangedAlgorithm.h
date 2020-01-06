@@ -265,7 +265,7 @@ int   run_InterchangedParallelAlternative(
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(static)
 		for( unsigned i = 0; i < outer; ++ i ) {
 			rollback_Alt(j, constantGlobs, myResult[i]);
 		}
