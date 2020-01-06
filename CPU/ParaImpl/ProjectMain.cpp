@@ -70,9 +70,14 @@ int main()
 		RunTestOnProgram("Simple Parallel Dynamic", run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 
-#if RUN_CPU_EXPERIMENTAL || RUN_ALL
+
 		RunTestOnProgram("Interchanged", run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+#if RUN_CPU_EXPERIMENTAL || RUN_ALL
+        RunTestOnProgram("Interchanged Optimized", run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+#endif  
 		RunTestOnProgram("Parallel Interchanged", run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+#if RUN_CPU_EXPERIMENTAL || RUN_ALL
+        //RunTestOnProgram("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
     }
 
