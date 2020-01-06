@@ -1,23 +1,21 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart -O3 -c
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include
 
-SOURCES_CPP =ProjectMain.cu
+SOURCES_CPP =ProjectMain.cpp
 HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
 OBJECTS     =ProjectMain.o
 EXECUTABLE  =runproject
 
 
-default: compile run
+default: cpu
 
-#.cpp.o: $(SOURCES_CPP) $(HELPERS)
-#	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+.cpp.o: $(SOURCES_CPP) $(HELPERS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
-%.o: %.cu
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $<
-
+cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
 
