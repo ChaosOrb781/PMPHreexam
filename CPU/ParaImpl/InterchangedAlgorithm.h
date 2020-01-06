@@ -56,11 +56,11 @@ int   run_InterchangedParallel(
 	int procs = 0;
 	
 	vector<PrivGlobs> globstastic;
-	globstastic.resize(outer);
+	globstastic.resize(outer); //Generates list from default constructor
 #pragma omp parallel for
 	for( unsigned i = 0; i < outer; ++ i ) {
-		PrivGlobs glob(numX, numY, numY);
-		globstastic[i] = glob;
+		//Initialize each object as if called by the size constructor
+		globstastic[i].Initialize(numX, numY, numT);
 		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
 		initOperator(globstastic[i].myX,globstastic[i].myDxx);
 		initOperator(globstastic[i].myY,globstastic[i].myDyy);
