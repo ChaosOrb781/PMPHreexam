@@ -4,6 +4,9 @@
 #include "SimpleParallelAlgorithm.h"
 #include "InterchangedAlgorithm.h"
 
+#include "cuda.h"
+#include "cuda_runtime.h"
+
 #define RUN_ALL false //will enable all and also experimental tests
 #define RUN_CPU_EXPERIMENTAL true
 
