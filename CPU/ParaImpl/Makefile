@@ -2,7 +2,6 @@ CXX        = g++
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11
 
-INCLUDES    += -I ../include
 GPU_OPTS   = -D lgWARP=5
 
 SOURCES_CPP =ProjectMain.cpp
@@ -19,7 +18,7 @@ default: cpu
 
 cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(OBJECTS)
 
 
 run_small: $(EXECUTABLE)
