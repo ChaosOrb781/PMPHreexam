@@ -1,9 +1,8 @@
 CXX        = g++
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11
 
-INCLUDES    += -I ../include
-GPU_OPTS   = -D lgWARP=5
+INCLUDES  += -I ../include
 
 SOURCES_CPP =ProjectMain.cpp
 HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h
@@ -14,8 +13,7 @@ EXECUTABLE  =runproject
 default: cpu
 
 .cpp.o: $(SOURCES_CPP) $(HELPERS)
-	$(CXX) $(CXXFLAGS) $(GPU_OPTS) $(INCLUDES) -c -o $@ $<
-
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
