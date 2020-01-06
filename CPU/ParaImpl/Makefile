@@ -1,5 +1,5 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart -O3 -c
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include
@@ -12,7 +12,10 @@ EXECUTABLE  =runproject
 
 default: compile run
 
-.cu.o: $(SOURCES_CU) $(HELPERS)
+#.cpp.o: $(SOURCES_CPP) $(HELPERS)
+#	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+
+%.o: %.cu
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(EXECUTABLE): $(OBJECTS)
