@@ -252,7 +252,7 @@ int   run_InterchangedParallelAlternative(
 	initOperator(constantGlobs.myX,constantGlobs.myDxx);
 	initOperator(constantGlobs.myY,constantGlobs.myDyy);
 	
-#pragma omp parallel for
+#pragma omp parallel for collapse(3)
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		REAL strike = 0.001*i;
 		for(unsigned j=0;j<constantGlobs.myX.size();++j)
