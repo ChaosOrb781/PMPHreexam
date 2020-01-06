@@ -18,7 +18,7 @@ default: cpu
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 %.o: %.cu
-	$(COMPILER) $(CFLAGS) $< -o $@ 
+	$(CUDA) $(CUDAFLAGS) $< -o $@ 
 
 cpu: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
