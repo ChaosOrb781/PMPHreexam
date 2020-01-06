@@ -239,6 +239,8 @@ int   run_InterchangedParallelAlternative(
 	//Only non-constant throughout parallel operations for each sequential iteration
 	vector < vector< vector<REAL> > > myResult;
 	myResult.resize(outer);
+	//Cannot collapse loop due to inner depends on the result in the outer loop
+#pragma omp parallel for
 	for (unsigned i = 0; i < outer; ++i ) {
 		myResult[i].resize(numX);
 		for (unsigned j = 0; j < numX; ++j) {
