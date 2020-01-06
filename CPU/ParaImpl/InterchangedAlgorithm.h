@@ -17,8 +17,10 @@ int   run_Interchanged(
                       REAL*  res   // [outer] RESULT
 ) {
 	vector<PrivGlobs> globstastic;
+	globstastic.resize(outer); //Generates list from default constructor
 	for( unsigned i = 0; i < outer; ++ i ) {
-		globstastic.push_back(PrivGlobs(numX, numY, numY));
+		//Initialize each object as if called by the size constructor
+		globstastic[i].Initialize(numX, numY, numT);
 		initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
 		initOperator(globstastic[i].myX,globstastic[i].myDxx);
 		initOperator(globstastic[i].myY,globstastic[i].myDyy);

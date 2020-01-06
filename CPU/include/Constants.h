@@ -37,8 +37,8 @@ struct PrivGlobs {
     vector<vector<REAL> >   myDyy;  // [numY][4]
 
     PrivGlobs( ) {
-        printf("Invalid Contructor: need to provide the array sizes! EXITING...!\n");
-        exit(0);
+        //printf("Invalid Contructor: need to provide the array sizes! EXITING...!\n");
+        //exit(0);
     }
 
     PrivGlobs(  const unsigned int& numX,
@@ -66,6 +66,34 @@ struct PrivGlobs {
             this->  myVarY[i].resize(numY);
             this->myResult[i].resize(numY);
         }
+
+    }
+
+    void Initialize(const unsigned int& numX,
+      const unsigned int& numY,
+      const unsigned int& numT) {
+      this->myX.resize(numX);
+      this->myDxx.resize(numX);
+      for (int k = 0; k < numX; k++) {
+        this->myDxx[k].resize(4);
+      }
+
+      this->myY.resize(numY);
+      this->myDyy.resize(numY);
+      for (int k = 0; k < numY; k++) {
+        this->myDyy[k].resize(4);
+      }
+
+      this->myTimeline.resize(numT);
+
+      this->myVarX.resize(numX);
+      this->myVarY.resize(numX);
+      this->myResult.resize(numX);
+      for (unsigned i = 0; i < numX; ++i) {
+        this->myVarX[i].resize(numY);
+        this->myVarY[i].resize(numY);
+        this->myResult[i].resize(numY);
+      }
 
     }
 } __attribute__ ((aligned (128)));
