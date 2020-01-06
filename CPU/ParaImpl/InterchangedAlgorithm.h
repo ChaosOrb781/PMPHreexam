@@ -252,6 +252,8 @@ int   run_InterchangedParallelAlternative(
 	initOperator(constantGlobs.myX,constantGlobs.myDxx);
 	initOperator(constantGlobs.myY,constantGlobs.myDyy);
 
+//Switch comments for using thread heavy calculation and collapsed vs. non-collapsed version, about same performance
+//#pragma omp parallel for collapse(3) schedule(static)
 #pragma omp parallel for schedule(static)
 	for ( unsigned i = 0; i < outer; ++ i ) {
 		//for(unsigned j=0;j<constantGlobs.myX.size();++j) {
@@ -263,7 +265,7 @@ int   run_InterchangedParallelAlternative(
 	}
 	for ( int j = 0; j <= numT-2; ++ j ) {
 		updateParams(j,alpha,beta,nu,constantGlobs);
-#pragma omp parallel for schedule(static)
+#pragma omp parallel for schedule(dynamic)
 		for( unsigned i = 0; i < outer; ++ i ) {
 			rollback_Alt(j, constantGlobs, myResult[i]);
 		}
