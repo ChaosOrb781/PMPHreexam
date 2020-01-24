@@ -107,7 +107,9 @@ int main()
         RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
 
-        string str = "Kernelized (" << Block << ")";
+        string str = "Kernelized (";
+        str.append(Block);
+        str.append(")");
         RunTestOnProgram<funGPU>(string::c_str(str), (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
