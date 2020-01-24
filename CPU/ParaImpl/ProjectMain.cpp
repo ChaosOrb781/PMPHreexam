@@ -3,6 +3,7 @@
 #include "OriginalAlgorithm.h"
 #include "SimpleParallelAlgorithm.h"
 #include "InterchangedAlgorithm.h"
+#include "KernelizedAlgorithm.h"
 
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -25,6 +26,7 @@ bool compare_validate(REAL* result, REAL* expected, uint size) {
     return isvalid;
 }
 
+template <int blocksize = 0>
 ReturnStat* RunStatsOnProgram(const char* name, fun f, 
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) 
@@ -34,17 +36,25 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
 
-    int procs = f(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    int procs = 0;
+    if (blocksize > 0) {
+        procs = f<blocksize>(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    }
+    else 
+    {
+        procs = f(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    }
 
     gettimeofday(&t_end, NULL);
     timeval_subtract(&t_diff, &t_end, &t_start);
     return new ReturnStat(t_diff.tv_sec*1e6+t_diff.tv_usec, procs);
 }
 
+template <int blocksize = 0>
 void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
 	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta) {
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
-	ReturnStat* returnstatus = RunStatsOnProgram(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+	ReturnStat* returnstatus = RunStatsOnProgram<blocksize>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 	bool is_valid = compare_validate(res, expected, outer);
 	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expectedStats);
 }
@@ -82,6 +92,8 @@ int main()
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
         RunTestOnProgram("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
+
+        RunTestOnProgram<16>("Kernelized", run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     }
 
     return 0;
