@@ -33,7 +33,6 @@ int   run_Kernelized(
 	for(int j = 0;j<=numT-2;++j) {
 		for( unsigned ii = 0; ii < outer; ii += blocksize ) {
 		    for( unsigned i = ii; i < min(outer, ii + blocksize); ++ i ) {
-			{
 				updateParams(j,alpha,beta,nu,globstastic[i]);
 				rollback(j, globstastic[i]);
 			}
