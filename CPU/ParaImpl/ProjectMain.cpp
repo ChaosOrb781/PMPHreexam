@@ -12,7 +12,7 @@
 #define RUN_CPU_EXPERIMENTAL true
 
 typedef int (*funCPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
-typedef int (*funGPU)<>(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, const uint, REAL*);
+typedef int (*funGPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, const uint, REAL*);
 
 bool compare_validate(REAL* result, REAL* expected, uint size) {
     bool isvalid = true;
