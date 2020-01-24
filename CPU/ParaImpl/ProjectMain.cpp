@@ -45,7 +45,7 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
         if (is_same<funType, funGPU>::value) {
             funCPU funCPU = reinterpret_cast<funType>(f);
             procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
-        } else if (is_same<funType, funGPU>::value)) {
+        } else if (is_same<funType, funGPU>::value) {
             funGPU funGPU = reinterpret_cast<funType>(f);
             procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
         }
@@ -78,7 +78,7 @@ int main()
     readDataSet( outer, numX, numY, numT ); 
 
     REAL* res_original = (REAL*)malloc(outer*sizeof(REAL));
-    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (fun)run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
     writeStatsAndResult( is_valid, res_original, outer, false, originalStat, originalStat );
@@ -86,24 +86,24 @@ int main()
     // If initial original program is correct, run rest
     if (is_valid) {
         //Simple parallized programs
-        RunTestOnProgram<funCPU>("Simple Parallel", run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel", (fun)run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Simple Parallel Static", run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel Static", (fun)run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (fun)run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 
 
-		RunTestOnProgram<funCPU>("Interchanged", run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Interchanged", (fun)run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Interchanged Optimized", run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Interchanged Optimized", (fun)run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
-		RunTestOnProgram<funCPU>("Parallel Interchanged", run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Parallel Interchanged", (fun)run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
 
-        RunTestOnProgram<funGPU>("Kernelized", run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funGPU>("Kernelized", (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     }
 
     return 0;
