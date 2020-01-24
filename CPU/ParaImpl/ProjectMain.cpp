@@ -42,10 +42,10 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
 
     try
     {
-        if (is_same<funType, funGPU>::value) {
+        if (is_same_v<funType, funCPU>) {
             funCPU funCPU = reinterpret_cast<funType>(f);
             procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
-        } else if (is_same<funType, funGPU>::value) {
+        } else if (is_same_v<funType, funGPU>) {
             funGPU funGPU = reinterpret_cast<funType>(f);
             procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
         }
@@ -64,7 +64,7 @@ template <typename funType>
 void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
 	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 0) {
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
-	ReturnStat* returnstatus = RunStatsOnProgram<funtype>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
+	ReturnStat* returnstatus = RunStatsOnProgram<funType>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
 	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expectedStats);
 }
