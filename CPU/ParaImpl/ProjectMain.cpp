@@ -36,28 +36,19 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 1) 
     {
     //61 characters long
-    printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
+    if (is_same<funType, funCPU>::value)
+        printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
+    else if (is_same<funType, funGPU>::value)
+        printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d B: %3d]\n", name, outer, numX, numY, numT, blocksize);
+
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
     
     int procs = 0;
-
-    try
-    {
-        if (is_same<funType, funCPU>::value) {
-            //funCPU funCPU = reinterpret_cast<funType>(f);
-            funCPU fun = (funCPU) f;
-            procs = fun(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
-        } else if (is_same<funType, funGPU>::value) {
-            //funGPU funGPU = reinterpret_cast<funType>(f);
-            funGPU fun = (funGPU) f;
-            procs = fun(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
-        }
-    }
-    catch(const std::exception& ex)
-    {
-        std::cout << "["<<ex.what()<<"]" << std::endl;
-    }
+    if (is_same<funType, funCPU>::value)
+        procs = ((funCPU) f)(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    else if (is_same<funType, funGPU>::value)
+        procs = ((funGPU) f)(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
 
     gettimeofday(&t_end, NULL);
     timeval_subtract(&t_diff, &t_end, &t_start);
@@ -108,7 +99,7 @@ int main()
 #endif  
         char buffer[256];
         sprintf(buffer, "Kernelized (%d)", Block);
-        RunTestOnProgram<funGPU>(string::c_str("Kernelized (" + to_string(Block) + ")"), (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>(buffer, (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;
