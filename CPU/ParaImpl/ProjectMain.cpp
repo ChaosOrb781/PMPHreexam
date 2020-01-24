@@ -11,6 +11,8 @@
 #define RUN_ALL false //will enable all and also experimental tests
 #define RUN_CPU_EXPERIMENTAL true
 
+#define Block 16
+
 typedef int (*fun)();
 typedef int (*funCPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
 typedef int (*funGPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, const uint, REAL*);
@@ -31,7 +33,7 @@ bool compare_validate(REAL* result, REAL* expected, uint size) {
 template <typename funType>
 ReturnStat* RunStatsOnProgram(const char* name, fun f, 
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
-    const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 0) 
+    const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 1) 
     {
     //61 characters long
     printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
@@ -64,7 +66,7 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
 
 template <typename funType>
 void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
-	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 0) {
+	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 1) {
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
 	ReturnStat* returnstatus = RunStatsOnProgram<funType>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
@@ -105,7 +107,7 @@ int main()
         RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
 
-        RunTestOnProgram<funGPU>("Kernelized", (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funGPU>("Kernelized (" << Block << ")", (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;
