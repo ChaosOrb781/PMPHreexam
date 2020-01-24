@@ -38,12 +38,12 @@ ReturnStat* RunStatsOnProgram(const char* name, void* f,
     gettimeofday(&t_start, NULL);
     
     int procs = 0;
-    funCPU* funCPU = dynamic_cast<funType*>(f);
-    if (*funCPU) {
-        procs = *funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    funCPU funCPU = dynamic_cast<funType*>(f);
+    if (funCPU) {
+        procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
     } else {
-        funGPU* funGPU = dynamic_cast<funType>(f);
-        procs = *funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
+        funGPU funGPU = dynamic_cast<funType>(f);
+        procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
     }
 
     gettimeofday(&t_end, NULL);
