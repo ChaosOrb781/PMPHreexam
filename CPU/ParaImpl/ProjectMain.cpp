@@ -11,6 +11,7 @@
 #define RUN_ALL false //will enable all and also experimental tests
 #define RUN_CPU_EXPERIMENTAL true
 
+typedef int (*fun)();
 typedef int (*funCPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
 typedef int (*funGPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, const uint, REAL*);
 
@@ -28,7 +29,7 @@ bool compare_validate(REAL* result, REAL* expected, uint size) {
 }
 
 template <typename funType>
-ReturnStat* RunStatsOnProgram(const char* name, void* f, 
+ReturnStat* RunStatsOnProgram(const char* name, fun f, 
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 0) 
     {
@@ -41,15 +42,15 @@ ReturnStat* RunStatsOnProgram(const char* name, void* f,
 
     try
     {
-        funCPU* funCPU = dynamic_cast<funType&>(f);
-        if (funCPU) {
-            procs = *funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
-        } else {
-            funGPU* funGPU = dynamic_cast<funType&>(f);
-            procs = *funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
+        if (is_same(funType, funCPU)) {
+            funCPU funCPU = reinterpret_cast<funType>(f);
+            procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+        } else if (is_same(funType, funGPU)) {
+            funGPU funGPU = reinterpret_cast<funType>(f);
+            procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
         }
     }
-    catch(const std::bad_cast& ex)
+    catch(const std::exception& ex)
     {
         std::cout << "["<<ex.what()<<"]" << std::endl;
     }
@@ -60,10 +61,10 @@ ReturnStat* RunStatsOnProgram(const char* name, void* f,
 }
 
 template <typename funType>
-void RunTestOnProgram(const char* title, void* f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
+void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expectedStats, const uint outer, const uint numX, const uint numY, const uint numT,
 	const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 0) {
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
-	ReturnStat* returnstatus = RunStatsOnProgram(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
+	ReturnStat* returnstatus = RunStatsOnProgram<funtype>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
 	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expectedStats);
 }
@@ -77,7 +78,7 @@ int main()
     readDataSet( outer, numX, numY, numT ); 
 
     REAL* res_original = (REAL*)malloc(outer*sizeof(REAL));
-    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (void*)&run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
     writeStatsAndResult( is_valid, res_original, outer, false, originalStat, originalStat );
@@ -85,24 +86,24 @@ int main()
     // If initial original program is correct, run rest
     if (is_valid) {
         //Simple parallized programs
-        RunTestOnProgram<funCPU>("Simple Parallel", (void*)&run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel", run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Simple Parallel Static", (void*)&run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (void*)&run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel Static", run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 
 
-		RunTestOnProgram<funCPU>("Interchanged", (void*)&run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Interchanged", run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Interchanged Optimized", (void*)&run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Interchanged Optimized", run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
-		RunTestOnProgram<funCPU>("Parallel Interchanged", (void*)&run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Parallel Interchanged", run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (void*)&run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
 
-        RunTestOnProgram<funGPU>("Kernelized", (void*)&run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funGPU>("Kernelized", run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     }
 
     return 0;
