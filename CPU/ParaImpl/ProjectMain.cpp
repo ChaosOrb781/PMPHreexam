@@ -44,12 +44,12 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     {
         if (is_same<funType, funCPU>::value) {
             //funCPU funCPU = reinterpret_cast<funType>(f);
-            funCPU funCPU = (funCPU) f;
-            procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+            funCPU fun = (funCPU) f;
+            procs = fun(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
         } else if (is_same<funType, funGPU>::value) {
             //funGPU funGPU = reinterpret_cast<funType>(f);
-            funGPU funGPU = (funGPU) f;
-            procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
+            funGPU fun = (funGPU) f;
+            procs = fun(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
         }
     }
     catch(const std::exception& ex)
