@@ -4,8 +4,6 @@
 #include "OriginalAlgorithm.h"
 #include <omp.h>
 
-//Blocksize
-template <int B>
 int   run_Kernelized(  
                 const uint   outer,
                 const uint   numX,
@@ -16,12 +14,13 @@ int   run_Kernelized(
                 const REAL   alpha, 
                 const REAL   nu, 
                 const REAL   beta,
+                const uint   Blocksize,
                       REAL*  res   // [outer] RESULT
 ) {
 	vector<PrivGlobs> globstastic;
 	globstastic.resize(outer); //Generates list from default constructor
-	for( unsigned ii = 0; ii < outer; ii += B ) {
-        for ( unsigned i = ii; i < min(outer, ii + B); i++) {
+	for( unsigned ii = 0; ii < outer; ii += Blocksize ) {
+        for ( unsigned i = ii; i < min(outer, ii + Blocksize); i++) {
             //Initialize each object as if called by the size constructor
             globstastic[i].Initialize(numX, numY, numT);
             initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
