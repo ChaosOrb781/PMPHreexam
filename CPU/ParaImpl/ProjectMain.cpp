@@ -108,7 +108,7 @@ int main()
 #endif  
         char buffer[256];
         sprintf(buffer, "Kernelized (%d)", Block);
-        RunTestOnProgram<funGPU>(buffer, (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized (" << to_string(Block) << ")", (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;
