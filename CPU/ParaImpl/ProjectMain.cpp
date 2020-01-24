@@ -106,7 +106,7 @@ int main()
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
         RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
-        char[256] buffer;
+        char buffer[256];
         sprintf(buffer, "Kernelized (%d)", Block);
         RunTestOnProgram<funGPU>(buffer, (fun)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
