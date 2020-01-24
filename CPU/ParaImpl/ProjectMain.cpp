@@ -38,12 +38,12 @@ ReturnStat* RunStatsOnProgram(const char* name, void* f,
     gettimeofday(&t_start, NULL);
     
     int procs = 0;
-    funCPU funCPU = dynamic_cast<funType>(f);
-    if (funCPU) {
-        procs = funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
+    funCPU* funCPU = dynamic_cast<funType*>(f);
+    if (*funCPU) {
+        procs = *funCPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, res);
     } else {
-        funGPU funGPU = dynamic_cast<funType>(f);
-        procs = funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
+        funGPU* funGPU = dynamic_cast<funType>(f);
+        procs = *funGPU(outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize, res);
     }
 
     gettimeofday(&t_end, NULL);
@@ -69,7 +69,7 @@ int main()
     readDataSet( outer, numX, numY, numT ); 
 
     REAL* res_original = (REAL*)malloc(outer*sizeof(REAL));
-    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (void*)run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+    ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (void*)&run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
     writeStatsAndResult( is_valid, res_original, outer, false, originalStat, originalStat );
@@ -77,24 +77,24 @@ int main()
     // If initial original program is correct, run rest
     if (is_valid) {
         //Simple parallized programs
-        RunTestOnProgram<funCPU>("Simple Parallel", (void*)run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel", (void*)&run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Simple Parallel Static", (void*)run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (void*)run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Simple Parallel Static", (void*)&run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (void*)&run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 
 
-		RunTestOnProgram<funCPU>("Interchanged", (void*)run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Interchanged", (void*)&run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Interchanged Optimized", (void*)run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Interchanged Optimized", (void*)&run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
-		RunTestOnProgram<funCPU>("Parallel Interchanged", (void*)run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		RunTestOnProgram<funCPU>("Parallel Interchanged", (void*)&run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (void*)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (void*)&run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
 
-        RunTestOnProgram<funGPU>("Kernelized", (void*)run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        RunTestOnProgram<funGPU>("Kernelized", (void*)&run_Kernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     }
 
     return 0;
