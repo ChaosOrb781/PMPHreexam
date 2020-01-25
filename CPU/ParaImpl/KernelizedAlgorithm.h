@@ -2,8 +2,6 @@
 #define KERNELIZED_ALGORITHM
 
 #include "OriginalAlgorithm.h"
-#include <omp.h>
-
 int   run_Kernelized(  
                 const uint   outer,
                 const uint   numX,
