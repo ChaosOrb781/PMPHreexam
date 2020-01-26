@@ -89,14 +89,14 @@ void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     for(uint i = 0; i < outer; i++) {
         for(uint j = 0; j < numX; j++)
         {
-            REAL payoff = max(myX[i]-0.001*(REAL)i, (REAL)0.0);
+            REAL payoff = max(myX[j]-0.001*(REAL)i, (REAL)0.0);
             for(uint k = 0; k < numY; k++)
                 myResult[i][j][k] = payoff;
         }
     }
 }
 
-void rollback_Alt(const uint o, const unsigned t, const uint numX, const uint numY, 
+void rollback_Alt(const uint o, const uint t, const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<vector<REAL> > myDxx,
     const vector<vector<REAL> > myDyy,
