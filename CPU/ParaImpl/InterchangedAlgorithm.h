@@ -258,18 +258,21 @@ int   run_InterchangedAlternative(
         }
     }
 
-
+    cout << "initializing.." << endl;
 	initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 	initOperator_Alt(numX, myX, myDxx);
     initOperator_Alt(numY, myY, myDyy);
 
+    cout << "setting payoffs" << endl;
     //left off from here!
     setPayoff_Alt(myX, outer, numX, numY, myResult);
 
+    cout << "setting VarX and VarY" << endl;
     updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 
 	for (uint j = 0; j <= numT - 2; j++) {
 		for(uint i = 0; i < outer; i++) {
+            cout << "rollback: t:" << j << " o:" << i << endl;
 			rollback_Alt(j, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 		}
     }
