@@ -7,36 +7,66 @@
 #include "OriginalAlgorithm.h"
 
 using namespace thrust;
+template <class T>
+using hvec = host_vector<T>;
+template <class T>
+using dvec = device_vector<T>;
 
-__global__ void InitGridTest(const uint   outer,
-                const uint   numX,
-                const uint   numY,
+///numT iterations
+__global__ void InitMyTimeline(
                 const uint   numT,
-                const REAL   s0,
-                const REAL   t, 
-                const REAL   alpha, 
-                const REAL   nu,
+                const REAL   t,
+                REAL* myTimeline
     ) {
     unsigned gidx = blockIdx.x*blockDim.x + threadIdx.x;
-
-    for(unsigned i=0;i<numT;++i)
-        myTimeline[gidx] = t*i/(numT-1);
-
-    const REAL stdX = 20.0*alpha*s0*sqrt(t);
-    const REAL dx = stdX/numX;
-    uint myXindex = static_cast<unsigned>(s0/dx) % numX;
-
-    for(unsigned i=0;i<numX;++i)
-        myX[i] = i*dx - myXindex*dx + s0;
-
-    const REAL stdY = 10.0*nu*sqrt(t);
-    const REAL dy = stdY/numY;
-    const REAL logAlpha = log(alpha);
-    uint myYindex = static_cast<unsigned>(numY/2.0);
-
-    for(unsigned i=0;i<numY;++i)
-        myY[i] = i*dy - myYindex*dy + logAlpha;
+    myTimeline[gidx] = t*gidx/(numT-1);
 }
+
+///numX iterations
+__global__ void InitMyX(
+                const uint myXindex,
+                const REAL s0,
+                const REAL dx,
+                REAL* myX
+    ) {
+    unsigned gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    myX[gidx] = gidx*dx - myXindex*dx + s0;
+}
+
+///numY iterations
+__global__ void InitMyY(
+                const uint myYindex,
+                const REAL logAlpha,
+                const REAL dy,
+                REAL* myY
+    ) {
+    unsigned gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    myY[gidx] = gidx*dy - myYindex*dy + logAlpha;
+}
+
+///numZ iterations
+__global__ void InitMyDzzT(
+                const uint numZ,
+                dvec<REAL> myZ,
+                dvec<REAL> myDzzT
+    ) {
+    unsigned gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    if (gidx < numZ * 4) {
+        int row = gidx / numZ;
+        int col = gidx / 4;
+        REAL dl = col > 0 ? myZ[col] - myZ[col-1] : 0.0;
+		REAL du = col < numZ-1 ? myZ[col+1] - myZ[col] : 0.0;
+
+		myDzzT[gidx] = col > 0 && col < numZ-1 ?
+                       (row == 0 ? 2.0/dl/(dl+du) :
+                       (row == 1 ? -2.0*(1.0/dl + 1.0/du)/(dl+du) :
+                       (row == 2 ? 2.0/du/(dl+du) :
+                        0.0)))
+                       : 0.0;
+    }
+}
+
+
 
 __global__ void MyTimeline(const uint   outer,
                 const uint   numX,
@@ -45,16 +75,10 @@ __global__ void MyTimeline(const uint   outer,
                 const REAL   s0,
                 const REAL   t, 
                 const REAL   alpha, 
-                const REAL   nu,
+                const REAL   nu
     ) {
     unsigned gidx = blockIdx.x*blockDim.x + threadIdx.x;
-    //Memory dedication
-    //globstastic[i].Initialize(numX, numY, numT);
-    initGrid(s0,alpha,nu,t, numX, numY, numT, globstastic[i]);
-    initOperator(globstastic[i].myX,globstastic[i].myDxx);
-    initOperator(globstastic[i].myY,globstastic[i].myDyy);
-    REAL strike = 0.001*i;
-    setPayoff(strike, globstastic[i]);
+
 }
 
 #endif

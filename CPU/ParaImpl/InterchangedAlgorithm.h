@@ -531,7 +531,7 @@ int   run_InterchangedParallelAlternative(
 ) {
 	int procs = 0;
 	
-		vector<REAL>                   myX(numX);       // [numX]
+	vector<REAL>                   myX(numX);       // [numX]
     vector<REAL>                   myY(numY);       // [numY]
     vector<REAL>                   myTimeline(numT);// [numT]
     vector<vector<REAL> >          myDxx(numX);     // [numX][4]
