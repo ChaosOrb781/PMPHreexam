@@ -293,6 +293,7 @@ void rollback_Alt_para(const uint outer, const uint numT,
     vector<vector< vector<REAL> > >& myResult 
 ) {
     for (int t = 0; t <= numT - 2; t++) {
+#pragma omp parallel for schedule(static)
         for (int o = 0; o < outer; o++) {
             uint numZ = max(numX,numY);
 
