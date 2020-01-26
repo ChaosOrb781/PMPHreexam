@@ -1,10 +1,34 @@
 #ifndef KERNELIZED_ALGORITHM
 #define KERNELIZED_ALGORITHM
 
-#include "InterchangedAlgorithm.h"
+#include "OriginalAlgorithm.h"
+
+void initGrid_Alt(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+                const unsigned numX, const unsigned numY, const unsigned numT,
+                vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
+                uint& myXindex, uint& myYindex
+) {
+    for(unsigned i=0;i<numT;++i)
+        myTimeline[i] = t*i/(numT-1);
+
+    const REAL stdX = 20.0*alpha*s0*sqrt(t);
+    const REAL dx = stdX/numX;
+    myXindex = static_cast<unsigned>(s0/dx) % numX;
+
+    for(unsigned i=0;i<numX;++i)
+        myX[i] = i*dx - myXindex*dx + s0;
+
+    const REAL stdY = 10.0*nu*sqrt(t);
+    const REAL dy = stdY/numY;
+    const REAL logAlpha = log(alpha);
+    myYindex = static_cast<unsigned>(numY/2.0);
+
+    for(unsigned i=0;i<numY;++i)
+        myY[i] = i*dy - myYindex*dy + logAlpha;
+}
 
 //Have to flatten to use device vector!
-void initOperator_Alt_Trans(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Alt_T(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
     for (int gidx = 0; gidx < numZ * 4; gidx ++) {
@@ -22,7 +46,7 @@ void initOperator_Alt_Trans(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void initOperator_Alt_Trans_para(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Alt_T_para(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
 	//	standard case
@@ -42,7 +66,7 @@ void initOperator_Alt_Trans_para(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void updateParams_Alt_Trans(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Alt(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -62,7 +86,7 @@ void updateParams_Alt_Trans(const REAL alpha, const REAL beta, const REAL nu,
     }
 }
 
-void updateParams_Alt_Trans_para(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Alt_para(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -83,7 +107,7 @@ void updateParams_Alt_Trans_para(const REAL alpha, const REAL beta, const REAL n
     }
 }
 
-void setPayoff_Alt_Trans(const vector<REAL> myX, const uint outer,
+void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -94,7 +118,7 @@ void setPayoff_Alt_Trans(const vector<REAL> myX, const uint outer,
     }
 }
 
-void setPayoff_Alt_Trans_para(const vector<REAL> myX, const uint outer,
+void setPayoff_Alt_para(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -106,7 +130,7 @@ void setPayoff_Alt_Trans_para(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Alt_Trans(const uint outer, const uint numT, 
+void rollback_Alt(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -123,58 +147,58 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
 
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
 
-            vector<REAL> u(numY * numX);   // [numY][numX]
-            vector<REAL> v(numX * numY);   // [numX][numY]
+            vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
+            vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
             vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
             vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
 
-            cout << "explicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit x, t: " << t << " o: " << gidx << endl;
             //	explicit x
             for(i=0;i<numX;i++) {
                 for(j=0;j<numY;j++) {
-                    u[j * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+                    u[j][i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
 
                     if(i > 0) { 
-                        u[j * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        u[j][i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 0] ) 
                                       * myResult[((gidx * numX) + (i-1)) * numY + j];
                     }
-                    u[j * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                    u[j][i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                     * myDxx[i * 4 + 1] )
                                     * myResult[((gidx * numX) + i) * numY + j];
                     if(i < numX-1) {
-                        u[j * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        u[j][i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 2] )
                                       * myResult[((gidx * numX) + (i+1)) * numY + j];
                     }
                 }
             }
 
-            cout << "explicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit y, t: " << t << " o: " << gidx << endl;
             //	explicit y
             for(j=0;j<numY;j++)
             {
                 for(i=0;i<numX;i++) {
-                    v[i * numY + j] = 0.0;
+                    v[i][j] = 0.0;
 
                     if(j > 0) {
-                        v[i * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        v[i][j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 0] )
-                                        * myResult[((gidx * numX) + (i+1)) * numY + j - 1];
+                                        * myResult[((gidx * numX) + i) * numY + j - 1];
                     }
-                    v[i * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                    v[i][j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                      * myDyy[j * 4 + 1] )
-                                     * myResult[((gidx * numX) + (i+1)) * numY + j];
+                                     * myResult[((gidx * numX) + i) * numY + j];
                     if(j < numY-1) {
-                        v[i * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        v[i][j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 2] )
-                                        * myResult[((gidx * numX) + (i+1)) * numY + j + 1];
+                                        * myResult[((gidx * numX) + i) * numY + j + 1];
                     }
-                    u[j * numX + i] += v[i * numY + j]; 
+                    u[j][i] += v[i][j]; 
                 }
             }
 
-            cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
             //	implicit x
             for(j=0;j<numY;j++) {
                 for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
@@ -183,10 +207,10 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
                     c[i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
                 }
                 // here yy should have size [numX]
-                tridagPar(a,b,c,u,j,numX,u,j,yy);
+                tridagPar(a,b,c,u[j],numX,u[j],yy);
             }
 
-            cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
@@ -196,7 +220,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
                 }
 
                 for(j=0;j<numY;j++)
-                    y[j] = dtInv*u[j * numX + i] - 0.5*v[i * numY + j];
+                    y[j] = dtInv*u[j][i] - 0.5*v[i][j];
 
                 // here yy should have size [numY]
                 tridagPar(a,b,c,y,0,numY,myResult, (gidx * numX + i) * numY,yy);
@@ -205,7 +229,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
     }
 }
 
-void rollback_Alt_Trans_para(const uint outer, const uint numT, 
+void rollback_Alt_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -331,16 +355,18 @@ int   run_SimpleKernelized(
     cout << "Test1" << endl;
 	initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cout << "Test2" << endl;
-    initOperator_Alt_Trans(numX, myX, myDxx);
+    initOperator_Alt_T(numX, myX, myDxxT);
+    matTranspose(myDxxT, myDxx, 0, 4, numX);
     cout << "Test3" << endl;
-    initOperator_Alt_Trans(numY, myY, myDyy);
+    initOperator_Alt_T(numY, myY, myDyyT);
+    matTranspose(myDyyT, myDyy, 0, 4, numY);
     cout << "Test4" << endl;
-    setPayoff_Alt_Trans(myX, outer, numX, numY, myResult);
+    setPayoff_Alt(myX, outer, numX, numY, myResult);
 
     cout << "Test5" << endl;
-    updateParams_Alt_Trans(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cout << "Test6" << endl;
-	rollback_Alt_Trans(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
