@@ -128,6 +128,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
             vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
             vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
 
+            cout << "explicit x, t: " << t << " o: " << gidx << endl;
             //	explicit x
             for(i=0;i<numX;i++) {
                 for(j=0;j<numY;j++) {
@@ -149,6 +150,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
                 }
             }
 
+            cout << "explicit y, t: " << t << " o: " << gidx << endl;
             //	explicit y
             for(j=0;j<numY;j++)
             {
@@ -172,6 +174,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
                 }
             }
 
+            cout << "implicit x, t: " << t << " o: " << gidx << endl;
             //	implicit x
             for(j=0;j<numY;j++) {
                 for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
@@ -183,6 +186,7 @@ void rollback_Alt_Trans(const uint outer, const uint numT,
                 tridagPar(a,b,c,u,j,numX,u,j,yy);
             }
 
+            cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
