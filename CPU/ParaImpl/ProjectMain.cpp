@@ -95,7 +95,7 @@ int main()
 #endif  
 		RunTestOnProgram<funCPU>("Parallel Interchanged", (fun)run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        //RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif  
         char buffer[256];
         sprintf(buffer, "Kernelized (%d)", Block);
