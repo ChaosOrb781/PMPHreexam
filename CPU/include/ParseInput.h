@@ -124,14 +124,17 @@ bool validate( const REAL* res, const int& N ) {
     return is_valid;
 }
 
-void writeStatsAndResult(   const bool& valid, const REAL* data, const uint outer,
-                            const bool& is_gpu, ReturnStat* me, ReturnStat* other  
+void writeStatsAndResult(
+    const char* programName, 
+    const bool& valid, const REAL* data, const uint outer,
+    const bool& is_gpu, ReturnStat* me, ReturnStat* other  
 ) {
-    printf("|_%s_|_%s_|_%s_|_%s_|\n", "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
-    printf("|%10d|%14d|%12d|%7.3f|\n", valid, me->numthreads, me->time, me->Speedup(other));
+    printf("|%s33|%10d|%14d|%12d|%7.3f|\n", programName, valid, me->numthreads, me->time, me->Speedup(other));
 
     // write the result
-    write_1Darr( data, static_cast<int>(outer));
+    if (!valid) {
+        write_1Darr( data, static_cast<int>(outer));
+    }
 }
 
 #if 0

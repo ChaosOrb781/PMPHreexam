@@ -35,12 +35,6 @@ ReturnStat* RunStatsOnProgram(const char* name, fun f,
     REAL* res, const uint outer, const uint numX, const uint numY, const uint numT, 
     const REAL s0, const REAL t, const REAL alpha, const REAL nu, const REAL beta, const uint blocksize = 1) 
     {
-    //61 characters long
-    if (is_same<funType, funCPU>::value)
-        printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d]\n", name, outer, numX, numY, numT);
-    else if (is_same<funType, funGPU>::value)
-        printf("\n[Running %-15s, outer: %3d, X: %3d, Y: %3d, T: %3d B: %3d]\n", name, outer, numX, numY, numT, blocksize);
-
     struct timeval t_start, t_end, t_diff;
     gettimeofday(&t_start, NULL);
     
@@ -71,6 +65,9 @@ int main()
 	const REAL s0 = 0.03, strike = 0.03, t = 5.0, alpha = 0.2, nu = 0.6, beta = 0.5;
 
     readDataSet( outer, numX, numY, numT ); 
+
+    printf("\n[Running programs with: outer: %3d, X: %3d, Y: %3d, T: %3d, B: %3d]\n", outer, numX, numY, numT, Block);
+    printf("|_%s31_|_%s_|_%s_|_%s_|_%s_|\n", "Program" "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
 
     REAL* res_original = (REAL*)malloc(outer*sizeof(REAL));
     ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (fun)run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
