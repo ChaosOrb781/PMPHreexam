@@ -96,7 +96,7 @@ void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Alt( const unsigned g, const uint numX, const uint numY, 
+void rollback_Alt(const uint o, const unsigned t, const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<vector<REAL> > myDxx,
     const vector<vector<REAL> > myDyy,
@@ -108,7 +108,7 @@ void rollback_Alt( const unsigned g, const uint numX, const uint numY,
 
     uint i, j;
 
-    REAL dtInv = 1.0/(myTimeline[g+1]-myTimeline[g]);
+    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
 
     vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
     vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
@@ -118,17 +118,17 @@ void rollback_Alt( const unsigned g, const uint numX, const uint numY,
     //	explicit x
     for(i=0;i<numX;i++) {
         for(j=0;j<numY;j++) {
-            u[j][i] = dtInv*myResult[g][i][j];
+            u[j][i] = dtInv*myResult[o][i][j];
 
             if(i > 0) { 
-              u[j][i] += 0.5*( 0.5*myVarX[g][i][j]*myDxx[i][0] ) 
-                            * myResult[g][i-1][j];
+              u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][0] ) 
+                            * myResult[o][i-1][j];
             }
-            u[j][i]  +=  0.5*( 0.5*myVarX[g][i][j]*myDxx[i][1] )
-                            * myResult[g][i][j];
+            u[j][i]  +=  0.5*( 0.5*myVarX[t][i][j]*myDxx[i][1] )
+                            * myResult[o][i][j];
             if(i < numX-1) {
-              u[j][i] += 0.5*( 0.5*myVarX[g][i][j]*myDxx[i][2] )
-                            * myResult[g][i+1][j];
+              u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][2] )
+                            * myResult[o][i+1][j];
             }
         }
     }
@@ -140,14 +140,14 @@ void rollback_Alt( const unsigned g, const uint numX, const uint numY,
             v[i][j] = 0.0;
 
             if(j > 0) {
-              v[i][j] +=  ( 0.5*myVarY[g][i][j]*myDyy[j][0] )
-                         *  myResult[g][i][j-1];
+              v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][0] )
+                         *  myResult[o][i][j-1];
             }
-            v[i][j]  +=   ( 0.5*myVarY[g][i][j]*myDyy[j][1] )
-                         *  myResult[g][i][j];
+            v[i][j]  +=   ( 0.5*myVarY[t][i][j]*myDyy[j][1] )
+                         *  myResult[o][i][j];
             if(j < numY-1) {
-              v[i][j] +=  ( 0.5*myVarY[g][i][j]*myDyy[j][2] )
-                         *  myResult[g][i][j+1];
+              v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][2] )
+                         *  myResult[o][i][j+1];
             }
             u[j][i] += v[i][j]; 
         }
@@ -156,9 +156,9 @@ void rollback_Alt( const unsigned g, const uint numX, const uint numY,
     //	implicit x
     for(j=0;j<numY;j++) {
         for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-            a[i] =		 - 0.5*(0.5*myVarX[g][i][j]*myDxx[i][0]);
-            b[i] = dtInv - 0.5*(0.5*myVarX[g][i][j]*myDxx[i][1]);
-            c[i] =		 - 0.5*(0.5*myVarX[g][i][j]*myDxx[i][2]);
+            a[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][0]);
+            b[i] = dtInv - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][1]);
+            c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
         }
         // here yy should have size [numX]
         tridagPar(a,b,c,u[j],numX,u[j],yy);
@@ -167,16 +167,16 @@ void rollback_Alt( const unsigned g, const uint numX, const uint numY,
     //	implicit y
     for(i=0;i<numX;i++) { 
         for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-            a[j] =		 - 0.5*(0.5*myVarY[g][i][j]*myDyy[j][0]);
-            b[j] = dtInv - 0.5*(0.5*myVarY[g][i][j]*myDyy[j][1]);
-            c[j] =		 - 0.5*(0.5*myVarY[g][i][j]*myDyy[j][2]);
+            a[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][0]);
+            b[j] = dtInv - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][1]);
+            c[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][2]);
         }
 
         for(j=0;j<numY;j++)
             y[j] = dtInv*u[j][i] - 0.5*v[i][j];
 
         // here yy should have size [numY]
-        tridagPar(a,b,c,y,numY,myResult[g][i],yy);
+        tridagPar(a,b,c,y,numY,myResult[o][i],yy);
     }
 }
 
@@ -277,7 +277,7 @@ int   run_InterchangedAlternative(
 	for (uint j = 0; j <= numT - 2; j++) {
 		for(uint i = 0; i < outer; i++) {
             cout << "rollback: t:" << j << " o:" << i << endl;
-			rollback_Alt(j, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+			rollback_Alt(i, j, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 		}
     }
 	for(uint i = 0; i < outer; i++) {
