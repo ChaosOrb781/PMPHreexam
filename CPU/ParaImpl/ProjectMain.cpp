@@ -67,7 +67,7 @@ int main()
     readDataSet( outer, numX, numY, numT ); 
 
     printf("\n[Running programs with: outer: %3d, X: %3d, Y: %3d, T: %3d, B: %3d]\n", outer, numX, numY, numT, Block);
-    printf("|_%s31_|_%s_|_%s_|_%s_|_%s_|\n", "Program" "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
+    printf("|_%31s_|_%s_|_%s_|_%s_|_%s_|\n", "Program" "VALIDITY", "# OF THREADS", "TIME TAKEN", "SPEEDUP");
 
     REAL* res_original = (REAL*)malloc(outer*sizeof(REAL));
     ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (fun)run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
