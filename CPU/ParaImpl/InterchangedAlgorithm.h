@@ -194,6 +194,8 @@ int   run_Interchanged(
 ) {
 	vector<PrivGlobs> globstastic;
 	globstastic.resize(outer); //Generates list from default constructor
+    
+    cout << "test 1/2" << endl;
 	for( unsigned i = 0; i < outer; ++ i ) {
 		//Initialize each object as if called by the size constructor
 		globstastic[i].Initialize(numX, numY, numT);
@@ -203,6 +205,7 @@ int   run_Interchanged(
 		REAL strike = 0.001*i;
 		setPayoff(strike, globstastic[i]);
 	}
+    cout << "test 3/4" << endl;
 	for(int j = 0;j<=numT-2;++j) {
 		for( unsigned i = 0; i < outer; ++ i ) {
 			{
@@ -211,6 +214,7 @@ int   run_Interchanged(
 			}
 		}
     }
+    cout << "test 5" << endl;
 	for( unsigned i = 0; i < outer; ++ i ) {
         res[i] = globstastic[i].myResult[globstastic[i].myXindex][globstastic[i].myYindex];
     }
@@ -262,19 +266,26 @@ int   run_InterchangedAlternative(
         }
     }
 
+    cout << "test 1" << endl;
 	initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 	initOperator_Alt(numX, myX, myDxx);
     initOperator_Alt(numY, myY, myDyy);
+    
+    cout << "test 2" << endl;
     //left off from here!
     setPayoff_Alt(myX, outer, numX, numY, myResult);
 
+    cout << "test 3" << endl;
     updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 
+    cout << "test 4" << endl;
 	for (uint j = 0; j <= numT - 2; j++) {
 		for(uint i = 0; i < outer; i++) {
 			rollback_Alt(i, j, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 		}
     }
+    
+    cout << "test 5" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[i][myXindex][myYindex];
     }
