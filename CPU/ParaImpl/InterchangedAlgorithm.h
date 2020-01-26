@@ -235,8 +235,8 @@ int   run_InterchangedAlternative(
     vector<vector<REAL> >          myDxx(numX);     // [numX][4]
     vector<vector<REAL> >          myDyy(numY);     // [numY][4]
     vector<vector<vector<REAL> > > myResult(outer); // [outer][numX][numY]
-    vector<vector<vector<REAL> > > myVarX(outer);   // [numT][numX][numY]
-    vector<vector<vector<REAL> > > myVarY(outer);   // [numT][numX][numY]
+    vector<vector<vector<REAL> > > myVarX(numT);    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > myVarY(numT);    // [numT][numX][numY]
 
     uint myXindex = 0;
     uint myYindex = 0;
@@ -249,10 +249,14 @@ int   run_InterchangedAlternative(
     }
     for (int i = 0; i < outer; i++) {
         myResult[i].resize(numX);
+        for (int j = 0; j < numX; j++) {
+            myResult[i][j].resize(numY);
+        }
+    }
+    for (int i = 0; i < numT; i++) {
         myVarX[i].resize(numX);
         myVarY[i].resize(numX);
         for (int j = 0; j < numX; j++) {
-            myResult[i][j].resize(numY);
             myVarX[i][j].resize(numY);
             myVarY[i][j].resize(numY);
         }
