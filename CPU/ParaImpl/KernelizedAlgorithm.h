@@ -163,16 +163,21 @@ void rollback_Alt(const uint outer, const uint numT,
             //	explicit x
             for(i=0;i<numX;i++) {
                 for(j=0;j<numY;j++) {
+                    cout << "explicit x, test1" << endl;
                     u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
 
+                    cout << "explicit x, test2" << endl;
                     if(i > 0) { 
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 0] ) 
                                       * myResult[((gidx * numX) + (i-1)) * numY + j];
                     }
+                    cout << "explicit x, test3" << endl;
                     u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                     * myDxx[i * 4 + 1] )
                                     * myResult[((gidx * numX) + i) * numY + j];
+                    
+                    cout << "explicit x, test4" << endl;
                     if(i < numX-1) {
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 2] )
@@ -186,21 +191,27 @@ void rollback_Alt(const uint outer, const uint numT,
             for(j=0;j<numY;j++)
             {
                 for(i=0;i<numX;i++) {
+                    cout << "explicit y, test1" << endl;
                     v[((gidx * numX) + i) * numY + j] = 0.0;
 
+                    cout << "explicit y, test2" << endl;
                     if(j > 0) {
                         v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 0] )
                                         * myResult[((gidx * numX) + (i+1)) * numY + j - 1];
                     }
+                    cout << "explicit y, test3" << endl;
                     v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                      * myDyy[j * 4 + 1] )
                                      * myResult[((gidx * numX) + (i+1)) * numY + j];
+                    
+                    cout << "explicit y, test4" << endl;
                     if(j < numY-1) {
                         v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 2] )
                                         * myResult[((gidx * numX) + (i+1)) * numY + j + 1];
                     }
+                    cout << "explicit y, test5" << endl;
                     u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
                 }
             }
