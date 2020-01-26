@@ -159,25 +159,25 @@ void rollback_Alt(const uint outer, const uint numT,
             //REAL* a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
             //REAL* yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
 
-            cout << "explicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit x, t: " << t << " o: " << gidx << endl;
             //	explicit x
             for(i=0;i<numX;i++) {
                 for(j=0;j<numY;j++) {
-                    cout << "explicit x, test1" << endl;
+                    //cout << "explicit x, test1" << endl;
                     u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
 
-                    cout << "explicit x, test2" << endl;
+                    //cout << "explicit x, test2" << endl;
                     if(i > 0) { 
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 0] ) 
                                       * myResult[((gidx * numX) + (i-1)) * numY + j];
                     }
-                    cout << "explicit x, test3" << endl;
+                    //cout << "explicit x, test3" << endl;
                     u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                     * myDxx[i * 4 + 1] )
                                     * myResult[((gidx * numX) + i) * numY + j];
                     
-                    cout << "explicit x, test4" << endl;
+                    //cout << "explicit x, test4" << endl;
                     if(i < numX-1) {
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 2] )
@@ -186,7 +186,7 @@ void rollback_Alt(const uint outer, const uint numT,
                 }
             }
 
-            cout << "explicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit y, t: " << t << " o: " << gidx << endl;
             //	explicit y
             for(j=0;j<numY;j++)
             {
@@ -202,7 +202,7 @@ void rollback_Alt(const uint outer, const uint numT,
                                      * myDyy[j * 4 + 1] )
                                      * myResult[((gidx * numX) + i) * numY + j];
                     
-                    cout << "explicit y, test4" << endl;
+                    //cout << "explicit y, test4" << endl;
                     if(j < numY-1) {
                         v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 2] )
@@ -212,7 +212,7 @@ void rollback_Alt(const uint outer, const uint numT,
                 }
             }
 
-            cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
             //	implicit x
             for(j=0;j<numY;j++) {
                 for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
@@ -224,7 +224,7 @@ void rollback_Alt(const uint outer, const uint numT,
                 tridagPar(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j)],numX,&u[((gidx * numY) + j)],&yy[gidx * numZ]);
             }
 
-            cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
@@ -260,6 +260,7 @@ void rollback_Alt_para(const uint outer, const uint numT,
     REAL* myResult
 ) {
     for (int t = 0; t <= numT - 2; t++) {
+#pragma omp parallel for schedule(static)
         for (int gidx = 0; gidx < outer; gidx++) {
             uint numZ = max(numX,numY);
 
@@ -272,20 +273,25 @@ void rollback_Alt_para(const uint outer, const uint numT,
             //REAL* a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
             //REAL* yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
 
-            cout << "explicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit x, t: " << t << " o: " << gidx << endl;
             //	explicit x
             for(i=0;i<numX;i++) {
                 for(j=0;j<numY;j++) {
+                    //cout << "explicit x, test1" << endl;
                     u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
 
+                    //cout << "explicit x, test2" << endl;
                     if(i > 0) { 
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 0] ) 
                                       * myResult[((gidx * numX) + (i-1)) * numY + j];
                     }
+                    //cout << "explicit x, test3" << endl;
                     u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                     * myDxx[i * 4 + 1] )
                                     * myResult[((gidx * numX) + i) * numY + j];
+                    
+                    //cout << "explicit x, test4" << endl;
                     if(i < numX-1) {
                         u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
                                       * myDxx[i * 4 + 2] )
@@ -294,56 +300,58 @@ void rollback_Alt_para(const uint outer, const uint numT,
                 }
             }
 
-            cout << "explicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "explicit y, t: " << t << " o: " << gidx << endl;
             //	explicit y
             for(j=0;j<numY;j++)
             {
                 for(i=0;i<numX;i++) {
-                    v[i * numY + j] = 0.0;
+                    v[((gidx * numX) + i) * numY + j] = 0.0;
 
                     if(j > 0) {
-                        v[i * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 0] )
-                                        * myResult[((gidx * numX) + (i+1)) * numY + j - 1];
+                                        * myResult[((gidx * numX) + i) * numY + j - 1];
                     }
-                    v[i * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                    v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                      * myDyy[j * 4 + 1] )
-                                     * myResult[((gidx * numX) + (i+1)) * numY + j];
+                                     * myResult[((gidx * numX) + i) * numY + j];
+                    
+                    //cout << "explicit y, test4" << endl;
                     if(j < numY-1) {
-                        v[i * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
                                         * myDyy[j * 4 + 2] )
-                                        * myResult[((gidx * numX) + (i+1)) * numY + j + 1];
+                                        * myResult[((gidx * numX) + i) * numY + j + 1];
                     }
-                    u[((gidx * numY) + j) * numX + i] += v[i * numY + j]; 
+                    u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
                 }
             }
 
-            cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
             //	implicit x
             for(j=0;j<numY;j++) {
                 for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-                    a[i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
-                    b[i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-                    c[i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+                    a[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+                    b[(gidx * numZ) + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+                    c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
                 }
                 // here yy should have size [numX]
-                tridagPar(a,b,c,&u[((gidx * numY) + j)],numX,&u[((gidx * numY) + j)],yy);
+                tridagPar(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j)],numX,&u[((gidx * numY) + j)],&yy[gidx * numZ]);
             }
 
-            cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-                    a[j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
-                    b[j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
-                    c[j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+                    a[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+                    b[(gidx * numZ) + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+                    c[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
                 }
 
                 for(j=0;j<numY;j++)
-                    y[j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[i * numY + j];
+                    y[gidx * numZ + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
                 // here yy should have size [numY]
-                tridagPar(a,b,c,y,numY,&myResult[(gidx * numX + i) * numY],yy);
+                tridagPar(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
             }
         }
     }
