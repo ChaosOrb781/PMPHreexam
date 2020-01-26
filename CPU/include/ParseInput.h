@@ -129,7 +129,7 @@ void writeStatsAndResult(
     const bool& valid, const REAL* data, const uint outer,
     const bool& is_gpu, ReturnStat* me, ReturnStat* other  
 ) {
-    printf("|%33s|%10d|%14d|%12d|%7.3f|\n", programName, valid, me->numthreads, me->time, me->Speedup(other));
+    printf("|%-33s|%10d|%14d|%12d|%7.3f|\n", programName, valid, me->numthreads, me->time, me->Speedup(other));
 
     // write the result
     if (!valid) {
