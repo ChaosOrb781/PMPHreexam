@@ -96,7 +96,8 @@ void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Alt(const uint o, const uint t, const uint numX, const uint numY, 
+void rollback_Alt(const uint outer, const uint numT, 
+    const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<vector<REAL> > myDxx,
     const vector<vector<REAL> > myDyy,
@@ -104,79 +105,83 @@ void rollback_Alt(const uint o, const uint t, const uint numX, const uint numY,
     const vector<vector<vector<REAL> > > myVarY,
     vector<vector< vector<REAL> > >& myResult 
 ) {
-    uint numZ = max(numX,numY);
+    for (int t = 0; t <= numT - 2; t++) {
+    for (int o = 0; o < outer; o++) {
+            uint numZ = max(numX,numY);
 
-    uint i, j;
+            uint i, j;
 
-    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
 
-    vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
-    vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
-    vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
-    vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
+            vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
+            vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
+            vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
+            vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
 
-    //	explicit x
-    for(i=0;i<numX;i++) {
-        for(j=0;j<numY;j++) {
-            u[j][i] = dtInv*myResult[o][i][j];
+            //	explicit x
+            for(i=0;i<numX;i++) {
+                for(j=0;j<numY;j++) {
+                    u[j][i] = dtInv*myResult[o][i][j];
 
-            if(i > 0) { 
-              u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][0] ) 
-                            * myResult[o][i-1][j];
+                    if(i > 0) { 
+                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][0] ) 
+                                    * myResult[o][i-1][j];
+                    }
+                    u[j][i]  +=  0.5*( 0.5*myVarX[t][i][j]*myDxx[i][1] )
+                                    * myResult[o][i][j];
+                    if(i < numX-1) {
+                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][2] )
+                                    * myResult[o][i+1][j];
+                    }
+                }
             }
-            u[j][i]  +=  0.5*( 0.5*myVarX[t][i][j]*myDxx[i][1] )
-                            * myResult[o][i][j];
-            if(i < numX-1) {
-              u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][2] )
-                            * myResult[o][i+1][j];
+
+            //	explicit y
+            for(j=0;j<numY;j++)
+            {
+                for(i=0;i<numX;i++) {
+                    v[i][j] = 0.0;
+
+                    if(j > 0) {
+                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][0] )
+                                *  myResult[o][i][j-1];
+                    }
+                    v[i][j]  +=   ( 0.5*myVarY[t][i][j]*myDyy[j][1] )
+                                *  myResult[o][i][j];
+                    if(j < numY-1) {
+                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][2] )
+                                *  myResult[o][i][j+1];
+                    }
+                    u[j][i] += v[i][j]; 
+                }
+            }
+
+            //	implicit x
+            for(j=0;j<numY;j++) {
+                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
+                    a[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][0]);
+                    b[i] = dtInv - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][1]);
+                    c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
+                }
+                // here yy should have size [numX]
+                tridagPar(a,b,c,u[j],numX,u[j],yy);
+            }
+
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
+                    a[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][0]);
+                    b[j] = dtInv - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][1]);
+                    c[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][2]);
+                }
+
+                for(j=0;j<numY;j++)
+                    y[j] = dtInv*u[j][i] - 0.5*v[i][j];
+
+                // here yy should have size [numY]
+                tridagPar(a,b,c,y,numY,myResult[o][i],yy);
             }
         }
-    }
-
-    //	explicit y
-    for(j=0;j<numY;j++)
-    {
-        for(i=0;i<numX;i++) {
-            v[i][j] = 0.0;
-
-            if(j > 0) {
-              v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][0] )
-                         *  myResult[o][i][j-1];
-            }
-            v[i][j]  +=   ( 0.5*myVarY[t][i][j]*myDyy[j][1] )
-                         *  myResult[o][i][j];
-            if(j < numY-1) {
-              v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][2] )
-                         *  myResult[o][i][j+1];
-            }
-            u[j][i] += v[i][j]; 
-        }
-    }
-
-    //	implicit x
-    for(j=0;j<numY;j++) {
-        for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-            a[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][0]);
-            b[i] = dtInv - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][1]);
-            c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
-        }
-        // here yy should have size [numX]
-        tridagPar(a,b,c,u[j],numX,u[j],yy);
-    }
-
-    //	implicit y
-    for(i=0;i<numX;i++) { 
-        for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-            a[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][0]);
-            b[j] = dtInv - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][1]);
-            c[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][2]);
-        }
-
-        for(j=0;j<numY;j++)
-            y[j] = dtInv*u[j][i] - 0.5*v[i][j];
-
-        // here yy should have size [numY]
-        tridagPar(a,b,c,y,numY,myResult[o][i],yy);
     }
 }
 
@@ -279,12 +284,8 @@ int   run_InterchangedAlternative(
     updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 
     cout << "test 4" << endl;
-	for (uint j = 0; j <= numT - 2; j++) {
-		for(uint i = 0; i < outer; i++) {
-			rollback_Alt(i, j, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
-		}
-    }
-    
+	rollback_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	
     cout << "test 5" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[i][myXindex][myYindex];
