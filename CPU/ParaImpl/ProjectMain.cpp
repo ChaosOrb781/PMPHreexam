@@ -55,7 +55,7 @@ void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expe
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
 	ReturnStat* returnstatus = RunStatsOnProgram<funType>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
-	writeStatsAndResult(is_valid, res, outer, false, returnstatus, expectedStats);
+	writeStatsAndResult(title, is_valid, res, outer, false, returnstatus, expectedStats);
 }
 
 
@@ -73,7 +73,7 @@ int main()
     ReturnStat* originalStat = RunStatsOnProgram<funCPU>("Original", (fun)run_Original, res_original, outer, numX, numY, numT, s0, t, alpha, nu, beta);
     // Initial validation, rest is based on this result as validate gets a segmentation fault if repeated calls
     bool is_valid = validate ( res_original, outer );
-    writeStatsAndResult( is_valid, res_original, outer, false, originalStat, originalStat );
+    writeStatsAndResult("Original", is_valid, res_original, outer, false, originalStat, originalStat );
 
     // If initial original program is correct, run rest
     if (is_valid) {
