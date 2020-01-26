@@ -3,7 +3,7 @@
 
 #include "OriginalAlgorithm.h"
 
-void initGrid_Alt(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
@@ -28,7 +28,7 @@ void initGrid_Alt(  const REAL s0, const REAL alpha, const REAL nu,const REAL t,
 }
 
 //Have to flatten to use device vector!
-void initOperator_Alt_T(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernel_T(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
     for (int gidx = 0; gidx < numZ * 4; gidx ++) {
@@ -46,7 +46,7 @@ void initOperator_Alt_T(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void initOperator_Alt_T_para(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernel_T_para(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
 	//	standard case
@@ -66,7 +66,7 @@ void initOperator_Alt_T_para(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void updateParams_Alt(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -86,7 +86,7 @@ void updateParams_Alt(const REAL alpha, const REAL beta, const REAL nu,
     }
 }
 
-void updateParams_Alt_para(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Kernel_para(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -107,7 +107,7 @@ void updateParams_Alt_para(const REAL alpha, const REAL beta, const REAL nu,
     }
 }
 
-void setPayoff_Alt(const vector<REAL> myX, const uint outer,
+void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -118,7 +118,7 @@ void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     }
 }
 
-void setPayoff_Alt_para(const vector<REAL> myX, const uint outer,
+void setPayoff_Kernel_para(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -130,7 +130,7 @@ void setPayoff_Alt_para(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Alt(const uint outer, const uint numT, 
+void rollback_Kernel(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -229,7 +229,7 @@ void rollback_Alt(const uint outer, const uint numT,
     }
 }
 
-void rollback_Alt_para(const uint outer, const uint numT, 
+void rollback_Kernel_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -353,20 +353,20 @@ int   run_SimpleKernelized(
     uint myYindex = 0;
 
     cout << "Test1" << endl;
-	initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cout << "Test2" << endl;
-    initOperator_Alt_T(numX, myX, myDxxT);
+    initOperator_Kernel_T(numX, myX, myDxxT);
     matTranspose(myDxxT, myDxx, 0, 4, numX);
     cout << "Test3" << endl;
-    initOperator_Alt_T(numY, myY, myDyyT);
+    initOperator_Kernel_T(numY, myY, myDyyT);
     matTranspose(myDyyT, myDyy, 0, 4, numY);
     cout << "Test4" << endl;
-    setPayoff_Alt(myX, outer, numX, numY, myResult);
+    setPayoff_Kernel(myX, outer, numX, numY, myResult);
 
     cout << "Test5" << endl;
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cout << "Test6" << endl;
-	rollback_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
