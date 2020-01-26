@@ -67,7 +67,7 @@ void updateParams_Alt_Trans_para(const REAL alpha, const REAL beta, const REAL n
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
 {
-#pragma omp parallel for schedule(static) collapse(3)
+#pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < numT * numX * numY; gidx++) {
         int i = gidx / (numX * numY);
         int j = gidx % (numX * numY);
@@ -98,7 +98,7 @@ void setPayoff_Alt_Trans_para(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
-#pragma omp parallel for schedule(static) collapse(2)
+#pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
         int j = gidx % (numX * numY);
