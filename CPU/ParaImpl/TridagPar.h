@@ -138,15 +138,14 @@ void inplaceScanInc(const int n, vector<typename OP::OpTp>& inpres) {
   }
 }
 
+
 inline void tridagPar(
     const vector<REAL>&   a,   // size [n]
     const vector<REAL>&   b,   // size [n]
     const vector<REAL>&   c,   // size [n]
     const vector<REAL>&   r,   // size [n]
-    const int&            r_start,
     const int             n,
           vector<REAL>&   u,   // size [n]
-    const int&            u_start,
           vector<REAL>&   uu   // size [n] temporary
 ) {
     int i, offset;
@@ -172,14 +171,14 @@ inline void tridagPar(
     //   solved by scan with linear func comp operator  --
     //----------------------------------------------------
     vector<MyReal2> lfuns(n);
-    REAL y0 = r[r_start + 0];
+    REAL y0 = r[0];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
-        else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[i]/uu[i-1]; }
+        else      { lfuns[i].x = r[i]; lfuns[i].y = -a[i]/uu[i-1]; }
     }
     inplaceScanInc<LinFunComp>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
-        u[u_start + i] = lfuns[i].x + y0*lfuns[i].y;
+        u[i] = lfuns[i].x + y0*lfuns[i].y;
     }
     // y -> u
 
@@ -187,26 +186,26 @@ inline void tridagPar(
     // Recurrence 3: backward recurrence solved via     --
     //             scan with linear func comp operator  --
     //----------------------------------------------------
-    REAL yn = u[u_start + n-1]/uu[n-1];
+    REAL yn = u[n-1]/uu[n-1];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         int k = n - i - 1;
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
-        else      { lfuns[i].x = u[u_start + k]/uu[k]; lfuns[i].y = -c[k]/uu[k]; }
+        else      { lfuns[i].x = u[k]/uu[k]; lfuns[i].y = -c[k]/uu[k]; }
     }
     inplaceScanInc<LinFunComp>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
-        u[u_start + n-i-1] = lfuns[i].x + yn*lfuns[i].y;
+        u[n-i-1] = lfuns[i].x + yn*lfuns[i].y;
     }
 }
 
 inline void tridagPar(
-    const vector<REAL>&   a,   // size [n]
-    const vector<REAL>&   b,   // size [n]
-    const vector<REAL>&   c,   // size [n]
-    const vector<REAL>&   r,   // size [n]
-    const int             n,
-          vector<REAL>&   u,   // size [n]
-          vector<REAL>&   uu   // size [n] temporary
+    REAL*   a,   // size [n]
+    REAL*   b,   // size [n]
+    REAL*   c,   // size [n]
+    REAL*   r,   // size [n]
+    const int n,
+    REAL*   u,   // size [n]
+    REAL*   uu   // size [n] temporary
 ) {
     int i, offset;
 
