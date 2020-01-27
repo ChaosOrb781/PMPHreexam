@@ -16,8 +16,11 @@ default: cpu
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 cpu: $(EXECUTABLE)
-$(EXECUTABLE): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS)
+$(EXECUTABLE): kernel.o $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS) kernel.o
+
+kernel.o:
+	nvcc -c -arch=sm_20 CUDAKernels.cu
 
 
 run_small: $(EXECUTABLE)

@@ -1,6 +1,6 @@
 #ifndef KERNEL_ALGORITHM
 #define KERNEL_ALGORITHM
-#include "CUDAKernels.h"
+#include "CUDAKernels.cu"
 #include "InterchangedAlgorithm.h"
 
 #define TEST_INIT_CORRECTNESS true
