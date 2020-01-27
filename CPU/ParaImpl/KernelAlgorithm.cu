@@ -10,6 +10,16 @@ using namespace thrust;
 
 #define TEST_INIT_CORRECTNESS true
 
+#define gpuErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      cout << "GPUassert: " << cudaGetErrorString(code) << " in " << file << " : "<< line << endl;
+      if (abort) exit(code);
+   }
+}
+
 void initGrid_Control(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
@@ -405,18 +415,22 @@ int run_SimpleKernel(
     cout << "Test1" << endl;
     initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
 
     cout << "Test2" << endl;
     initOperator_Kernel(blocksize, numX, myX, myDxx);
     cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
 
     cout << "Test3" << endl;
     initOperator_Kernel(blocksize, numY, myY, myDyy);
     cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
 
     cout << "Test4" << endl;
     setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
     cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -430,6 +444,7 @@ int run_SimpleKernel(
     cout << "Test5" << endl;
     updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
     cout << "Test6" << endl;
 	//rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
