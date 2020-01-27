@@ -59,36 +59,19 @@ void initGrid_Kernelized_para(  const REAL s0, const REAL alpha, const REAL nu,c
 void initOperator_Kernelized(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& Dzz
 ) {
-    REAL dl, du;
-	//	lower boundary
-	dl		 =  0.0;
-	du		 =  myZ[1] - myZ[0];
-	
-	Dzz[0 * 4 + 0] =  0.0;
-	Dzz[0 * 4 + 1] =  0.0;
-	Dzz[0 * 4 + 2] =  0.0;
-    Dzz[0 * 4 + 3] =  0.0;
-	
-	//	standard case
-	for(unsigned i=1;i<numZ;i++)
-	{
-		dl      = myZ[i]   - myZ[i-1];
-		du      = myZ[i+1] - myZ[i];
-
-		Dzz[i * 4 + 0] =  2.0/dl/(dl+du);
-		Dzz[i * 4 + 1] = -2.0*(1.0/dl + 1.0/du)/(dl+du);
-		Dzz[i * 4 + 2] =  2.0/du/(dl+du);
-        Dzz[i * 4 + 3] =  0.0; 
-	}
-
-	//	upper boundary
-	dl		   =  myZ[numZ-1] - myZ[numZ-2];
-	du		   =  0.0;
-
-	Dzz[(numZ-1) * 4 + 0] = 0.0;
-	Dzz[(numZ-1) * 4 + 1] = 0.0;
-	Dzz[(numZ-1) * 4 + 2] = 0.0;
-    Dzz[(numZ-1) * 4 + 3] = 0.0;
+    for (int gidx = 0; gidx < numZ * 4; gidx++) {
+        uint row = gidx / numZ;
+        uint col = gidx / 4;
+        REAL dl, du;
+        dl = (col == 0) ? 0.0 : myZ[col] - myZ[col - 1];
+        du = (col == numZ - 1) ? 0.0 : myZ[col + 1] - myZ[col];
+        Dzz[gidx] = col > 0 && col < numZ-1 ?
+                    (row == 0 ? 2.0/dl/(dl+du) :
+                    (row == 1 ? -2.0*(1.0/dl + 1.0/du)/(dl+du) :
+                    (row == 2 ? 2.0/du/(dl+du) :
+                    0.0)))
+                    : 0.0;
+    }
 }
 
 void initOperator_Kernelized_para(  const uint& numZ, const vector<REAL>& myZ, 
