@@ -2,8 +2,7 @@
 #define SCAN_KERS
 
 #include <cuda_runtime.h>
-
-typedef float REAL;
+#include "Constants.h"
 
 class MyReal2_ker {
   public:
@@ -15,7 +14,7 @@ class MyReal2_ker {
     __device__ __host__ inline MyReal2_ker(const REAL& a, const REAL& b) {
         x = a; y = b;
     }
-    __device__ __host__ inline MyReal2_ker(const MyReal2& i4) { 
+    __device__ __host__ inline MyReal2_ker(const MyReal2_ker& i4) { 
         x = i4.x; y = i4.y;
     }
     volatile __device__ __host__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) volatile {

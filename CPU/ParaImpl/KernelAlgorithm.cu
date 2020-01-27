@@ -293,7 +293,7 @@ void rollback_Kernel(const int blocksize, const uint outer, const uint numT,
     
     uint num_blocks = (outer + blocksize - 1) / blocksize;
     for (int t = 0; t <= numT - 2; t++) {
-        Rollback<<<num_blocks, blocksize>>>(t, outer, numT, numX, numY, myTimeline_p, myDxx_p, myDyy_p, myVarX_p, myVarY_p, u_p, v_p, a_p, b_p, c_p, y_p, yy_p, myResult_p);
+        Rollback<<<num_blocks, blocksize, 32 * blocksize>>>(t, outer, numT, numX, numY, myTimeline_p, myDxx_p, myDyy_p, myVarX_p, myVarY_p, u_p, v_p, a_p, b_p, c_p, y_p, yy_p, myResult_p);
     }
 }
 

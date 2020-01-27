@@ -237,7 +237,7 @@ __global__ void Rollback(
                 c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
             }
             // here yy should have size [numX]
-            TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,&u[((gidx * numY) + j) * numX],&yy[gidx * numZ]);
+            TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,8,&u[((gidx * numY) + j) * numX],&yy[gidx * numZ]);
         }
 
         //cout << "implicit y, t: " << t << " o: " << gidx << endl;
