@@ -153,7 +153,7 @@ void rollback_Kernel(const int blocksize, const uint outer, const uint numT,
                     c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
                 }
                 // here yy should have size [numX]
-                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+                //tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
             }
 
             //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -169,7 +169,7 @@ void rollback_Kernel(const int blocksize, const uint outer, const uint numT,
                     y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
                 // here yy should have size [numY]
-                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+                //tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
             }
         }
     }
@@ -245,7 +245,7 @@ int run_SimpleKernel(
     updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
     //cout << "Test6" << endl;
-	rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	//rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {

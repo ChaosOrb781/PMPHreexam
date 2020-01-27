@@ -72,9 +72,6 @@ fun *[real] tridagPar( [real] a, *[real] b, [real] c, *[real] y ) =
     copy(y)
 #endif
 
-
-#include <thrust/device_vector.h>
-
 struct MyReal4 {
     REAL x;
     REAL y;
@@ -209,18 +206,18 @@ inline void tridagPar(
 }
 
 inline void tridagPar(
-    const thrust::device_vector<REAL>&   a,   // size [n]
+    const REAL*   a,   // size [n]
     const int             a_start,
-    const thrust::device_vector<REAL>&   b,   // size [n]
+    const REAL*   b,   // size [n]
     const int             b_start,
-    const thrust::device_vector<REAL>&   c,   // size [n]
+    const REAL*   c,   // size [n]
     const int             c_start,
-    const thrust::device_vector<REAL>&   r,   // size [n]
+    const REAL*   r,   // size [n]
     const int             r_start,
     const int             n,
-          thrust::device_vector<REAL>&   u,   // size [n]
+          REAL*   u,   // size [n]
     const int             u_start,
-          thrust::device_vector<REAL>&   uu,   // size [n] temporary
+          REAL*   uu,   // size [n] temporary
     const int             uu_start
 ) {
     int i, offset;
@@ -332,4 +329,4 @@ inline void tridagPar(
     }
 }
 
-#endif TRIDAGPAR_SEQUENTIAL
+#endif
