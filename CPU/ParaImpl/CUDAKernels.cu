@@ -73,6 +73,65 @@ void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
 }
 
 __device__ void tridagPar_seq(
+    const vector<REAL>&   a,   // size [n]
+    const vector<REAL>&   b,   // size [n]
+    const vector<REAL>&   c,   // size [n]
+    const vector<REAL>&   r,   // size [n]
+    const int             n,
+          vector<REAL>&   u,   // size [n]
+          vector<REAL>&   uu   // size [n] temporary
+) {
+    //int i, offset;
+
+    //vector<MyReal4> scanres(n); // supposed to also be in shared memory and to reuse the space of mats
+    //--------------------------------------------------
+    // Recurrence 1: b[i] = b[i] - a[i]*c[i-1]/b[i-1] --
+    //   solved by scan with 2x2 matrix mult operator --
+    //--------------------------------------------------
+    vector<MyReal4_ker> mats(n);    // supposed to be in shared memory!
+    REAL b0 = b[0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
+        else      { mats[i].x = b[i]; mats[i].y = -a[i]*c[i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
+    }
+    inplaceScanInc_ker<MatMult2b2_ker>(n,mats);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        uu[i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
+    }
+    // b -> uu
+    //----------------------------------------------------
+    // Recurrence 2: y[i] = y[i] - (a[i]/b[i-1])*y[i-1] --
+    //   solved by scan with linear func comp operator  --
+    //----------------------------------------------------
+    vector<MyReal2_ker> lfuns(n);
+    REAL y0 = r[0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = r[i]; lfuns[i].y = -a[i]/uu[i-1]; }
+    }
+    inplaceScanInc_ker<LinFunComp_ker>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[i] = lfuns[i].x + y0*lfuns[i].y;
+    }
+    // y -> u
+
+    //----------------------------------------------------
+    // Recurrence 3: backward recurrence solved via     --
+    //             scan with linear func comp operator  --
+    //----------------------------------------------------
+    REAL yn = u[n-1]/uu[n-1];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        int k = n - i - 1;
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = u[k]/uu[k]; lfuns[i].y = -c[k]/uu[k]; }
+    }
+    inplaceScanInc_ker<LinFunComp_ker>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[n-i-1] = lfuns[i].x + yn*lfuns[i].y;
+    }
+}
+
+__device__ void tridagPar_seq(
     const REAL*   a,   // size [n]
     const int             a_start,
     const REAL*   b,   // size [n]
