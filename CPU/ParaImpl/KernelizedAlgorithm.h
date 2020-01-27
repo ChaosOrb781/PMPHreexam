@@ -423,11 +423,11 @@ int   run_SimpleKernelized(
     vector<REAL>                   TestmyX(numX);       // [numX]
     vector<REAL>                   TestmyY(numY);       // [numY]
     vector<REAL>                   TestmyTimeline(numT);// [numT]
-    vector<vector<REAL> >          TestmyDxx(numX);     // [numX][4]
-    vector<vector<REAL> >          TestmyDyy(numY);     // [numY][4]
-    vector<vector<vector<REAL> > > TestmyResult(outer); // [outer][numX][numY]
-    vector<vector<vector<REAL> > > TestmyVarX(numT);    // [numT][numX][numY]
-    vector<vector<vector<REAL> > > TestmyVarY(numT);    // [numT][numX][numY]
+    vector<vector<REAL> >          TestmyDxx(numX, vector<REAL>(4));     // [numX][4]
+    vector<vector<REAL> >          TestmyDyy(numY, vector<REAL>(4));     // [numY][4]
+    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL>>(numX, vector<REAL>(numY))); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
     uint myXindex = 0;
     uint myYindex = 0;
