@@ -20,7 +20,7 @@ $(EXECUTABLE): kernel.o $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS) kernel.o
 
 kernel.o:
-	nvcc -c -arch=sm_20 CUDAKernels.cu
+	nvcc -c CUDAKernels.cu
 
 
 run_small: $(EXECUTABLE)
