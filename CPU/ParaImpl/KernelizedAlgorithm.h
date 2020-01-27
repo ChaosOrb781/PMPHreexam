@@ -541,6 +541,113 @@ void rollback_Kernel_Alt(const uint outer, const uint numT,
     }
 }
 
+void rollback_Kernel_Alt_para(const uint outer, const uint numT, 
+    const uint numX, const uint numY, 
+    const vector<REAL> myTimeline, 
+    const vector<REAL> myDxx,
+    const vector<REAL> myDyy,
+    const vector<REAL> myVarX,
+    const vector<REAL> myVarY,
+    vector<REAL>& u,
+    vector<REAL>& v,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c,
+    vector<REAL>& y,
+    vector<REAL>& yy,
+    vector<REAL>& myResult
+) {
+    for (int t = 0; t <= numT - 2; t++) {
+#pragma omp parallel for schedule(static)
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint numZ = max(numX,numY);
+
+            uint i, j;
+
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+
+            //vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
+            //vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
+            //vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
+            //vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
+
+            //cout << "explicit x, t: " << t << " o: " << gidx << endl;
+            //	explicit x
+            for(i=0;i<numX;i++) {
+                for(j=0;j<numY;j++) {
+                    u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+
+                    if(i > 0) { 
+                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                      * myDxx[i * 4 + 0] ) 
+                                      * myResult[((gidx * numX) + (i-1)) * numY + j];
+                    }
+                    u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                    * myDxx[i * 4 + 1] )
+                                    * myResult[((gidx * numX) + i) * numY + j];
+                    if(i < numX-1) {
+                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                      * myDxx[i * 4 + 2] )
+                                      * myResult[((gidx * numX) + (i+1)) * numY + j];
+                    }
+                }
+            }
+
+            //cout << "explicit y, t: " << t << " o: " << gidx << endl;
+            //	explicit y
+            for(j=0;j<numY;j++)
+            {
+                for(i=0;i<numX;i++) {
+                    v[((gidx * numX) + i) * numY + j] = 0.0;
+
+                    if(j > 0) {
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                        * myDyy[j * 4 + 0] )
+                                        * myResult[((gidx * numX) + i) * numY + j - 1];
+                    }
+                    v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                     * myDyy[j * 4 + 1] )
+                                     * myResult[((gidx * numX) + i) * numY + j];
+                    if(j < numY-1) {
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                        * myDyy[j * 4 + 2] )
+                                        * myResult[((gidx * numX) + i) * numY + j + 1];
+                    }
+                    u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
+                }
+            }
+
+            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            //	implicit x
+            for(j=0;j<numY;j++) {
+                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
+                    a[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+                    b[(gidx * numZ) + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+                    c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+                }
+                // here yy should have size [numX]
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            }
+
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
+                    a[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+                    b[(gidx * numZ) + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+                    c[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+                }
+
+                for(j=0;j<numY;j++)
+                    y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
+
+                // here yy should have size [numY]
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            }
+        }
+    }
+}
+
 int   run_SimpleKernelized(  
                 const uint   outer,
                 const uint   numX,
@@ -1016,6 +1123,10 @@ int   run_Kernelized_Rollback_Parallel(
     vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
     vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
     uint numZ = max(numX, numY);
     vector<REAL> u(outer * numY * numX);
     vector<REAL> v(outer * numX * numY);
@@ -1024,10 +1135,6 @@ int   run_Kernelized_Rollback_Parallel(
     vector<REAL> c(outer * numZ);
     vector<REAL> y(outer * numZ);
     vector<REAL> yy(outer * numZ);
-
-#if TEST_INIT_CORRECTNESS
-    vector<REAL> myResultCopy(outer * numX * numY);
-#endif
 
     uint myXindex = 0;
     uint myYindex = 0;
@@ -1056,7 +1163,7 @@ int   run_Kernelized_Rollback_Parallel(
     //cout << "Test5" << endl;
     updateParams_Kernel_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Kernel_Alt_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
 #pragma omp parallel for schedule(static)
