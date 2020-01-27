@@ -70,6 +70,9 @@ fun *[real] tridagPar( [real] a, *[real] b, [real] c, *[real] y ) =
     copy(y)
 #endif
 
+
+#include <thrust/device_vector.h>
+
 struct MyReal4 {
     REAL x;
     REAL y;
@@ -146,11 +149,76 @@ inline void tridagPar(
     const vector<REAL>&   c,   // size [n]
     const int             c_start,
     const vector<REAL>&   r,   // size [n]
-    const int&            r_start,
+    const int             r_start,
     const int             n,
           vector<REAL>&   u,   // size [n]
-    const int&            u_start,
+    const int             u_start,
           vector<REAL>&   uu,   // size [n] temporary
+    const int             uu_start
+) {
+    int i, offset;
+
+    //vector<MyReal4> scanres(n); // supposed to also be in shared memory and to reuse the space of mats
+    //--------------------------------------------------
+    // Recurrence 1: b[i] = b[i] - a[i]*c[i-1]/b[i-1] --
+    //   solved by scan with 2x2 matrix mult operator --
+    //--------------------------------------------------
+    vector<MyReal4> mats(n);    // supposed to be in shared memory!
+    REAL b0 = b[b_start + 0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
+        else      { mats[i].x = b[b_start + i]; mats[i].y = -a[a_start + i]*c[c_start + i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
+    }
+    inplaceScanInc<MatMult2b2>(n,mats);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        uu[uu_start + i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
+    }
+    // b -> uu
+    //----------------------------------------------------
+    // Recurrence 2: y[i] = y[i] - (a[i]/b[i-1])*y[i-1] --
+    //   solved by scan with linear func comp operator  --
+    //----------------------------------------------------
+    vector<MyReal2> lfuns(n);
+    REAL y0 = r[r_start + 0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[a_start + i]/uu[uu_start + i-1]; }
+    }
+    inplaceScanInc<LinFunComp>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[u_start + i] = lfuns[i].x + y0*lfuns[i].y;
+    }
+    // y -> u
+
+    //----------------------------------------------------
+    // Recurrence 3: backward recurrence solved via     --
+    //             scan with linear func comp operator  --
+    //----------------------------------------------------
+    REAL yn = u[u_start + n-1]/uu[uu_start + n-1];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        int k = n - i - 1;
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = u[u_start + k]/uu[uu_start + k]; lfuns[i].y = -c[c_start + k]/uu[uu_start + k]; }
+    }
+    inplaceScanInc<LinFunComp>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[u_start + n-i-1] = lfuns[i].x + yn*lfuns[i].y;
+    }
+}
+
+inline void tridagPar(
+    const thrust::device_vector<REAL>&   a,   // size [n]
+    const int             a_start,
+    const thrust::device_vector<REAL>&   b,   // size [n]
+    const int             b_start,
+    const thrust::device_vector<REAL>&   c,   // size [n]
+    const int             c_start,
+    const thrust::device_vector<REAL>&   r,   // size [n]
+    const int             r_start,
+    const int             n,
+          thrust::device_vector<REAL>&   u,   // size [n]
+    const int             u_start,
+          thrust::device_vector<REAL>&   uu,   // size [n] temporary
     const int             uu_start
 ) {
     int i, offset;

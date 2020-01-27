@@ -1,7 +1,173 @@
-#ifndef SIMPLE_KERNEL_ALGORITHM
-#define SIMPLE_KERNEL_ALGORITHM
+#ifndef KERNEL_ALGORITHM
+#define KERNEL_ALGORITHM
 #include "CUDAKernels.h"
+#include "InterchangedAlgorithm.h"
 
+#define TEST_INIT_CORRECTNESS true
+
+void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+                const uint numX, const uint numY, const uint numT,
+                dvec<REAL>& myX, dvec<REAL>& myY, dvec<REAL>& myTimeline,
+                uint& myXindex, uint& myYindex
+) {
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    InitMyTimeline(numT, t, myTimeline_p);
+
+    const REAL stdX = 20.0*alpha*s0*sqrt(t);
+    const REAL dx = stdX/numX;
+    myXindex = static_cast<unsigned>(s0/dx) % numX;
+
+    REAL* myX_p = raw_pointer_cast(&myX[0]);
+    InitMyX(numX, myXindex, s0, dx, myX_p);
+
+    const REAL stdY = 10.0*nu*sqrt(t);
+    const REAL dy = stdY/numY;
+    const REAL logAlpha = log(alpha);
+    myYindex = static_cast<unsigned>(numY/2.0);
+
+    REAL* myY_p = raw_pointer_cast(&myY[0]);
+    InitMyY(numY, myYindex, logAlpha, dy, myY_p);
+}
+
+void initOperator_Kernel(  const uint numZ, dvec<REAL>& myZ, 
+                        dvec<REAL>& Dzz
+) {
+    REAL* myZ_p = raw_pointer_cast(&myZ[0]);
+    REAL* Dzz_p = raw_pointer_cast(&Dzz[0]);
+    InitMyDzz(numZ, myZ_p, Dzz_p);
+}
+
+void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
+    const uint numX, const uint numY, const uint numT, 
+    dvec<REAL>& myX, dvec<REAL>& myY, dvec<REAL>& myTimeline,
+    dvec<REAL>& myVarX, dvec<REAL>& myVarY)
+{
+    REAL* myX_p = raw_pointer_cast(&myX[0]);
+    REAL* myY_p = raw_pointer_cast(&myY[0]);
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    REAL* myVarX_p = raw_pointer_cast(&myVarX[0]);
+    REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
+    InitParams(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarX_p, myVarY_p);
+}
+
+void setPayoff_Kernel(dvec<REAL>& myX, const uint outer,
+    const uint numX, const uint numY,
+    dvec<REAL>& myResult)
+{
+    for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
+        int o = gidx / (numX * numY);
+        int plane_remain = gidx % (numX * numY);
+        int i = plane_remain / numY;
+        //int j = plane_remain % numY
+        myResult[gidx] = std::max(myX[i]-0.001*(REAL)o, (REAL)0.0);
+    }
+}
+
+void rollback_Kernel(const uint outer, const uint numT, 
+    const uint numX, const uint numY, 
+    dvec<REAL>& myTimeline, 
+    dvec<REAL>& myDxx,
+    dvec<REAL>& myDyy,
+    dvec<REAL>& myVarX,
+    dvec<REAL>& myVarY,
+    dvec<REAL>& u,
+    dvec<REAL>& v,
+    dvec<REAL>& a,
+    dvec<REAL>& b,
+    dvec<REAL>& c,
+    dvec<REAL>& y,
+    dvec<REAL>& yy,
+    dvec<REAL>& myResult
+) {
+    for (int t = 0; t <= numT - 2; t++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint numZ = std::max(numX,numY);
+
+            uint i, j;
+
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+
+            //vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
+            //vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
+            //vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
+            //vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
+
+            //cout << "explicit x, t: " << t << " o: " << gidx << endl;
+            //	explicit x
+            for(i=0;i<numX;i++) {
+                for(j=0;j<numY;j++) {
+                    u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+
+                    if(i > 0) { 
+                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                      * myDxx[i * 4 + 0] ) 
+                                      * myResult[((gidx * numX) + (i-1)) * numY + j];
+                    }
+                    u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                    * myDxx[i * 4 + 1] )
+                                    * myResult[((gidx * numX) + i) * numY + j];
+                    if(i < numX-1) {
+                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                      * myDxx[i * 4 + 2] )
+                                      * myResult[((gidx * numX) + (i+1)) * numY + j];
+                    }
+                }
+            }
+
+            //cout << "explicit y, t: " << t << " o: " << gidx << endl;
+            //	explicit y
+            for(j=0;j<numY;j++)
+            {
+                for(i=0;i<numX;i++) {
+                    v[((gidx * numX) + i) * numY + j] = 0.0;
+
+                    if(j > 0) {
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                        * myDyy[j * 4 + 0] )
+                                        * myResult[((gidx * numX) + i) * numY + j - 1];
+                    }
+                    v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                     * myDyy[j * 4 + 1] )
+                                     * myResult[((gidx * numX) + i) * numY + j];
+                    if(j < numY-1) {
+                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                        * myDyy[j * 4 + 2] )
+                                        * myResult[((gidx * numX) + i) * numY + j + 1];
+                    }
+                    u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
+                }
+            }
+
+            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            //	implicit x
+            for(j=0;j<numY;j++) {
+                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
+                    a[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+                    b[(gidx * numZ) + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+                    c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+                }
+                // here yy should have size [numX]
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            }
+
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
+                    a[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+                    b[(gidx * numZ) + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+                    c[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+                }
+
+                for(j=0;j<numY;j++)
+                    y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
+
+                // here yy should have size [numY]
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            }
+        }
+    }
+}
 
 int run_SimpleKernel(
                 const uint   outer,
@@ -18,45 +184,45 @@ int run_SimpleKernel(
 ) {
     int procs = 0;
 
-	vector<REAL> myX(numX);       // [numX]
-    vector<REAL> myY(numY);       // [numY]
-    vector<REAL> myTimeline(numT);// [numT]
-    vector<REAL> myDxx(numX * 4);     // [numX][4]
-    vector<REAL> myDyy(numY * 4);     // [numY][4]
-    vector<REAL> myDxxT(4 * numX);       // [4][numX]
-    vector<REAL> myDyyT(4 * numY);       // [4][numY]
-    vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
-    vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
-    vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
-    vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
+	dvec<REAL> myX(numX);       // [numX]
+    dvec<REAL> myY(numY);       // [numY]
+    dvec<REAL> myTimeline(numT);// [numT]
+    dvec<REAL> myDxx(numX * 4);     // [numX][4]
+    dvec<REAL> myDyy(numY * 4);     // [numY][4]
+    dvec<REAL> myDxxT(4 * numX);       // [4][numX]
+    dvec<REAL> myDyyT(4 * numY);       // [4][numY]
+    dvec<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
+    dvec<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    dvec<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
+    dvec<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
 #if TEST_INIT_CORRECTNESS
     vector<REAL> myResultCopy(outer * numX * numY);
 #endif
 
-    uint numZ = max(numX, numY);
-    vector<REAL> u(outer * numY * numX);
-    vector<REAL> v(outer * numX * numY);
-    vector<REAL> a(outer * numZ);
-    vector<REAL> b(outer * numZ);
-    vector<REAL> c(outer * numZ);
-    vector<REAL> y(outer * numZ);
-    vector<REAL> yy(outer * numZ);
+    uint numZ = std::max(numX, numY);
+    dvec<REAL> u(outer * numY * numX);
+    dvec<REAL> v(outer * numX * numY);
+    dvec<REAL> a(outer * numZ);
+    dvec<REAL> b(outer * numZ);
+    dvec<REAL> c(outer * numZ);
+    dvec<REAL> y(outer * numZ);
+    dvec<REAL> yy(outer * numZ);
 
     uint myXindex = 0;
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-	initGrid_Kernel_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
     //cout << "Test2" << endl;
-    initOperator_Kernel_para(numX, myX, myDxx);
+    initOperator_Kernel(numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel_para(numY, myY, myDyy);
+    initOperator_Kernel(numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel_para(myX, outer, numX, numY, myResult);
+    setPayoff_Kernel(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -68,17 +234,12 @@ int run_SimpleKernel(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel_Alt_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
-#pragma omp parallel for schedule(static)
 	for(uint i = 0; i < outer; i++) {
-        {
-            int th_id = omp_get_thread_num();
-            if(th_id == 0) { procs = omp_get_num_threads(); }
-        }
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
     }
 
@@ -92,7 +253,7 @@ int run_SimpleKernel(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -112,7 +273,7 @@ int run_SimpleKernel(
         }
     }
 
-    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -122,7 +283,7 @@ int run_SimpleKernel(
         }
     }
 
-    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -132,7 +293,7 @@ int run_SimpleKernel(
         }
     }
 
-    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -144,7 +305,7 @@ int run_SimpleKernel(
         }
     }
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
