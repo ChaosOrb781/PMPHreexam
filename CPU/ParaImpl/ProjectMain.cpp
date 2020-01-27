@@ -55,7 +55,7 @@ void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expe
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
 	ReturnStat* returnstatus = RunStatsOnProgram<funType>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
-	writeStatsAndResult(title, is_valid, res, outer, false, returnstatus, expectedStats);
+	writeStatsAndResult(title + (blocksize > 1 ? "(" + blocksize + ")" : ""), is_valid, res, outer, false, returnstatus, expectedStats);
 }
 
 
@@ -96,6 +96,8 @@ int main()
         RunTestOnProgram<funGPU>(buffer, (fun)run_SimpleKernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         sprintf(buffer, "Kernelized Parallel (%d)", Block);
         RunTestOnProgram<funGPU>(buffer, (fun)run_SimpleKernelized_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        sprintf(buffer, "Kernelized Parallel (%d)", Block);
+        RunTestOnProgram<funGPU>(buffer, (fun)run_Kernelized_Rollback, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;
