@@ -184,7 +184,7 @@ void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
 {
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
-        int j = gidx / (outer * numY);
+        int j = (gidx % (numX * numY)) / numY;
         myResult[gidx] = max(myX[j]-0.001*(REAL)o, (REAL)0.0);
     }
 }
