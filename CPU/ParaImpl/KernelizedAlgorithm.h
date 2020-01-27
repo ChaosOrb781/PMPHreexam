@@ -143,16 +143,17 @@ void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
 {
     for(uint gidx = 0; gidx < numT * numX * numY; gidx++) {
-        int i = gidx / (numX * numY);
-        int j = gidx % (numX * numY);
-        int k = j / numY;
-        myVarX[gidx] = exp(2.0*(  beta*log(myX[j])   
-                                    + myY[k]             
-                                    - 0.5*nu*nu*myTimeline[i] )
+        int t = gidx / (numX * numY);
+        int plane_remain = gidx % (numX * numY);
+        int i = plane_remain / numY;
+        int j = plane_remain % numY;
+        myVarX[gidx] = exp(2.0*(  beta*log(myX[i])   
+                                    + myY[j]             
+                                    - 0.5*nu*nu*myTimeline[t] )
                                 );
-        myVarY[gidx] = exp(2.0*(  alpha*log(myX[j])   
-                                    + myY[k]             
-                                    - 0.5*nu*nu*myTimeline[i] )
+        myVarY[gidx] = exp(2.0*(  alpha*log(myX[i])   
+                                    + myY[j]             
+                                    - 0.5*nu*nu*myTimeline[t] )
                                 ); // nu*nu
     }
 }
