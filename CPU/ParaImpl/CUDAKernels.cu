@@ -155,20 +155,21 @@ __global__ void Rollback(
     const uint numT, 
     const uint numX, 
     const uint numY, 
-    const vector<REAL> myTimeline, 
-    const vector<REAL> myDxx,
-    const vector<REAL> myDyy,
-    const vector<REAL> myVarX,
-    const vector<REAL> myVarY,
-    vector<REAL>& u,
-    vector<REAL>& v,
-    vector<REAL>& a,
-    vector<REAL>& b,
-    vector<REAL>& c,
-    vector<REAL>& y,
-    vector<REAL>& yy,
-    vector<REAL>& myResult
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
 ) {
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
     if (gidx < outer) {
         uint numZ = max(numX,numY);
 
