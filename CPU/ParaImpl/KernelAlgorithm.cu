@@ -8,7 +8,7 @@
 
 using namespace thrust;
 
-#define TEST_INIT_CORRECTNESS true
+#define TEST_INIT_CORRECTNESS false
 
 #define gpuErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
