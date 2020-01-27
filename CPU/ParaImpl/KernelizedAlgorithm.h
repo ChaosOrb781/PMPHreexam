@@ -27,6 +27,77 @@ void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL
         myY[i] = i*dy - myYindex*dy + logAlpha;
 }
 
+void initOperator_Kernel(  const uint& numZ, const vector<REAL>& myZ, 
+                        vector<REAL>& Dzz
+) {
+    REAL dl, du;
+	//	lower boundary
+	dl		 =  0.0;
+	du		 =  myZ[1] - myZ[0];
+	
+	Dzz[0 * 4 + 0] =  0.0;
+	Dzz[0 * 4 + 1] =  0.0;
+	Dzz[0 * 4 + 2] =  0.0;
+    Dzz[0 * 4 + 3] =  0.0;
+	
+	//	standard case
+	for(unsigned i=1;i<numZ;i++)
+	{
+		dl      = myZ[i]   - myZ[i-1];
+		du      = myZ[i+1] - myZ[i];
+
+		Dzz[i * 4 + 0] =  2.0/dl/(dl+du);
+		Dzz[i * 4 + 1] = -2.0*(1.0/dl + 1.0/du)/(dl+du);
+		Dzz[i * 4 + 2] =  2.0/du/(dl+du);
+        Dzz[i * 4 + 3] =  0.0; 
+	}
+
+	//	upper boundary
+	dl		   =  myZ[numZ-1] - myZ[numZ-2];
+	du		   =  0.0;
+
+	Dzz[(numZ-1) * 4 + 0] = 0.0;
+	Dzz[(numZ-1) * 4 + 1] = 0.0;
+	Dzz[(numZ-1) * 4 + 2] = 0.0;
+    Dzz[(numZ-1) * 4 + 3] = 0.0;
+}
+
+void initOperator_Kernel_para(  const uint& numZ, const vector<REAL>& myZ, 
+                        vector<REAL>& Dzz
+) {
+	REAL dl, du;
+	//	lower boundary
+	dl		 =  0.0;
+	du		 =  myZ[1] - myZ[0];
+	
+	Dzz[0 * 4 + 0] =  0.0;
+	Dzz[0 * 4 + 1] =  0.0;
+	Dzz[0 * 4 + 2] =  0.0;
+    Dzz[0 * 4 + 3] =  0.0;
+	
+	//	standard case
+#pragma omp parallel for schedule(static)
+	for(unsigned i=1;i<numZ;i++)
+	{
+		dl      = myZ[i]   - myZ[i-1];
+		du      = myZ[i+1] - myZ[i];
+
+		Dzz[i * 4 + 0] =  2.0/dl/(dl+du);
+		Dzz[i * 4 + 1] = -2.0*(1.0/dl + 1.0/du)/(dl+du);
+		Dzz[i * 4 + 2] =  2.0/du/(dl+du);
+        Dzz[i * 4 + 3] =  0.0; 
+	}
+
+	//	upper boundary
+	dl		   =  myZ[numZ-1] - myZ[numZ-2];
+	du		   =  0.0;
+
+	Dzz[(numZ-1) * 4 + 0] = 0.0;
+	Dzz[(numZ-1) * 4 + 1] = 0.0;
+	Dzz[(numZ-1) * 4 + 2] = 0.0;
+    Dzz[(numZ-1) * 4 + 3] = 0.0;
+}
+
 //Have to flatten to use device vector!
 void initOperator_Kernel_T(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
@@ -355,11 +426,9 @@ int   run_SimpleKernelized(
     cout << "Test1" << endl;
 	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cout << "Test2" << endl;
-    initOperator_Kernel_T(numX, myX, myDxxT);
-    matTranspose(myDxxT, myDxx, 0, 4, numX);
+    initOperator_Kernel(numX, myX, myDxx);
     cout << "Test3" << endl;
-    initOperator_Kernel_T(numY, myY, myDyyT);
-    matTranspose(myDyyT, myDyy, 0, 4, numY);
+    initOperator_Kernel(numY, myY, myDyy);
     cout << "Test4" << endl;
     setPayoff_Kernel(myX, outer, numX, numY, myResult);
 
