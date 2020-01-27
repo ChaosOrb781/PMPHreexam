@@ -87,7 +87,7 @@ __device__ void tridagPar_seq(
           REAL*   uu,   // size [n] temporary
     const int             uu_start
 ) {
-    int i, offset;
+    //int i, offset;
 
     //vector<MyReal4> scanres(n); // supposed to also be in shared memory and to reuse the space of mats
     //--------------------------------------------------
@@ -100,7 +100,7 @@ __device__ void tridagPar_seq(
         if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
         else      { mats[i].x = b[b_start + i]; mats[i].y = -a[a_start + i]*c[c_start + i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
     }
-    inplaceScanInc<MatMult2b2_ker>(n,mats);
+    inplaceScanInc_ker<MatMult2b2_ker>(n,mats);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         uu[uu_start + i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
     }
@@ -115,7 +115,7 @@ __device__ void tridagPar_seq(
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
         else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[a_start + i]/uu[uu_start + i-1]; }
     }
-    inplaceScanInc<LinFunComp_ker>(n,lfuns);
+    inplaceScanInc_ker<LinFunComp_ker>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         u[u_start + i] = lfuns[i].x + y0*lfuns[i].y;
     }
@@ -131,7 +131,7 @@ __device__ void tridagPar_seq(
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
         else      { lfuns[i].x = u[u_start + k]/uu[uu_start + k]; lfuns[i].y = -c[c_start + k]/uu[uu_start + k]; }
     }
-    inplaceScanInc<LinFunComp_ker>(n,lfuns);
+    inplaceScanInc_ker<LinFunComp_ker>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         u[u_start + n-i-1] = lfuns[i].x + yn*lfuns[i].y;
     }
@@ -369,7 +369,7 @@ __global__ void Rollback(
                 c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
             }
             // here yy should have size [numX]
-            tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            tridagPar_seq(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
         }
 
         //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -385,7 +385,7 @@ __global__ void Rollback(
                 y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
             // here yy should have size [numY]
-            tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            tridagPar_seq(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
         }
     }
 }
