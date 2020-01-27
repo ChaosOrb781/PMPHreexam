@@ -1,13 +1,195 @@
 #ifndef KERNEL_ALGORITHM
 #define KERNEL_ALGORITHM
 #include "CUDAKernels.cu"
-#include "InterchangedAlgorithm.h"
+#include "Constants.h"
+#include "TridagPar.h"
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
 using namespace thrust;
 
 #define TEST_INIT_CORRECTNESS true
+
+void initGrid_Control(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+                const unsigned numX, const unsigned numY, const unsigned numT,
+                vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
+                uint& myXindex, uint& myYindex
+) {
+    for(unsigned i=0;i<numT;++i)
+        myTimeline[i] = t*i/(numT-1);
+
+    const REAL stdX = 20.0*alpha*s0*sqrt(t);
+    const REAL dx = stdX/numX;
+    myXindex = static_cast<unsigned>(s0/dx) % numX;
+
+    for(unsigned i=0;i<numX;++i)
+        myX[i] = i*dx - myXindex*dx + s0;
+
+    const REAL stdY = 10.0*nu*sqrt(t);
+    const REAL dy = stdY/numY;
+    const REAL logAlpha = log(alpha);
+    myYindex = static_cast<unsigned>(numY/2.0);
+
+    for(unsigned i=0;i<numY;++i)
+        myY[i] = i*dy - myYindex*dy + logAlpha;
+}
+
+void initOperator_Control(  const uint& numZ, const vector<REAL>& myZ, 
+                        vector<vector<REAL> >& Dzz
+) {
+	REAL dl, du;
+	//	lower boundary
+	dl		 =  0.0;
+	du		 =  myZ[1] - myZ[0];
+	
+	Dzz[0][0] =  0.0;
+	Dzz[0][1] =  0.0;
+	Dzz[0][2] =  0.0;
+    Dzz[0][3] =  0.0;
+	
+	//	standard case
+	for(unsigned i=1;i<numZ;i++)
+	{
+		dl      = myZ[i]   - myZ[i-1];
+		du      = myZ[i+1] - myZ[i];
+
+		Dzz[i][0] =  2.0/dl/(dl+du);
+		Dzz[i][1] = -2.0*(1.0/dl + 1.0/du)/(dl+du);
+		Dzz[i][2] =  2.0/du/(dl+du);
+        Dzz[i][3] =  0.0; 
+	}
+
+	//	upper boundary
+	dl		   =  myZ[numZ-1] - myZ[numZ-2];
+	du		   =  0.0;
+
+	Dzz[numZ-1][0] = 0.0;
+	Dzz[numZ-1][1] = 0.0;
+	Dzz[numZ-1][2] = 0.0;
+    Dzz[numZ-1][3] = 0.0;
+}
+
+void updateParams_Control(const REAL alpha, const REAL beta, const REAL nu,
+    const uint numX, const uint numY, const uint numT, 
+    const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
+    vector<vector<vector<REAL> > >& myVarX, vector<vector<vector<REAL> > >& myVarY)
+{
+    for(uint i = 0; i < numT; i++)
+        for(uint j = 0; j < numX; j++)
+            for(uint k = 0; k < numY; k++) {
+                myVarX[i][j][k] = exp(2.0*(  beta*log(myX[j])   
+                                            + myY[k]             
+                                            - 0.5*nu*nu*myTimeline[i] )
+                                        );
+                myVarY[i][j][k] = exp(2.0*(  alpha*log(myX[j])   
+                                            + myY[k]             
+                                            - 0.5*nu*nu*myTimeline[i] )
+                                        ); // nu*nu
+            }
+}
+
+void setPayoff_Control(const vector<REAL> myX, const uint outer,
+    const uint numX, const uint numY,
+    vector<vector< vector<REAL> > >& myResult)
+{
+    for(uint i = 0; i < outer; i++) {
+        for(uint j = 0; j < numX; j++)
+        {
+            REAL payoff = max(myX[j]-0.001*(REAL)i, (REAL)0.0);
+            for(uint k = 0; k < numY; k++)
+                myResult[i][j][k] = payoff;
+        }
+    }
+}
+
+void rollback_Control(const uint outer, const uint numT, 
+    const uint numX, const uint numY, 
+    const vector<REAL> myTimeline, 
+    const vector<vector<REAL> > myDxx,
+    const vector<vector<REAL> > myDyy,
+    const vector<vector<vector<REAL> > > myVarX,
+    const vector<vector<vector<REAL> > > myVarY,
+    vector<vector< vector<REAL> > >& myResult 
+) {
+    for (int t = 0; t <= numT - 2; t++) {
+        for (int o = 0; o < outer; o++) {
+            uint numZ = max(numX,numY);
+
+            uint i, j;
+
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+
+            vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
+            vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
+            vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
+            vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
+
+            //	explicit x
+            for(i=0;i<numX;i++) {
+                for(j=0;j<numY;j++) {
+                    u[j][i] = dtInv*myResult[o][i][j];
+
+                    if(i > 0) { 
+                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][0] ) 
+                                    * myResult[o][i-1][j];
+                    }
+                    u[j][i]  +=  0.5*( 0.5*myVarX[t][i][j]*myDxx[i][1] )
+                                    * myResult[o][i][j];
+                    if(i < numX-1) {
+                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][2] )
+                                    * myResult[o][i+1][j];
+                    }
+                }
+            }
+
+            //	explicit y
+            for(j=0;j<numY;j++)
+            {
+                for(i=0;i<numX;i++) {
+                    v[i][j] = 0.0;
+
+                    if(j > 0) {
+                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][0] )
+                                *  myResult[o][i][j-1];
+                    }
+                    v[i][j]  +=   ( 0.5*myVarY[t][i][j]*myDyy[j][1] )
+                                *  myResult[o][i][j];
+                    if(j < numY-1) {
+                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][2] )
+                                *  myResult[o][i][j+1];
+                    }
+                    u[j][i] += v[i][j]; 
+                }
+            }
+
+            //	implicit x
+            for(j=0;j<numY;j++) {
+                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
+                    a[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][0]);
+                    b[i] = dtInv - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][1]);
+                    c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
+                }
+                // here yy should have size [numX]
+                tridagPar(a,b,c,u[j],numX,u[j],yy);
+            }
+
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
+                    a[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][0]);
+                    b[j] = dtInv - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][1]);
+                    c[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][2]);
+                }
+
+                for(j=0;j<numY;j++)
+                    y[j] = dtInv*u[j][i] - 0.5*v[i][j];
+
+                // here yy should have size [numY]
+                tridagPar(a,b,c,y,numY,myResult[o][i],yy);
+            }
+        }
+    }
+}
 
 void initGrid_Kernel(const int blocksize, const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const uint numX, const uint numY, const uint numT,
@@ -262,7 +444,7 @@ int run_SimpleKernel(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Control(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -282,7 +464,7 @@ int run_SimpleKernel(
         }
     }
 
-    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
+    initOperator_Control(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -292,7 +474,7 @@ int run_SimpleKernel(
         }
     }
 
-    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
+    initOperator_Control(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -302,7 +484,7 @@ int run_SimpleKernel(
         }
     }
 
-    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Control(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -314,7 +496,7 @@ int run_SimpleKernel(
         }
     }
 
-    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Control(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
