@@ -55,7 +55,14 @@ void RunTestOnProgram(const char* title, fun f, REAL* expected, ReturnStat* expe
 	REAL* res = (REAL*)malloc(outer * sizeof(REAL));
 	ReturnStat* returnstatus = RunStatsOnProgram<funType>(title, f, res, outer, numX, numY, numT, s0, t, alpha, nu, beta, blocksize);
 	bool is_valid = compare_validate(res, expected, outer);
-	writeStatsAndResult(title + (blocksize > 1 ? "(" + blocksize + ")" : ""), is_valid, res, outer, false, returnstatus, expectedStats);
+
+    char buffer[256];
+    if (blocksize > 1) {
+        sprintf(buffer, "%s (%d)", title, Block);
+    } else {
+        sprintf(buffer, "%s", title);
+    }
+	writeStatsAndResult(buffer, is_valid, res, outer, false, returnstatus, expectedStats);
 }
 
 
@@ -79,25 +86,17 @@ int main()
     if (is_valid) {
         //Simple parallized programs
         RunTestOnProgram<funCPU>("Simple Parallel", (fun)run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
         RunTestOnProgram<funCPU>("Simple Parallel Static", (fun)run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (fun)run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
-
-
 		RunTestOnProgram<funCPU>("Interchanged", (fun)run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         RunTestOnProgram<funCPU>("Interchanged Optimized", (fun)run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 		RunTestOnProgram<funCPU>("Parallel Interchanged", (fun)run_InterchangedParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         RunTestOnProgram<funCPU>("Parallel Interchanged Optimized", (fun)run_InterchangedParallelAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-
-        char buffer[256];
-        sprintf(buffer, "Kernelized (%d)", Block);
-        RunTestOnProgram<funGPU>(buffer, (fun)run_SimpleKernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        sprintf(buffer, "Kernelized Parallel (%d)", Block);
-        RunTestOnProgram<funGPU>(buffer, (fun)run_SimpleKernelized_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        sprintf(buffer, "Kernelized Parallel (%d)", Block);
-        RunTestOnProgram<funGPU>(buffer, (fun)run_Kernelized_Rollback, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized", (fun)run_SimpleKernelized, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized Parallel", (fun)run_SimpleKernelized_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized Flatrollback", (fun)run_Kernelized_Rollback, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;
