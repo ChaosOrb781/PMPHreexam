@@ -3,7 +3,139 @@
 
 #include <cuda_runtime.h>
 #include "Constants.h"
-#include "TridagPar.h"
+
+struct MyReal4 {
+    REAL x;
+    REAL y;
+    REAL z;
+    REAL w;
+    
+    // constructors
+    inline MyReal4() { x = y = z = w = 0.0; }
+    inline MyReal4(const REAL a, const REAL b, const REAL c, const REAL d) {
+        x = a; y = b; z = c; w = d;
+    }
+    // copy constructor
+    inline MyReal4(const MyReal4& i4) { 
+        x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
+    }
+    // assignment operator
+    inline MyReal4& operator=(const MyReal4& i4) {
+        x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
+        return *this;
+    }
+};
+
+struct MatMult2b2 {
+  typedef MyReal4 OpTp;
+  static MyReal4 apply(const MyReal4 a, const MyReal4 b) {
+    REAL val = 1.0/(a.x*b.x);
+    return MyReal4( (b.x*a.x + b.y*a.z)*val,
+                    (b.x*a.y + b.y*a.w)*val,
+                    (b.z*a.x + b.w*a.z)*val,
+                    (b.z*a.y + b.w*a.w)*val );
+  }
+};
+
+struct MyReal2 {
+    REAL x;
+    REAL y;
+    // constructors
+    inline MyReal2() { x = y = 0.0; }
+    inline MyReal2(const REAL a, const REAL b) {
+        x = a; y = b;
+    }
+    // copy constructor
+    inline MyReal2(const MyReal2& i4) { 
+        x = i4.x; y = i4.y; 
+    }
+    // assignment operator
+    inline MyReal2& operator=(const MyReal2& i4) {
+        x = i4.x; y = i4.y; 
+        return *this;
+    }
+};
+
+struct LinFunComp {
+  typedef MyReal2 OpTp;
+  static MyReal2 apply(const MyReal2 a, const MyReal2 b) {
+    return MyReal2( b.x + b.y*a.x, a.y*b.y );
+  }
+};
+
+template<class OP>
+void inplaceScanInc(const int n, vector<typename OP::OpTp>& inpres) {
+  typename OP::OpTp acc = inpres[0];
+  for(int i=1; i<n; i++) {
+    acc = OP::apply(acc,inpres[i]);
+    inpres[i] = acc;    
+  }
+}
+
+__device__ void tridagPar_seq(
+    const REAL*   a,   // size [n]
+    const int             a_start,
+    const REAL*   b,   // size [n]
+    const int             b_start,
+    const REAL*   c,   // size [n]
+    const int             c_start,
+    const REAL*   r,   // size [n]
+    const int             r_start,
+    const int             n,
+          REAL*   u,   // size [n]
+    const int             u_start,
+          REAL*   uu,   // size [n] temporary
+    const int             uu_start
+) {
+    int i, offset;
+
+    //vector<MyReal4> scanres(n); // supposed to also be in shared memory and to reuse the space of mats
+    //--------------------------------------------------
+    // Recurrence 1: b[i] = b[i] - a[i]*c[i-1]/b[i-1] --
+    //   solved by scan with 2x2 matrix mult operator --
+    //--------------------------------------------------
+    vector<MyReal4> mats(n);    // supposed to be in shared memory!
+    REAL b0 = b[b_start + 0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
+        else      { mats[i].x = b[b_start + i]; mats[i].y = -a[a_start + i]*c[c_start + i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
+    }
+    inplaceScanInc<MatMult2b2>(n,mats);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        uu[uu_start + i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
+    }
+    // b -> uu
+    //----------------------------------------------------
+    // Recurrence 2: y[i] = y[i] - (a[i]/b[i-1])*y[i-1] --
+    //   solved by scan with linear func comp operator  --
+    //----------------------------------------------------
+    vector<MyReal2> lfuns(n);
+    REAL y0 = r[r_start + 0];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[a_start + i]/uu[uu_start + i-1]; }
+    }
+    inplaceScanInc<LinFunComp>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[u_start + i] = lfuns[i].x + y0*lfuns[i].y;
+    }
+    // y -> u
+
+    //----------------------------------------------------
+    // Recurrence 3: backward recurrence solved via     --
+    //             scan with linear func comp operator  --
+    //----------------------------------------------------
+    REAL yn = u[u_start + n-1]/uu[uu_start + n-1];
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        int k = n - i - 1;
+        if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
+        else      { lfuns[i].x = u[u_start + k]/uu[uu_start + k]; lfuns[i].y = -c[c_start + k]/uu[uu_start + k]; }
+    }
+    inplaceScanInc<LinFunComp>(n,lfuns);
+    for(int i=0; i<n; i++) { //parallel, map-like semantics
+        u[u_start + n-i-1] = lfuns[i].x + yn*lfuns[i].y;
+    }
+}
 
 ///numT iterations
 __global__ void InitMyTimeline(
