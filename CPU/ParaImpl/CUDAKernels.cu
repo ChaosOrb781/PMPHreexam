@@ -237,7 +237,7 @@ __global__ void Rollback(
                 c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
             }
             // here yy should have size [numX]
-            tridagPar_seq(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,&u[((gidx * numY) + j) * numX],&yy[gidx * numZ]);
         }
 
         //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -253,7 +253,7 @@ __global__ void Rollback(
                 y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
             // here yy should have size [numY]
-            tridagPar_seq(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
         }
     }
 }

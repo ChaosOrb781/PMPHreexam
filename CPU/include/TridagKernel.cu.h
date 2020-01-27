@@ -5,83 +5,83 @@
 
 typedef float REAL;
 
-class MyReal2 {
+class MyReal2_ker {
   public:
     REAL x; REAL y;
 
-    __device__ __host__ inline MyReal2() {
+    __device__ __host__ inline MyReal2_ker() {
         x = 0.0; y = 0.0; 
     }
-    __device__ __host__ inline MyReal2(const REAL& a, const REAL& b) {
+    __device__ __host__ inline MyReal2_ker(const REAL& a, const REAL& b) {
         x = a; y = b;
     }
-    __device__ __host__ inline MyReal2(const MyReal2& i4) { 
+    __device__ __host__ inline MyReal2_ker(const MyReal2& i4) { 
         x = i4.x; y = i4.y;
     }
-    volatile __device__ __host__ inline MyReal2& operator=(const MyReal2& i4) volatile {
+    volatile __device__ __host__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) volatile {
         x = i4.x; y = i4.y;
         return *this;
     }
-    __device__ __host__ inline MyReal2& operator=(const MyReal2& i4) {
+    __device__ __host__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) {
         x = i4.x; y = i4.y;
         return *this;
     }
 };
 
-class MyReal4 {
+class MyReal4_ker {
   public:
     REAL x; REAL y; REAL z; REAL w;
 
-    __device__ __host__ inline MyReal4() {
+    __device__ __host__ inline MyReal4_ker() {
         x = 0.0; y = 0.0; z = 0.0; w = 0.0; 
     }
-    __device__ __host__ inline MyReal4(const REAL& a, const REAL& b, const REAL& c, const REAL& d) {
+    __device__ __host__ inline MyReal4_ker(const REAL& a, const REAL& b, const REAL& c, const REAL& d) {
         x = a; y = b; z = c; w = d; 
     }
-    __device__ __host__ inline MyReal4(const MyReal4& i4) { 
+    __device__ __host__ inline MyReal4_ker(const MyReal4_ker& i4) { 
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
     }
-    volatile __device__ __host__ inline MyReal4& operator=(const MyReal4& i4) volatile {
+    volatile __device__ __host__ inline MyReal4_ker& operator=(const MyReal4_ker& i4) volatile {
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
         return *this;
     }
-    __device__ __host__ inline MyReal4& operator=(const MyReal4& i4) {
+    __device__ __host__ inline MyReal4_ker& operator=(const MyReal4_ker& i4) {
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
         return *this;
     }
 };
 
-class LinFunComp {
+class LinFunComp_ker {
   public:
-    typedef MyReal2 BaseType;
+    typedef MyReal2_ker BaseType;
 
     static __device__ __host__ inline
-    MyReal2 apply(volatile MyReal2& a, volatile MyReal2& b) {
-      return MyReal2( b.x + b.y*a.x, a.y*b.y );
+    MyReal2_ker apply(volatile MyReal2_ker& a, volatile MyReal2_ker& b) {
+      return MyReal2_ker( b.x + b.y*a.x, a.y*b.y );
     }
 
     static __device__ __host__ inline 
-    MyReal2 identity() { 
-      return MyReal2(0.0, 1.0);
+    MyReal2_ker identity() { 
+      return MyReal2_ker(0.0, 1.0);
     }
 };
 
-class MatMult2b2 {
+class MatMult2b2_ker {
   public:
-    typedef MyReal4 BaseType;
+    typedef MyReal4_ker BaseType;
 
     static __device__ __host__ inline
-    MyReal4 apply(volatile MyReal4& a, volatile MyReal4& b) {
+    MyReal4_ker apply(volatile MyReal4_ker& a, volatile MyReal4_ker& b) {
       REAL val = 1.0/(a.x*b.x);
-      return MyReal4( (b.x*a.x + b.y*a.z)*val,
+      return MyReal4_ker( (b.x*a.x + b.y*a.z)*val,
                       (b.x*a.y + b.y*a.w)*val,
                       (b.z*a.x + b.w*a.z)*val,
                       (b.z*a.y + b.w*a.w)*val );
     }
 
     static __device__ __host__ inline 
-    MyReal4 identity() { 
-      return MyReal4(1.0,  0.0, 0.0, 1.0);
+    MyReal4_ker identity() { 
+      return MyReal4_ker(1.0,  0.0, 0.0, 1.0);
     }
 };
 
