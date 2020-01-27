@@ -1,7 +1,7 @@
 #ifndef KERNELIZED_ALGORITHM
 #define KERNELIZED_ALGORITHM
 
-#include "OriginalAlgorithm.h"
+#include "InterchangedAlgorithm.h"
 
 void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
@@ -420,20 +420,78 @@ int   run_SimpleKernelized(
     vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
     vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
+    vector<REAL>                   TestmyX(numX);       // [numX]
+    vector<REAL>                   TestmyY(numY);       // [numY]
+    vector<REAL>                   TestmyTimeline(numT);// [numT]
+    vector<vector<REAL> >          TestmyDxx(numX);     // [numX][4]
+    vector<vector<REAL> >          TestmyDyy(numY);     // [numY][4]
+    vector<vector<vector<REAL> > > TestmyResult(outer); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT);    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT);    // [numT][numX][numY]
+
     uint myXindex = 0;
     uint myYindex = 0;
 
     cout << "Test1" << endl;
 	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+
+    for (int i = 0; i < numX; i ++) {
+        if (myX[i] != TestmyX[i]) {
+            cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
+        }
+    }
+    for (int i = 0; i < numY; i ++) {
+        if (myY[i] != TestmyY[i]) {
+            cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
+        }
+    }
+    for (int i = 0; i < numT; i ++) {
+        if (myTimeline[i] != TestmyTimeline[i]) {
+            cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
+        }
+    }
+
     cout << "Test2" << endl;
     initOperator_Kernel(numX, myX, myDxx);
+    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    for (int i = 0; i < numX; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (myDxx[i * 4 + j] != TestmyDxx[i][j]) {
+                cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
+            }
+        }
+    }
+
     cout << "Test3" << endl;
     initOperator_Kernel(numY, myY, myDyy);
+    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    for (int i = 0; i < numY; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (myDyy[i * 4 + j] != TestmyDyy[i][j]) {
+                cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
+            }
+        }
+    }
+
+
+
     cout << "Test4" << endl;
     setPayoff_Kernel(myX, outer, numX, numY, myResult);
+    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (myResult[((o * numX) + i) * numY + j] != TestmyResult[o][i][j]) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                }
+            }
+        }
+    }
 
     cout << "Test5" << endl;
     updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+
     cout << "Test6" << endl;
 	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
