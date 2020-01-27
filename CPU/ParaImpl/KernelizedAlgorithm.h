@@ -460,6 +460,10 @@ int   run_SimpleKernelized(
     vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
     vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
     uint myXindex = 0;
     uint myYindex = 0;
 
@@ -474,6 +478,15 @@ int   run_SimpleKernelized(
 
     //cout << "Test4" << endl;
     setPayoff_Kernel(myX, outer, numX, numY, myResult);
+#if TEST_INIT_CORRECTNESS
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+            }
+        }
+    }
+#endif
 
     //cout << "Test5" << endl;
     updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
@@ -539,8 +552,8 @@ int   run_SimpleKernelized(
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (abs(myResult[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
-                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                if (abs(myResultCopy[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResultCopy[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                     return 1;
                 }
             }
@@ -591,6 +604,10 @@ int   run_SimpleKernelized_Parallel(
     vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
     vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
     uint myXindex = 0;
     uint myYindex = 0;
 
@@ -605,6 +622,15 @@ int   run_SimpleKernelized_Parallel(
 
     //cout << "Test4" << endl;
     setPayoff_Kernel_para(myX, outer, numX, numY, myResult);
+#if TEST_INIT_CORRECTNESS
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+            }
+        }
+    }
+#endif
 
     //cout << "Test5" << endl;
     updateParams_Kernel_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
@@ -670,8 +696,8 @@ int   run_SimpleKernelized_Parallel(
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (abs(myResult[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
-                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                if (abs(myResultCopy[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResultCopy[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                     return 1;
                 }
             }
