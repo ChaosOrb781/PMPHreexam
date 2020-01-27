@@ -233,7 +233,7 @@ void initOperator_Kernel(const int blocksize, const uint numZ, device_vector<REA
 ) {
     REAL* myZ_p = raw_pointer_cast(&myZ[0]);
     REAL* Dzz_p = raw_pointer_cast(&Dzz[0]);
-    uint num_blocks= (numZ + blocksize - 1) / blocksize;
+    uint num_blocks= (numZ * 4 + blocksize - 1) / blocksize;
     InitMyDzz<<<num_blocks, blocksize>>>(numZ, myZ_p, Dzz_p);
 }
 
