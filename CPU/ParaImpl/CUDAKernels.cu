@@ -72,7 +72,7 @@ void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
   }
 }
 
-__device__ void tridagPar_seq(
+__global__ void tridagPar_seq(
     const vector<REAL>&   a,   // size [n]
     const vector<REAL>&   b,   // size [n]
     const vector<REAL>&   c,   // size [n]
