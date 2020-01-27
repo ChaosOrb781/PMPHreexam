@@ -24,7 +24,7 @@ void initGrid_Kernel(const int blocksize, const REAL s0, const REAL alpha, const
 
     REAL* myX_p = raw_pointer_cast(&myX[0]);
     num_blocks = (numX + blocksize - 1) / blocksize;
-    InitMyX(numX, myXindex, s0, dx, myX_p);
+    InitMyX<<<num_blocks, blocksize>>>(numX, myXindex, s0, dx, myX_p);
 
     const REAL stdY = 10.0*nu*sqrt(t);
     const REAL dy = stdY/numY;
@@ -32,8 +32,8 @@ void initGrid_Kernel(const int blocksize, const REAL s0, const REAL alpha, const
     myYindex = static_cast<unsigned>(numY/2.0);
 
     REAL* myY_p = raw_pointer_cast(&myY[0]);
-    num_blocks = (numX + blocksize - 1) / blocksize;
-    InitMyY(numY, myYindex, logAlpha, dy, myY_p);
+    num_blocks = (numY + blocksize - 1) / blocksize;
+    InitMyY<<<num_blocks, blocksize>>>(numY, myYindex, logAlpha, dy, myY_p);
 }
 
 void initOperator_Kernel(const int blocksize, const uint numZ, device_vector<REAL>& myZ, 
@@ -41,8 +41,8 @@ void initOperator_Kernel(const int blocksize, const uint numZ, device_vector<REA
 ) {
     REAL* myZ_p = raw_pointer_cast(&myZ[0]);
     REAL* Dzz_p = raw_pointer_cast(&Dzz[0]);
-    uint num_blocks= (numT * numX * numY + blocksize - 1) / blocksize;
-    InitMyDzz(numZ, myZ_p, Dzz_p);
+    uint num_blocks= (numZ + blocksize - 1) / blocksize;
+    InitMyDzz<<<num_blocks, blocksize>>>(numZ, myZ_p, Dzz_p);
 }
 
 void updateParams_Kernel(const int blocksize, const REAL alpha, const REAL beta, const REAL nu,
@@ -56,7 +56,7 @@ void updateParams_Kernel(const int blocksize, const REAL alpha, const REAL beta,
     REAL* myVarX_p = raw_pointer_cast(&myVarX[0]);
     REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
     uint num_blocks= (numT * numX * numY + blocksize - 1) / blocksize;
-    InitParams<<<num_blocks, B>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarX_p, myVarY_p);
+    InitParams<<<num_blocks, blocksize>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarX_p, myVarY_p);
 }
 
 void setPayoff_Kernel(const int blocksize, device_vector<REAL>& myX, const uint outer,
@@ -66,7 +66,7 @@ void setPayoff_Kernel(const int blocksize, device_vector<REAL>& myX, const uint 
     REAL* myX_p = raw_pointer_cast(&myX[0]);
     REAL* myResult_p = raw_pointer_cast(&myResult[0]);
     uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
-    InitMyResult<<<num_blocks, blocksize>>>(outer, numX, numY, myX_p, myResult_p)
+    InitMyResult<<<num_blocks, blocksize>>>(outer, numX, numY, myX_p, myResult_p);
 }
 
 void rollback_Kernel(const int blocksize, const uint outer, const uint numT, 
@@ -219,17 +219,17 @@ int run_SimpleKernel(
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-    initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+    initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cudaDeviceSynchronize();
 
     //cout << "Test2" << endl;
-    initOperator_Kernel(numX, myX, myDxx);
+    initOperator_Kernel(blocksize, numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel(numY, myY, myDyy);
+    initOperator_Kernel(blocksize, numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel(myX, outer, numX, numY, myResult);
+    setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
     cudaDeviceSynchronize();
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
@@ -242,10 +242,10 @@ int run_SimpleKernel(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
     //cout << "Test6" << endl;
-	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
