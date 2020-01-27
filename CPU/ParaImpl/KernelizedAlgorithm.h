@@ -943,7 +943,7 @@ int   run_SimpleKernelized_Parallel(
     return procs;
 }
 
-int   run_Kernelizedized_Rollback(  
+int   run_Kernelized_Rollback(  
                 const uint   outer,
                 const uint   numX,
                 const uint   numY,
