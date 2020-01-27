@@ -66,7 +66,7 @@ __global__ void InitMyDzz(
         uint col = gidx / 4;
         REAL dl, du;
         dl = (col == 0) ? 0.0 : myZ[col] - myZ[col - 1];
-        du = (col == numZ - 1) ? 0.0 : myZ[col] - myZ[col - 1];;
+        du = (col == numZ - 1) ? 0.0 : myZ[col + 1] - myZ[col];
         Dzz[gidx] = col > 0 && col < numZ-1 ?
                     (row == 0 ? 2.0/dl/(dl+du) :
                     (row == 1 ? -2.0*(1.0/dl + 1.0/du)/(dl+du) :
