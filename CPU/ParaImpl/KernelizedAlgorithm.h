@@ -484,7 +484,7 @@ int   run_SimpleKernelized(
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
                 if (myResult[((o * numX) + i) * numY + j] != TestmyResult[o][i][j]) {
-                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                    //cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                 }
             }
         }
