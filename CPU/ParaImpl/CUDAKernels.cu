@@ -64,7 +64,7 @@ struct LinFunComp_ker {
 };
 
 template<class OP>
-__global__ void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
+__device__ void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
   typename OP::OpTp acc = inpres[0];
   for(int i=1; i<n; i++) {
     acc = OP::apply(acc,inpres[i]);
