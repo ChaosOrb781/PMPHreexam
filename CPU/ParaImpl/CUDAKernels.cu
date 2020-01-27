@@ -4,13 +4,10 @@
 #include <cuda_runtime.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-#include "OriginalAlgorithm.h"
+#include "Constants.h"
+#include "TridagPar.h"
 
 using namespace thrust;
-template <class T>
-using hvec = host_vector<T>;
-template <class T>
-using dvec = device_vector<T>;
 
 ///numT iterations
 __global__ void InitMyTimeline(

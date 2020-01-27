@@ -7,7 +7,7 @@
 
 void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const uint numX, const uint numY, const uint numT,
-                dvec<REAL>& myX, dvec<REAL>& myY, dvec<REAL>& myTimeline,
+                device_vector<REAL>& myX, device_vector<REAL>& myY, device_vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
 ) {
     REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
@@ -29,8 +29,8 @@ void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL
     InitMyY(numY, myYindex, logAlpha, dy, myY_p);
 }
 
-void initOperator_Kernel(  const uint numZ, dvec<REAL>& myZ, 
-                        dvec<REAL>& Dzz
+void initOperator_Kernel(  const uint numZ, device_vector<REAL>& myZ, 
+                        device_vector<REAL>& Dzz
 ) {
     REAL* myZ_p = raw_pointer_cast(&myZ[0]);
     REAL* Dzz_p = raw_pointer_cast(&Dzz[0]);
@@ -39,8 +39,8 @@ void initOperator_Kernel(  const uint numZ, dvec<REAL>& myZ,
 
 void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
-    dvec<REAL>& myX, dvec<REAL>& myY, dvec<REAL>& myTimeline,
-    dvec<REAL>& myVarX, dvec<REAL>& myVarY)
+    device_vector<REAL>& myX, device_vector<REAL>& myY, device_vector<REAL>& myTimeline,
+    device_vector<REAL>& myVarX, device_vector<REAL>& myVarY)
 {
     REAL* myX_p = raw_pointer_cast(&myX[0]);
     REAL* myY_p = raw_pointer_cast(&myY[0]);
@@ -50,9 +50,9 @@ void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
     InitParams(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarX_p, myVarY_p);
 }
 
-void setPayoff_Kernel(dvec<REAL>& myX, const uint outer,
+void setPayoff_Kernel(device_vector<REAL>& myX, const uint outer,
     const uint numX, const uint numY,
-    dvec<REAL>& myResult)
+    device_vector<REAL>& myResult)
 {
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
@@ -65,19 +65,19 @@ void setPayoff_Kernel(dvec<REAL>& myX, const uint outer,
 
 void rollback_Kernel(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
-    dvec<REAL>& myTimeline, 
-    dvec<REAL>& myDxx,
-    dvec<REAL>& myDyy,
-    dvec<REAL>& myVarX,
-    dvec<REAL>& myVarY,
-    dvec<REAL>& u,
-    dvec<REAL>& v,
-    dvec<REAL>& a,
-    dvec<REAL>& b,
-    dvec<REAL>& c,
-    dvec<REAL>& y,
-    dvec<REAL>& yy,
-    dvec<REAL>& myResult
+    device_vector<REAL>& myTimeline, 
+    device_vector<REAL>& myDxx,
+    device_vector<REAL>& myDyy,
+    device_vector<REAL>& myVarX,
+    device_vector<REAL>& myVarY,
+    device_vector<REAL>& u,
+    device_vector<REAL>& v,
+    device_vector<REAL>& a,
+    device_vector<REAL>& b,
+    device_vector<REAL>& c,
+    device_vector<REAL>& y,
+    device_vector<REAL>& yy,
+    device_vector<REAL>& myResult
 ) {
     for (int t = 0; t <= numT - 2; t++) {
         for (int gidx = 0; gidx < outer; gidx++) {
@@ -184,30 +184,30 @@ int run_SimpleKernel(
 ) {
     int procs = 0;
 
-	dvec<REAL> myX(numX);       // [numX]
-    dvec<REAL> myY(numY);       // [numY]
-    dvec<REAL> myTimeline(numT);// [numT]
-    dvec<REAL> myDxx(numX * 4);     // [numX][4]
-    dvec<REAL> myDyy(numY * 4);     // [numY][4]
-    dvec<REAL> myDxxT(4 * numX);       // [4][numX]
-    dvec<REAL> myDyyT(4 * numY);       // [4][numY]
-    dvec<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
-    dvec<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
-    dvec<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
-    dvec<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
+	device_vector<REAL> myX(numX);       // [numX]
+    device_vector<REAL> myY(numY);       // [numY]
+    device_vector<REAL> myTimeline(numT);// [numT]
+    device_vector<REAL> myDxx(numX * 4);     // [numX][4]
+    device_vector<REAL> myDyy(numY * 4);     // [numY][4]
+    device_vector<REAL> myDxxT(4 * numX);       // [4][numX]
+    device_vector<REAL> myDyyT(4 * numY);       // [4][numY]
+    device_vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
+    device_vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    device_vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
+    device_vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
 #if TEST_INIT_CORRECTNESS
     vector<REAL> myResultCopy(outer * numX * numY);
 #endif
 
     uint numZ = std::max(numX, numY);
-    dvec<REAL> u(outer * numY * numX);
-    dvec<REAL> v(outer * numX * numY);
-    dvec<REAL> a(outer * numZ);
-    dvec<REAL> b(outer * numZ);
-    dvec<REAL> c(outer * numZ);
-    dvec<REAL> y(outer * numZ);
-    dvec<REAL> yy(outer * numZ);
+    device_vector<REAL> u(outer * numY * numX);
+    device_vector<REAL> v(outer * numX * numY);
+    device_vector<REAL> a(outer * numZ);
+    device_vector<REAL> b(outer * numZ);
+    device_vector<REAL> c(outer * numZ);
+    device_vector<REAL> y(outer * numZ);
+    device_vector<REAL> yy(outer * numZ);
 
     uint myXindex = 0;
     uint myYindex = 0;
