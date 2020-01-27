@@ -11,16 +11,16 @@ struct MyReal4_ker {
     REAL w;
     
     // constructors
-    inline MyReal4_ker() { x = y = z = w = 0.0; }
-    inline MyReal4_ker(const REAL a, const REAL b, const REAL c, const REAL d) {
+    __device__ inline MyReal4_ker() { x = y = z = w = 0.0; }
+    __device__ inline MyReal4_ker(const REAL a, const REAL b, const REAL c, const REAL d) {
         x = a; y = b; z = c; w = d;
     }
     // copy constructor
-    inline MyReal4_ker(const MyReal4_ker& i4) { 
+    __device__ inline MyReal4_ker(const MyReal4_ker& i4) { 
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
     }
     // assignment operator
-    inline MyReal4_ker& operator=(const MyReal4_ker& i4) {
+    __device__ inline MyReal4_ker& operator=(const MyReal4_ker& i4) {
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
         return *this;
     }
@@ -28,7 +28,7 @@ struct MyReal4_ker {
 
 struct MatMult2b2_ker {
   typedef MyReal4_ker OpTp;
-  static MyReal4_ker apply(const MyReal4_ker a, const MyReal4_ker b) {
+  __device__ static MyReal4_ker apply(const MyReal4_ker a, const MyReal4_ker b) {
     REAL val = 1.0/(a.x*b.x);
     return MyReal4_ker( (b.x*a.x + b.y*a.z)*val,
                     (b.x*a.y + b.y*a.w)*val,
@@ -41,16 +41,16 @@ struct MyReal2_ker {
     REAL x;
     REAL y;
     // constructors
-    inline MyReal2_ker() { x = y = 0.0; }
-    inline MyReal2_ker(const REAL a, const REAL b) {
+    __device__ inline MyReal2_ker() { x = y = 0.0; }
+    __device__ inline MyReal2_ker(const REAL a, const REAL b) {
         x = a; y = b;
     }
     // copy constructor
-    inline MyReal2_ker(const MyReal2_ker& i4) { 
+    __device__ inline MyReal2_ker(const MyReal2_ker& i4) { 
         x = i4.x; y = i4.y; 
     }
     // assignment operator
-    inline MyReal2_ker& operator=(const MyReal2_ker& i4) {
+    __device__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) {
         x = i4.x; y = i4.y; 
         return *this;
     }
@@ -58,7 +58,7 @@ struct MyReal2_ker {
 
 struct LinFunComp_ker {
   typedef MyReal2_ker OpTp;
-  static MyReal2_ker apply(const MyReal2_ker a, const MyReal2_ker b) {
+  __device__ static MyReal2_ker apply(const MyReal2_ker a, const MyReal2_ker b) {
     return MyReal2_ker( b.x + b.y*a.x, a.y*b.y );
   }
 };
