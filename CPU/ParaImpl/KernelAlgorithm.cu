@@ -258,9 +258,9 @@ int run_SimpleKernel(
     vector<REAL>                   TestmyTimeline(numT);// [numT]
     vector<vector<REAL> >          TestmyDxx(numX, vector<REAL>(4));     // [numX][4]
     vector<vector<REAL> >          TestmyDyy(numY, vector<REAL>(4));     // [numY][4]
-    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL>>(numX, vector<REAL>(numY))); // [outer][numX][numY]
-    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
-    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL> >(numX, vector<REAL>(numY))); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
     initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
