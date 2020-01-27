@@ -2,12 +2,8 @@
 #define CUDA_KERNELS
 
 #include <cuda_runtime.h>
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
 #include "Constants.h"
 #include "TridagPar.h"
-
-using namespace thrust;
 
 ///numT iterations
 __global__ void InitMyTimeline(

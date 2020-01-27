@@ -16,11 +16,11 @@ default: cpu
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
 
 cpu: $(EXECUTABLE)
-$(EXECUTABLE): kernel.o $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(EXECUTABLE) $(OBJECTS) kernel.o
+$(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
+	$(CXX) -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
 
-kernel.o:
-	nvcc $(INCLUDES) -c CUDAKernels.cu
+KernelAlgorithm.o:
+	nvcc $(INCLUDES) -c KernelAlgorithm.cu
 
 
 run_small: $(EXECUTABLE)

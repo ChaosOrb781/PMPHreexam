@@ -1,3 +1,5 @@
+#ifndef TRIDAGPAR_SEQUENTIAL
+#define TRIDAGPAR_SEQUENTIAL
 #if 0
 // this is a functional definition of tridag
 fun *[real] tridagPar( [real] a, *[real] b, [real] c, *[real] y ) =
@@ -330,3 +332,4 @@ inline void tridagPar(
     }
 }
 
+#endif TRIDAGPAR_SEQUENTIAL
