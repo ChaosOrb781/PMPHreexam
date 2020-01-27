@@ -184,7 +184,7 @@ void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
 {
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
-        int j = gidx % (numX * numY);
+        int j = gidx / (outer * numY);
         myResult[gidx] = max(myX[j]-0.001*(REAL)o, (REAL)0.0);
     }
 }
@@ -457,7 +457,6 @@ int   run_SimpleKernelized(
     initOperator_Alt(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
-            cout << "myDxx[" << i << "][" << j << "]" << endl;
             if (myDxx[i * 4 + j] != TestmyDxx[i][j]) {
                 cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
             }
@@ -484,7 +483,7 @@ int   run_SimpleKernelized(
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
                 if (myResult[((o * numX) + i) * numY + j] != TestmyResult[o][i][j]) {
-                    //cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                 }
             }
         }
