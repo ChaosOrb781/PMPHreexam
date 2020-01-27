@@ -408,9 +408,11 @@ int run_SimpleKernel(
 
     cout << "Test2" << endl;
     initOperator_Kernel(blocksize, numX, myX, myDxx);
+    cudaDeviceSynchronize();
 
     cout << "Test3" << endl;
     initOperator_Kernel(blocksize, numY, myY, myDyy);
+    cudaDeviceSynchronize();
 
     cout << "Test4" << endl;
     setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
