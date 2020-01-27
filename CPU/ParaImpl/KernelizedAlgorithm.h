@@ -329,7 +329,7 @@ void rollback_Kernel(const uint outer, const uint numT,
                     y[j] = dtInv*u[j][i] - 0.5*v[i][j];
 
                 // here yy should have size [numY]
-                tridagPar(a,b,c,y,0,numY,myResult, (gidx * numX + i) * numY,yy);
+                tridagPar(a,0,b,0,c,0,y,0,numY,myResult, (gidx * numX + i) * numY,yy,0);
             }
         }
     }
@@ -429,7 +429,7 @@ void rollback_Kernel_para(const uint outer, const uint numT,
                     y[j] = dtInv*u[j][i] - 0.5*v[i][j];
 
                 // here yy should have size [numY]
-                tridagPar(a,b,c,y,0,numY,myResult, (gidx * numX + i) * numY,yy);
+                tridagPar(a,0,b,0,c,0,y,0,numY,myResult, (gidx * numX + i) * numY,yy,0);
             }
         }
     }
@@ -519,7 +519,7 @@ void rollback_Kernel_Alt(const uint outer, const uint numT,
                     c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
                 }
                 // here yy should have size [numX]
-                tridagPar(a,b,c,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy);
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
             }
 
             //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -535,7 +535,7 @@ void rollback_Kernel_Alt(const uint outer, const uint numT,
                     y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
                 // here yy should have size [numY]
-                tridagPar(a,b,c,y,0,numY,myResult, (gidx * numX + i) * numY,yy);
+                tridagPar(a,(gidx * numZ),b,(gidx * numZ),c,(gidx * numZ),y,(gidx * numZ),numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
             }
         }
     }

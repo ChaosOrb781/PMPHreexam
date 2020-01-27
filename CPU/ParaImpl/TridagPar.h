@@ -140,14 +140,18 @@ void inplaceScanInc(const int n, vector<typename OP::OpTp>& inpres) {
 
 inline void tridagPar(
     const vector<REAL>&   a,   // size [n]
+    const int             a_start,
     const vector<REAL>&   b,   // size [n]
+    const int             b_start,
     const vector<REAL>&   c,   // size [n]
+    const int             c_start,
     const vector<REAL>&   r,   // size [n]
     const int&            r_start,
     const int             n,
           vector<REAL>&   u,   // size [n]
     const int&            u_start,
-          vector<REAL>&   uu   // size [n] temporary
+          vector<REAL>&   uu,   // size [n] temporary
+    const int             uu_start
 ) {
     int i, offset;
 
@@ -157,14 +161,14 @@ inline void tridagPar(
     //   solved by scan with 2x2 matrix mult operator --
     //--------------------------------------------------
     vector<MyReal4> mats(n);    // supposed to be in shared memory!
-    REAL b0 = b[0];
+    REAL b0 = b[b_start + 0];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
-        else      { mats[i].x = b[i]; mats[i].y = -a[i]*c[i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
+        else      { mats[i].x = b[b_start + i]; mats[i].y = -a[a_start + i]*c[c_start + i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
     }
     inplaceScanInc<MatMult2b2>(n,mats);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
-        uu[i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
+        uu[uu_start + i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
     }
     // b -> uu
     //----------------------------------------------------
@@ -175,7 +179,7 @@ inline void tridagPar(
     REAL y0 = r[r_start + 0];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
-        else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[i]/uu[i-1]; }
+        else      { lfuns[i].x = r[r_start + i]; lfuns[i].y = -a[a_start + i]/uu[uu_start + i-1]; }
     }
     inplaceScanInc<LinFunComp>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
@@ -187,11 +191,11 @@ inline void tridagPar(
     // Recurrence 3: backward recurrence solved via     --
     //             scan with linear func comp operator  --
     //----------------------------------------------------
-    REAL yn = u[u_start + n-1]/uu[n-1];
+    REAL yn = u[u_start + n-1]/uu[uu_start + n-1];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         int k = n - i - 1;
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
-        else      { lfuns[i].x = u[u_start + k]/uu[k]; lfuns[i].y = -c[k]/uu[k]; }
+        else      { lfuns[i].x = u[u_start + k]/uu[uu_start + k]; lfuns[i].y = -c[c_start + k]/uu[uu_start + k]; }
     }
     inplaceScanInc<LinFunComp>(n,lfuns);
     for(int i=0; i<n; i++) { //parallel, map-like semantics
