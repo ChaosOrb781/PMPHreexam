@@ -60,7 +60,7 @@ void initOperator_Kernelized(  const uint& numZ, const vector<REAL>& myZ,
                         vector<REAL>& Dzz
 ) {
     for (int gidx = 0; gidx < numZ * 4; gidx++) {
-        uint row = gidx / numZ;
+        uint row = gidx % 4;
         uint col = gidx / 4;
         REAL dl, du;
         dl = (col == 0) ? 0.0 : myZ[col] - myZ[col - 1];
