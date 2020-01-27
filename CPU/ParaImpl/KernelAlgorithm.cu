@@ -180,7 +180,7 @@ void rollback_Control(const uint outer, const uint numT,
                     c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
                 }
                 // here yy should have size [numX]
-                tridagPar_seq(a,b,c,u[j],numX,u[j],yy);
+                tridagPar_seq_host(a,b,c,u[j],numX,u[j],yy);
             }
 
             //	implicit y
@@ -195,7 +195,7 @@ void rollback_Control(const uint outer, const uint numT,
                     y[j] = dtInv*u[j][i] - 0.5*v[i][j];
 
                 // here yy should have size [numY]
-                tridagPar_seq(a,b,c,y,numY,myResult[o][i],yy);
+                tridagPar_seq_host(a,b,c,y,numY,myResult[o][i],yy);
             }
         }
     }
