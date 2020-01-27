@@ -115,6 +115,7 @@ class ReturnStat {
         }
 };
 
+/*
 void matTranspose(vector<REAL> A, vector<REAL> trA, uint planeIndex, int rowsA, int colsA) {
     for(int i = 0; i < rowsA; i++) {
         for(int j = 0; j < colsA; j++) {
@@ -127,6 +128,6 @@ void matTransposePlane(vector<REAL> A, vector<REAL> trA, int planes, int rowsA, 
     for (unsigned i = 0; i < planes; i++) {
         matTranspose(A, trA, i * rowsA * colsA, rowsA, colsA);
     }
-}
+}*/
 
 #endif // CONSTANTS
