@@ -238,11 +238,11 @@ __global__ void Rollback(
                 c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
             }
             // here yy should have size [numX]
-            uint num_blocks = (outer + blockDim - 1) / blockDim;
+            uint num_blocks = (outer + blockDim.x - 1) / blockDim.x;
             //Dynamic parallelism (kernel child)
-            TRIDAG_SOLVER<<<num_blocks, blockDim, blockDim * 32>>>(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,SGM_SIZE,&u[((gidx * numY) + j) * numX],&yy[gidx * numZ]);
+            TRIDAG_SOLVER<<<num_blocks, blockDim.x, blockDim.x * 32>>>(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,SGM_SIZE,&u[((gidx * numY) + j) * numX],&yy[gidx * numZ]);
             cudaDeviceSynchronize();
-            _syncthreads();
+            __syncthreads();
         }
 
         //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -258,10 +258,10 @@ __global__ void Rollback(
                 y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
 
             // here yy should have size [numY]
-            uint num_blocks = (outer + blocksize - 1) / blocksize;
-            TRIDAG_SOLVER<<<num_blocks, blockDim, blockDim * 32>>>(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY, SGM_SIZE,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
-            cudaSynchronize();
-            _syncthreads();
+            uint num_blocks = (outer + blockDim.x - 1) / blockDim.x;
+            TRIDAG_SOLVER<<<num_blocks, blockDim.x, blockDim.x * 32>>>(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY, SGM_SIZE,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
+            cudaDeviceSynchronize();
+            __syncthreads();
         }
     }
 }
