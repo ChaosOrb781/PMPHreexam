@@ -275,7 +275,7 @@ void rollback_Kernel(const int blocksize, const uint outer, const uint numT,
     device_vector<REAL>& c,
     device_vector<REAL>& y,
     device_vector<REAL>& yy,
-    device_vector<REAL>& myResult,
+    device_vector<REAL>& myResult
 ) {
     REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
     REAL* myDxx_p      = raw_pointer_cast(&myDxx[0]);
