@@ -102,7 +102,8 @@ __global__ void InitMyResult(
         uint plane_remain = gidx % (numX * numY);
         uint i = plane_remain / numY;
         //int j = plane_remain % numY
-        myResult[gidx] = std::max(myX[i]-0.001*(REAL)o, (REAL)0.0);
+        REAL a = myX[i]-0.001*(REAL)o;
+        myResult[gidx] = a > 0.0 ? a : (REAL)0.0;
     }
 }
 
