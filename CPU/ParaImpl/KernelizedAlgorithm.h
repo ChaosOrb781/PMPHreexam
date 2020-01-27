@@ -497,19 +497,19 @@ int   run_SimpleKernelized(
 
     initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
-        if (myX[i] != TestmyX[i]) {
+        if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
             return 1;
         }
     }
     for (int i = 0; i < numY; i ++) {
-        if (myY[i] != TestmyY[i]) {
+        if (abs(myY[i] - TestmyY[i]) > 0.00001f) {
             cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
             return 1;
         }
     }
     for (int i = 0; i < numT; i ++) {
-        if (myTimeline[i] != TestmyTimeline[i]) {
+        if (abs(myTimeline[i] - TestmyTimeline[i]) > 0.00001f) {
             cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
             return 1;
         }
@@ -518,7 +518,7 @@ int   run_SimpleKernelized(
     initOperator_Alt(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
-            if (myDxx[i * 4 + j] != TestmyDxx[i][j]) {
+            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
                 cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
                 return 1;
             }
@@ -528,7 +528,7 @@ int   run_SimpleKernelized(
     initOperator_Alt(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
-            if (myDyy[i * 4 + j] != TestmyDyy[i][j]) {
+            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
                 cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
                 return 1;
             }
@@ -539,7 +539,7 @@ int   run_SimpleKernelized(
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (myResult[((o * numX) + i) * numY + j] != TestmyResult[o][i][j]) {
+                if (abs(myResult[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
                     cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                     return 1;
                 }
@@ -551,11 +551,11 @@ int   run_SimpleKernelized(
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (myVarX[((t * numX) + i) * numY + j] != TestmyVarX[t][i][j]) {
+                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) > 0.00001f) {
                     cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
                     return 1;
                 }
-                if (myVarY[((t * numX) + i) * numY + j] != TestmyVarY[t][i][j]) {
+                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) > 0.00001f) {
                     cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
                     return 1;
                 }
@@ -628,19 +628,19 @@ int   run_SimpleKernelized_Parallel(
 
     initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
-        if (abs(myX[i] - TestmyX[i]) < 0.00001f) {
+        if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
             return 1;
         }
     }
     for (int i = 0; i < numY; i ++) {
-        if (abs(myY[i] - TestmyY[i]) < 0.00001f) {
+        if (abs(myY[i] - TestmyY[i]) > 0.00001f) {
             cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
             return 1;
         }
     }
     for (int i = 0; i < numT; i ++) {
-        if (abs(myTimeline[i] - TestmyTimeline[i]) < 0.00001f) {
+        if (abs(myTimeline[i] - TestmyTimeline[i]) > 0.00001f) {
             cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
             return 1;
         }
@@ -649,7 +649,7 @@ int   run_SimpleKernelized_Parallel(
     initOperator_Alt(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
-            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) < 0.00001f) {
+            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
                 cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
                 return 1;
             }
@@ -659,7 +659,7 @@ int   run_SimpleKernelized_Parallel(
     initOperator_Alt(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
-            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) < 0.00001f) {
+            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
                 cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
                 return 1;
             }
@@ -670,7 +670,7 @@ int   run_SimpleKernelized_Parallel(
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (abs(myResult[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) < 0.00001f) {
+                if (abs(myResult[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
                     cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResult[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
                     return 1;
                 }
@@ -682,11 +682,11 @@ int   run_SimpleKernelized_Parallel(
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) < 0.00001f) {
+                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) > 0.00001f) {
                     cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
                     return 1;
                 }
-                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) < 0.00001f) {
+                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) > 0.00001f) {
                     cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
                     return 1;
                 }
