@@ -372,6 +372,7 @@ int run_SimpleKernel(
 ) {
     int procs = 0;
 
+    cout << "initializing device memory" << endl;
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
     device_vector<REAL> myTimeline(numT);// [numT]
@@ -388,6 +389,7 @@ int run_SimpleKernel(
     vector<REAL> myResultCopy(outer * numX * numY);
 #endif
 
+    cout << "initializing rollback memory" << endl;
     uint numZ = std::max(numX, numY);
     device_vector<REAL> u(outer * numY * numX);
     device_vector<REAL> v(outer * numX * numY);
@@ -400,17 +402,17 @@ int run_SimpleKernel(
     uint myXindex = 0;
     uint myYindex = 0;
 
-    //cout << "Test1" << endl;
+    cout << "Test1" << endl;
     initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cudaDeviceSynchronize();
 
-    //cout << "Test2" << endl;
+    cout << "Test2" << endl;
     initOperator_Kernel(blocksize, numX, myX, myDxx);
 
-    //cout << "Test3" << endl;
+    cout << "Test3" << endl;
     initOperator_Kernel(blocksize, numY, myY, myDyy);
 
-    //cout << "Test4" << endl;
+    cout << "Test4" << endl;
     setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
     cudaDeviceSynchronize();
 #if TEST_INIT_CORRECTNESS
@@ -423,13 +425,13 @@ int run_SimpleKernel(
     }
 #endif
 
-    //cout << "Test5" << endl;
+    cout << "Test5" << endl;
     updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
-    //cout << "Test6" << endl;
+    cout << "Test6" << endl;
 	//rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
-    //cout << "Test7" << endl;
+    cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
     }
