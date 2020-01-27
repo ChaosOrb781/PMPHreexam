@@ -5,7 +5,7 @@
 
 #define TEST_INIT_CORRECTNESS true
 
-void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+void initGrid_Kernelized(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
@@ -29,7 +29,7 @@ void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL
         myY[i] = i*dy - myYindex*dy + logAlpha;
 }
 
-void initGrid_Kernel_para(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+void initGrid_Kernelized_para(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
@@ -56,7 +56,7 @@ void initGrid_Kernel_para(  const REAL s0, const REAL alpha, const REAL nu,const
         myY[i] = i*dy - myYindex*dy + logAlpha;
 }
 
-void initOperator_Kernel(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernelized(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& Dzz
 ) {
     REAL dl, du;
@@ -91,7 +91,7 @@ void initOperator_Kernel(  const uint& numZ, const vector<REAL>& myZ,
     Dzz[(numZ-1) * 4 + 3] = 0.0;
 }
 
-void initOperator_Kernel_para(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernelized_para(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& Dzz
 ) {
 	REAL dl, du;
@@ -128,7 +128,7 @@ void initOperator_Kernel_para(  const uint& numZ, const vector<REAL>& myZ,
 }
 
 //Have to flatten to use device vector!
-void initOperator_Kernel_T(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernelized_T(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
     for (int gidx = 0; gidx < numZ * 4; gidx ++) {
@@ -146,7 +146,7 @@ void initOperator_Kernel_T(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void initOperator_Kernel_T_para(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Kernelized_T_para(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<REAL>& DzzT
 ) {
 	//	standard case
@@ -166,7 +166,7 @@ void initOperator_Kernel_T_para(  const uint& numZ, const vector<REAL>& myZ,
     }
 }
 
-void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Kernelized(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -187,7 +187,7 @@ void updateParams_Kernel(const REAL alpha, const REAL beta, const REAL nu,
     }
 }
 
-void updateParams_Kernel_para(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Kernelized_para(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<REAL>& myVarX, vector<REAL>& myVarY)
@@ -209,7 +209,7 @@ void updateParams_Kernel_para(const REAL alpha, const REAL beta, const REAL nu,
     }
 }
 
-void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
+void setPayoff_Kernelized(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -222,7 +222,7 @@ void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
     }
 }
 
-void setPayoff_Kernel_para(const vector<REAL> myX, const uint outer,
+void setPayoff_Kernelized_para(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<REAL>& myResult)
 {
@@ -236,7 +236,7 @@ void setPayoff_Kernel_para(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Kernel(const uint outer, const uint numT, 
+void rollback_Kernelized(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -335,7 +335,7 @@ void rollback_Kernel(const uint outer, const uint numT,
     }
 }
 
-void rollback_Kernel_para(const uint outer, const uint numT, 
+void rollback_Kernelized_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -435,7 +435,7 @@ void rollback_Kernel_para(const uint outer, const uint numT,
     }
 }
 
-void rollback_Kernel_Alt(const uint outer, const uint numT, 
+void rollback_Kernelized_Alt(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -541,7 +541,7 @@ void rollback_Kernel_Alt(const uint outer, const uint numT,
     }
 }
 
-void rollback_Kernel_Alt_para(const uint outer, const uint numT, 
+void rollback_Kernelized_Alt_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxx,
@@ -681,16 +681,16 @@ int   run_SimpleKernelized(
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernelized(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
     //cout << "Test2" << endl;
-    initOperator_Kernel(numX, myX, myDxx);
+    initOperator_Kernelized(numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel(numY, myY, myDyy);
+    initOperator_Kernelized(numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel(myX, outer, numX, numY, myResult);
+    setPayoff_Kernelized(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -702,9 +702,9 @@ int   run_SimpleKernelized(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernelized(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Kernelized(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
     //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
@@ -721,7 +721,7 @@ int   run_SimpleKernelized(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -741,7 +741,7 @@ int   run_SimpleKernelized(
         }
     }
 
-    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -751,7 +751,7 @@ int   run_SimpleKernelized(
         }
     }
 
-    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -761,7 +761,7 @@ int   run_SimpleKernelized(
         }
     }
 
-    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -773,7 +773,7 @@ int   run_SimpleKernelized(
         }
     }
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -827,16 +827,16 @@ int   run_SimpleKernelized_Parallel(
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-	initGrid_Kernel_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernelized_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
     //cout << "Test2" << endl;
-    initOperator_Kernel_para(numX, myX, myDxx);
+    initOperator_Kernelized_para(numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel_para(numY, myY, myDyy);
+    initOperator_Kernelized_para(numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel_para(myX, outer, numX, numY, myResult);
+    setPayoff_Kernelized_para(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -848,9 +848,9 @@ int   run_SimpleKernelized_Parallel(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernelized_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Kernelized_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
     //cout << "Test7" << endl;
 #pragma omp parallel for schedule(static)
@@ -872,7 +872,7 @@ int   run_SimpleKernelized_Parallel(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -892,7 +892,7 @@ int   run_SimpleKernelized_Parallel(
         }
     }
 
-    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -902,7 +902,7 @@ int   run_SimpleKernelized_Parallel(
         }
     }
 
-    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -912,7 +912,7 @@ int   run_SimpleKernelized_Parallel(
         }
     }
 
-    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -924,7 +924,7 @@ int   run_SimpleKernelized_Parallel(
         }
     }
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -943,7 +943,7 @@ int   run_SimpleKernelized_Parallel(
     return procs;
 }
 
-int   run_Kernelized_Rollback(  
+int   run_Kernelizedized_Rollback(  
                 const uint   outer,
                 const uint   numX,
                 const uint   numY,
@@ -985,16 +985,16 @@ int   run_Kernelized_Rollback(
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-	initGrid_Kernel(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernelized(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
     //cout << "Test2" << endl;
-    initOperator_Kernel(numX, myX, myDxx);
+    initOperator_Kernelized(numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel(numY, myY, myDyy);
+    initOperator_Kernelized(numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel(myX, outer, numX, numY, myResult);
+    setPayoff_Kernelized(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -1006,9 +1006,9 @@ int   run_Kernelized_Rollback(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernelized(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernelized_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
@@ -1025,7 +1025,7 @@ int   run_Kernelized_Rollback(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -1045,7 +1045,7 @@ int   run_Kernelized_Rollback(
         }
     }
 
-    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -1055,7 +1055,7 @@ int   run_Kernelized_Rollback(
         }
     }
 
-    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -1065,7 +1065,7 @@ int   run_Kernelized_Rollback(
         }
     }
 
-    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -1077,7 +1077,7 @@ int   run_Kernelized_Rollback(
         }
     }
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -1140,16 +1140,16 @@ int   run_Kernelized_Rollback_Parallel(
     uint myYindex = 0;
 
     //cout << "Test1" << endl;
-	initGrid_Kernel_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initGrid_Kernelized_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
     //cout << "Test2" << endl;
-    initOperator_Kernel_para(numX, myX, myDxx);
+    initOperator_Kernelized_para(numX, myX, myDxx);
 
     //cout << "Test3" << endl;
-    initOperator_Kernel_para(numY, myY, myDyy);
+    initOperator_Kernelized_para(numY, myY, myDyy);
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel_para(myX, outer, numX, numY, myResult);
+    setPayoff_Kernelized_para(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
@@ -1161,9 +1161,9 @@ int   run_Kernelized_Rollback_Parallel(
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Kernelized_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     //cout << "Test6" << endl;
-	rollback_Kernel_Alt_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernelized_Alt_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     //cout << "Test7" << endl;
 #pragma omp parallel for schedule(static)
@@ -1185,7 +1185,7 @@ int   run_Kernelized_Rollback_Parallel(
     vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
     vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
 
-    initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
     for (int i = 0; i < numX; i ++) {
         if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
             cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
@@ -1205,7 +1205,7 @@ int   run_Kernelized_Rollback_Parallel(
         }
     }
 
-    initOperator_Alt(numX, TestmyX, TestmyDxx);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
@@ -1215,7 +1215,7 @@ int   run_Kernelized_Rollback_Parallel(
         }
     }
 
-    initOperator_Alt(numY, TestmyY, TestmyDyy);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
             if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
@@ -1225,7 +1225,7 @@ int   run_Kernelized_Rollback_Parallel(
         }
     }
 
-    setPayoff_Alt(TestmyX, outer, numX, numY, TestmyResult);
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
@@ -1237,7 +1237,7 @@ int   run_Kernelized_Rollback_Parallel(
         }
     }
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
     for (int t = 0; t < numT; t ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {

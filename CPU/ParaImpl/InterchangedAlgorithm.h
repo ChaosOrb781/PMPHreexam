@@ -4,7 +4,7 @@
 #include "OriginalAlgorithm.h"
 #include <omp.h>
 
-void initGrid_Alt(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+void initGrid_Interchanged(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
@@ -28,7 +28,7 @@ void initGrid_Alt(  const REAL s0, const REAL alpha, const REAL nu,const REAL t,
         myY[i] = i*dy - myYindex*dy + logAlpha;
 }
 
-void initGrid_Alt_para(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
+void initGrid_Interchanged_para(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
                 vector<REAL>& myX, vector<REAL>& myY, vector<REAL>& myTimeline,
                 uint& myXindex, uint& myYindex
@@ -55,7 +55,7 @@ void initGrid_Alt_para(  const REAL s0, const REAL alpha, const REAL nu,const RE
         myY[i] = i*dy - myYindex*dy + logAlpha;
 }
 
-void initOperator_Alt(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Interchanged(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<vector<REAL> >& Dzz
 ) {
 	REAL dl, du;
@@ -90,7 +90,7 @@ void initOperator_Alt(  const uint& numZ, const vector<REAL>& myZ,
     Dzz[numZ-1][3] = 0.0;
 }
 
-void initOperator_Alt_para(  const uint& numZ, const vector<REAL>& myZ, 
+void initOperator_Interchanged_para(  const uint& numZ, const vector<REAL>& myZ, 
                         vector<vector<REAL> >& Dzz
 ) {
 	REAL dl, du;
@@ -126,7 +126,7 @@ void initOperator_Alt_para(  const uint& numZ, const vector<REAL>& myZ,
     Dzz[numZ-1][3] = 0.0;
 }
 
-void updateParams_Alt(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Interchanged(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<vector<vector<REAL> > >& myVarX, vector<vector<vector<REAL> > >& myVarY)
@@ -145,7 +145,7 @@ void updateParams_Alt(const REAL alpha, const REAL beta, const REAL nu,
             }
 }
 
-void updateParams_Alt_para(const REAL alpha, const REAL beta, const REAL nu,
+void updateParams_Interchanged_para(const REAL alpha, const REAL beta, const REAL nu,
     const uint numX, const uint numY, const uint numT, 
     const vector<REAL> myX, const vector<REAL> myY, const vector<REAL> myTimeline,
     vector<vector<vector<REAL> > >& myVarX, vector<vector<vector<REAL> > >& myVarY)
@@ -165,7 +165,7 @@ void updateParams_Alt_para(const REAL alpha, const REAL beta, const REAL nu,
             }
 }
 
-void setPayoff_Alt(const vector<REAL> myX, const uint outer,
+void setPayoff_Interchanged(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<vector< vector<REAL> > >& myResult)
 {
@@ -179,7 +179,7 @@ void setPayoff_Alt(const vector<REAL> myX, const uint outer,
     }
 }
 
-void setPayoff_Alt_para(const vector<REAL> myX, const uint outer,
+void setPayoff_Interchanged_para(const vector<REAL> myX, const uint outer,
     const uint numX, const uint numY,
     vector<vector< vector<REAL> > >& myResult)
 {
@@ -194,7 +194,7 @@ void setPayoff_Alt_para(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Alt(const uint outer, const uint numT, 
+void rollback_Interchanged(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<vector<REAL> > myDxx,
@@ -283,7 +283,7 @@ void rollback_Alt(const uint outer, const uint numT,
     }
 }
 
-void rollback_Alt_para(const uint outer, const uint numT, 
+void rollback_Interchanged_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
     const vector<vector<REAL> > myDxx,
@@ -456,13 +456,13 @@ int   run_InterchangedAlternative(
         }
     }
 
-	initGrid_Alt(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
-	initOperator_Alt(numX, myX, myDxx);
-    initOperator_Alt(numY, myY, myDyy);
-    setPayoff_Alt(myX, outer, numX, numY, myResult);
+	initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initOperator_Interchanged(numX, myX, myDxx);
+    initOperator_Interchanged(numY, myY, myDyy);
+    setPayoff_Interchanged(myX, outer, numX, numY, myResult);
 
-    updateParams_Alt(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
-	rollback_Alt(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+	rollback_Interchanged(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 	
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[i][myXindex][myYindex];
@@ -564,16 +564,16 @@ int   run_InterchangedParallelAlternative(
         }
     }
 
-	initGrid_Alt_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
-	initOperator_Alt_para(numX, myX, myDxx);
-    initOperator_Alt_para(numY, myY, myDyy);
+	initGrid_Interchanged_para(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+	initOperator_Interchanged_para(numX, myX, myDxx);
+    initOperator_Interchanged_para(numY, myY, myDyy);
     
     //left off from here!
-    setPayoff_Alt_para(myX, outer, numX, numY, myResult);
+    setPayoff_Interchanged_para(myX, outer, numX, numY, myResult);
 
-    updateParams_Alt_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Interchanged_para(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 
-	rollback_Alt_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
+	rollback_Interchanged_para(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
 
 #pragma omp parallel for schedule(static)
 	for(uint i = 0; i < outer; ++ i ) {
