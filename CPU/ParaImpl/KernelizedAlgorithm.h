@@ -457,6 +457,7 @@ int   run_SimpleKernelized(
     initOperator_Alt(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
+            cout << "myDxx[" << i << "][" << j << "]" << endl;
             if (myDxx[i * 4 + j] != TestmyDxx[i][j]) {
                 cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
             }
