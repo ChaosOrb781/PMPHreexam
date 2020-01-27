@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "Constants.h"
 
-struct MyReal4_ker {
+__global__ struct MyReal4_ker {
     REAL x;
     REAL y;
     REAL z;
@@ -26,7 +26,7 @@ struct MyReal4_ker {
     }
 };
 
-struct MatMult2b2_ker {
+__global__ struct MatMult2b2_ker {
   typedef MyReal4_ker OpTp;
   static MyReal4_ker apply(const MyReal4_ker a, const MyReal4_ker b) {
     REAL val = 1.0/(a.x*b.x);
@@ -37,7 +37,7 @@ struct MatMult2b2_ker {
   }
 };
 
-struct MyReal2_ker {
+__global__ struct MyReal2_ker {
     REAL x;
     REAL y;
     // constructors
@@ -56,7 +56,7 @@ struct MyReal2_ker {
     }
 };
 
-struct LinFunComp_ker {
+__global__ struct LinFunComp_ker {
   typedef MyReal2_ker OpTp;
   static MyReal2_ker apply(const MyReal2_ker a, const MyReal2_ker b) {
     return MyReal2_ker( b.x + b.y*a.x, a.y*b.y );
@@ -64,7 +64,7 @@ struct LinFunComp_ker {
 };
 
 template<class OP>
-void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
+__global__ void inplaceScanInc_ker(const int n, vector<typename OP::OpTp>& inpres) {
   typename OP::OpTp acc = inpres[0];
   for(int i=1; i<n; i++) {
     acc = OP::apply(acc,inpres[i]);
