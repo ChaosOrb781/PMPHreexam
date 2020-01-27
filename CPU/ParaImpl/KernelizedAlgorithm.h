@@ -184,8 +184,10 @@ void setPayoff_Kernel(const vector<REAL> myX, const uint outer,
 {
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
-        int j = (gidx % (numX * numY)) / numY;
-        myResult[gidx] = max(myX[j]-0.001*(REAL)o, (REAL)0.0);
+        int plane_remain = gidx % (numX * numY);
+        int i = plane_remain / numY;
+        //int j = plane_remain % numY
+        myResult[gidx] = max(myX[i]-0.001*(REAL)o, (REAL)0.0);
     }
 }
 
@@ -196,8 +198,10 @@ void setPayoff_Kernel_para(const vector<REAL> myX, const uint outer,
 #pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < outer * numX * numY; gidx++) {
         int o = gidx / (numX * numY);
-        int j = gidx % (numX * numY);
-        myResult[gidx] = max(myX[j]-0.001*(REAL)o, (REAL)0.0);
+        int plane_remain = gidx % (numX * numY);
+        int i = plane_remain / numY;
+        //int j = plane_remain % numY
+        myResult[gidx] = max(myX[i]-0.001*(REAL)o, (REAL)0.0);
     }
 }
 
@@ -491,6 +495,19 @@ int   run_SimpleKernelized(
 
     cout << "Test5" << endl;
     updateParams_Kernel(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_Alt(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    for (int t = 0; t < numT; t ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (myVarX[((t * numX) + i) * numY + j] != TestmyVarX[t][i][j]) {
+                    cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
+                }
+                if (myVarY[((t * numX) + i) * numY + j] != TestmyVarY[t][i][j]) {
+                    cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
+                }
+            }
+        }
+    }
 
     cout << "Test6" << endl;
 	rollback_Kernel(outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, myResult);
