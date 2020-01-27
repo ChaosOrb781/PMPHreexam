@@ -3,7 +3,7 @@
 
 #include "InterchangedAlgorithm.h"
 
-#define TEST_INIT_CORRECTNESS false
+#define TEST_INIT_CORRECTNESS true
 
 void initGrid_Kernel(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
