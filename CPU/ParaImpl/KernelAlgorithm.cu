@@ -308,6 +308,14 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
         gpuErr(cudaPeekAtLastError());
 
         uint num_blocks2 = (outer + blocksize - 1) / blocksize;
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numX % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
         for (int j = 0; j < numY; j++) {
             for (int o = 0; o < outer; o++) {
                 TRIDAG_SOLVER<<<num_blocks2, blocksize, 32 * blocksize>>>(
@@ -333,9 +341,17 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numY % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
-                TRIDAG_SOLVER<<<num_blocks2, blocksize, 32 * blocksize>>>(
+                TRIDAG_SOLVER<<<num_blocks2, blocksize, 64 * blocksize>>>(
                     &a_p[((o * numZ) + i) * numZ], 
                     &b_p[((o * numZ) + i) * numZ], 
                     &c_p[((o * numZ) + i) * numZ],
