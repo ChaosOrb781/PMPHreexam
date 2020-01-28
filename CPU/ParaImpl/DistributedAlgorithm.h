@@ -337,7 +337,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             uint o = gidx / numX;
             uint i = gidx % numX;
             uint numZ = max(numX,numY);
-            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            tridagPar(a,((o * numZ) + i) * numZ,b,((o * numZ) + i) * numZ,c,((o * numZ) + i) * numZ,y,((o * numZ) + i) * numZ,numY,myResult, (o * numX + i) * numY,yy,(o * numZ));
         }
     }
 }
