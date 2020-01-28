@@ -302,9 +302,8 @@ void rollback_Distributed(const uint outer, const uint numT,
 
         //cout << "test 4" << endl;
         for (int gidx = 0; gidx < outer * numY; gidx++) {
-            uint o = gidx / (numY * numX);
-            uint plane_remain = gidx % (numY * numX);
-            uint j = plane_remain / numX;
+            uint o = gidx / numY;
+            uint j = gidx % numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
             // here yy should have size [numX]
