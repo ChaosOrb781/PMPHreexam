@@ -307,15 +307,6 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        uint num_blocks2 = (outer + blocksize - 1) / blocksize;
-        if((blocksize % sgm_size)!=0) {
-            printf("Invalid segment or block size. Exiting!\n\n!");
-            exit(0);
-        }
-        if((numX % sgm_size)!=0) {
-            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
-            exit(0);
-        }
         for (int j = 0; j < numY; j++) {
             //cout << "t: " << t << endl;
             for (int o = 0; o < outer; o++) {
@@ -341,14 +332,6 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        if((blocksize % sgm_size)!=0) {
-            printf("Invalid segment or block size. Exiting!\n\n!");
-            exit(0);
-        }
-        if((numY % sgm_size)!=0) {
-            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
-            exit(0);
-        }
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
                 tridagPar(
@@ -491,8 +474,6 @@ int run_CPUKernel(
                       REAL*  res   // [outer] RESULT
 ) {
     int procs = blocksize;
-
-    int sgm_size = 8;
 
     cout << "initializing device memory" << endl;
 	device_vector<REAL> myX(numX);       // [numX]
