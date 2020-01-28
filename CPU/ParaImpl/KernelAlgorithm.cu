@@ -351,7 +351,7 @@ void rollback_Kernel_CPU(
                 );
             }
         }*/
-
+        cout << "test 1" << endl;
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
@@ -376,7 +376,7 @@ void rollback_Kernel_CPU(
             }
         }
 
-        //cout << "test 2" << endl;
+        cout << "test 2" << endl;
         for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
             uint o = gidx / (numY * numX);
             uint plane_remain = gidx % (numY * numX);
@@ -401,7 +401,7 @@ void rollback_Kernel_CPU(
             u_p[((o * numY) + j) * numX + i] += v_p[((o * numX) + i) * numY + j];
         }
 
-        //cout << "test 3" << endl;
+        cout << "test 3" << endl;
         for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
             uint o = gidx / (numY * numX);
             uint plane_remain = gidx % (numY * numX);
@@ -414,7 +414,7 @@ void rollback_Kernel_CPU(
             c_p[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 2]);
         }
 
-        //cout << "test 4" << endl;
+        cout << "test 4" << endl;
         for(uint j=0;j<numY;j++) {
             for (int gidx = 0; gidx < outer; gidx++) {
                 uint numZ = max(numX,numY);
@@ -423,7 +423,7 @@ void rollback_Kernel_CPU(
             }
         }
 
-        //cout << "test 5" << endl;
+        cout << "test 5" << endl;
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
@@ -436,7 +436,7 @@ void rollback_Kernel_CPU(
             c_p[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 2]);
         }
 
-        //cout << "test 6" << endl;
+        cout << "test 6" << endl;
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
@@ -447,6 +447,7 @@ void rollback_Kernel_CPU(
             y_p[((o * numZ) + i) * numZ + j] = dtInv*u_p[((o * numY) + j) * numX + i] - 0.5*v_p[((o * numX) + i) * numY + j];
         }
 
+        cout << "test 7" << endl;
         for(uint i=0;i<numX;i++) {
             for (int gidx = 0; gidx < outer; gidx++) {
                 // here yy should have size [numY]
