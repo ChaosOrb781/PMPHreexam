@@ -142,6 +142,15 @@ void inplaceScanInc(const int n, vector<typename OP::OpTp>& inpres) {
   }
 }
 
+template<class OP>
+void inplaceScanInc(const int n, typename OP::OpTp* inpres) {
+  typename OP::OpTp acc = inpres[0];
+  for(int i=1; i<n; i++) {
+    acc = OP::apply(acc,inpres[i]);
+    inpres[i] = acc;    
+  }
+}
+
 inline void tridagPar(
     const vector<REAL>&   a,   // size [n]
     const int             a_start,
@@ -348,7 +357,7 @@ inline void tridagPar(
     //   solved by scan with 2x2 matrix mult operator --
     //--------------------------------------------------
     std::cout << "test 1" << std::endl;
-    vector<MyReal4> mats(n);    // supposed to be in shared memory!
+    MyReal4 mats[n];    // supposed to be in shared memory!
     REAL b0 = b[0];
     std::cout << "test 2" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
@@ -367,7 +376,7 @@ inline void tridagPar(
     //   solved by scan with linear func comp operator  --
     //----------------------------------------------------
     std::cout << "test 5" << std::endl;
-    vector<MyReal2> lfuns(n);
+    MyReal2* lfuns[n];
     REAL y0 = r[0];
     std::cout << "test 6" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
