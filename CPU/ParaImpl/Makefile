@@ -14,12 +14,13 @@ SOURCES_CPP_2 =ProjectMain2.cpp
 OBJECTS_2     =ProjectMain2.o
 EXECUTABLE_2  =runproject2
 
-SOURCES_CPPs  =$(SOURCES_CPP_1) $(SOURCES_CPP_2)
-
 default: cpu
 
-.cpp.o: $(SOURCES_CPPs) $(HELPERS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<
+$(OBJECTS_1): $(SOURCES_CPP_1)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(SOURCES_CPP_1) -o $(OBJECTS_1)
+
+$(OBJECTS_2): $(SOURCES_CPP_2)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $(SOURCES_CPP_2) -o $(OBJECTS_2)
 
 cpu: $(EXECUTABLE_1) $(EXECUTABLE_2)
 $(EXECUTABLE_1): KernelAlgorithm.o $(OBJECTS_1)
