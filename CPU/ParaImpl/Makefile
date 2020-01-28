@@ -17,7 +17,7 @@ default: cpu
 
 cpu: $(EXECUTABLE)
 $(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
-	$(CXX) -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
+	$(CXX) -shared -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
 
 KernelAlgorithm.o:
 	nvcc $(INCLUDES) -arch=sm_35 -rdc=true -c KernelAlgorithm.cu -o KernelAlgorithm_nolink.o
