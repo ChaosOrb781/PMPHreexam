@@ -1,6 +1,7 @@
 #ifndef CUDA_KERNELS
 #define CUDA_KERNELS
 
+#include "cuda.h"
 #include <cuda_runtime.h>
 #include "Constants.h"
 #include "TridagKernel.cu.h"
