@@ -4,7 +4,6 @@
 #include "SimpleParallelAlgorithm.h"
 #include "InterchangedAlgorithm.h"
 #include "KernelizedAlgorithm.h"
-#include "KernelAlgorithm.h"
 
 #include "cuda.h"
 #include "cuda_runtime.h"
