@@ -1,5 +1,5 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudadevrt
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart -lcudadevrt
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include
