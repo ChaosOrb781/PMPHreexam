@@ -1150,8 +1150,8 @@ void rollback_Kernelized_Dist_Flat(const uint outer, const uint numT,
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
-            uint i = plane_remain % numY;
-            uint j = plane_remain / numY;
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
             u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
