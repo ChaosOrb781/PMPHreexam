@@ -394,12 +394,9 @@ int run_SimpleKernel(
     device_vector<REAL> myTimeline(numT);// [numT]
     device_vector<REAL> myDxx(numX * 4);     // [numX][4]
     device_vector<REAL> myDyy(numY * 4);     // [numY][4]
-    device_vector<REAL> myDxxT(4 * numX);       // [4][numX]
-    device_vector<REAL> myDyyT(4 * numY);       // [4][numY]
     device_vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
     device_vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
     device_vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
-    device_vector<REAL> myVarXT(numT * numY * numX);    // [numT][numY][numX]
 
 #if TEST_INIT_CORRECTNESS
     vector<REAL> myResultCopy(outer * numX * numY);

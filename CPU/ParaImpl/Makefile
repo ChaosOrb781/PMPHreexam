@@ -27,10 +27,14 @@ $(EXECUTABLE_1): KernelAlgorithm.o $(OBJECTS_1)
 	$(CXX) -o $(EXECUTABLE_1) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_1) KernelAlgorithm.o
 $(EXECUTABLE_2): KernelAlgorithm.o $(OBJECTS_2)
 	$(CXX) -o $(EXECUTABLE_2) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_2) KernelAlgorithm.o
+$(EXECUTABLE_3): KernelAlgorithm_debug.o $(OBJECTS_2)
+	$(CXX) -o $(EXECUTABLE_2) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_2) KernelAlgorithm_debug.o
 
 KernelAlgorithm.o:
 	nvcc $(INCLUDES) -c KernelAlgorithm.cu
 
+KernelAlgorithm_debug.o:
+	nvcc $(INCLUDES) -lineinfo -c KernelAlgorithm.cu -o KernelAlgorithm_debug.o
 
 run_small: $(EXECUTABLE_1) $(EXECUTABLE_2)
 	cat ../Data/Small/input.data ../Data/Small/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
@@ -62,6 +66,9 @@ run_medium_2: $(EXECUTABLE_2)
 
 run_large_2: $(EXECUTABLE_2)
 	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
+
+run_kernel_debug: $(EXECUTABLE_3)$
+	cat ../Data/Small/input.data ../Data/Small/output.data | cuda-memcheck ./$(EXECUTABLE_3) 2> Debug.txt
 
 clean:
 	rm -f Debug.txt $(EXECUTABLE_1) $(EXECUTABLE_2) $(OBJECTS_1)
