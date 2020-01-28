@@ -317,8 +317,8 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
             exit(0);
         }
         for (int j = 0; j < numY; j++) {
+            //cout << "t: " << t << endl;
             for (int o = 0; o < outer; o++) {
-                cout << "o: " << o << endl;
                 TRIDAG_SOLVER<<<num_blocks2, blocksize, sizeof(MyReal4_ker) * blocksize + sizeof(MyReal2_ker) * blocksize + sizeof(int) * blocksize>>>(
                     &a_p[((o * numZ) + j) * numZ], 
                     &b_p[((o * numZ) + j) * numZ], 
@@ -354,7 +354,7 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
         }
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
-                TRIDAG_SOLVER<<<num_blocks2, blocksize, 32 * blocksize>>>(
+                TRIDAG_SOLVER<<<num_blocks2, blocksize, sizeof(MyReal4_ker) * blocksize + sizeof(MyReal2_ker) * blocksize + sizeof(int) * blocksize>>>(
                     &a_p[((o * numZ) + i) * numZ], 
                     &b_p[((o * numZ) + i) * numZ], 
                     &c_p[((o * numZ) + i) * numZ],
@@ -364,9 +364,9 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
                     &myResult_p[((o * numX) + i) * numY],
                     &yy_p[o * numZ]
                 );
+                cudaDeviceSynchronize();
+                gpuErr(cudaPeekAtLastError());
             }
-            cudaDeviceSynchronize();
-            gpuErr(cudaPeekAtLastError());
         }
     }
 }
