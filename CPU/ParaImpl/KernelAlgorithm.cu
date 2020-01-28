@@ -374,12 +374,12 @@ void rollback_Kernel_CPU(
         gpuErr(cudaPeekAtLastError());
 
         cout << "Rollback tridagpar 2" << endl;
-        host_vector<REAL> a_h(a);
-        host_vector<REAL> b_h(b);
-        host_vector<REAL> c_h(c);
-        host_vector<REAL> y_h(y);
+        thrust::copy(a.begin(), a.end(), a_h.begin());
+        thrust::copy(b.begin(), b.end(), b_h.begin());
+        thrust::copy(c.begin(), c.end(), c_h.begin());
+        thrust::copy(y.begin(), y.end(), y_h.begin());
         host_vector<REAL> myResult_h(myResult);
-        host_vector<REAL> yy_h(yy);
+        thrust::copy(yy.begin(), yy.end(), yy_h.begin());
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
                 tridagPar(
