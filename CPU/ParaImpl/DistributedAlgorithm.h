@@ -236,7 +236,7 @@ void rollback_Distributed(const uint outer, const uint numT,
     vector<REAL>& myResult
 ) {
     for (int t = 0; t <= numT - 2; t++) {
-        cout << "test 1" << endl;
+        //cout << "test 1" << endl;
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
@@ -261,12 +261,12 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
-        cout << "test 2" << endl;
+        //cout << "test 2" << endl;
         for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
             uint o = gidx / (numY * numX);
             uint plane_remain = gidx % (numY * numX);
             uint j = plane_remain / numX;
-            uint i = plane_remain % numY;
+            uint i = plane_remain % numX;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
             v[((o * numX) + i) * numY + j] = 0.0;
@@ -287,12 +287,12 @@ void rollback_Distributed(const uint outer, const uint numT,
             u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
         }
 
-        cout << "test 3" << endl;
+        //cout << "test 3" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            //cout << "implicit x, t: " << t << " o: " << gidx << endl;
+            ////cout << "implicit x, t: " << t << " o: " << gidx << endl;
             //	implicit x
             for(j=0;j<numY;j++) {
                 for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
@@ -303,7 +303,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
-        cout << "test 4" << endl;
+        //cout << "test 4" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint j;
             uint numZ = max(numX,numY);
@@ -314,12 +314,12 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
-        cout << "test 5" << endl;
+        //cout << "test 5" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
@@ -330,12 +330,12 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
-        cout << "test 6" << endl;
+        //cout << "test 6" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 for(j=0;j<numY;j++) {
@@ -344,12 +344,12 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
-        cout << "test 7" << endl;
+        //cout << "test 7" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
             //	implicit y
             for(i=0;i<numX;i++) { 
                 // here yy should have size [numY]
