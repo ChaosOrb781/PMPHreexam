@@ -301,14 +301,14 @@ void rollback_Distributed(const uint outer, const uint numT,
         }
 
         //cout << "test 4" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint j;
+        for (int gidx = 0; gidx < outer * numY; gidx++) {
+            uint o = gidx / (numY * numX);
+            uint plane_remain = gidx % (numY * numX);
+            uint j = plane_remain / numX;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            for(j=0;j<numY;j++) {
-                // here yy should have size [numX]
-                tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
-            }
+            // here yy should have size [numX]
+            tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,(o * numZ));
         }
 
         //cout << "test 5" << endl;
