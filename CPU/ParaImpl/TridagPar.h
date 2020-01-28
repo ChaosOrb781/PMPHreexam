@@ -1,5 +1,7 @@
 #ifndef TRIDAGPAR_SEQUENTIAL
 #define TRIDAGPAR_SEQUENTIAL
+
+#include <iostream>
 #if 0
 // this is a functional definition of tridag
 fun *[real] tridagPar( [real] a, *[real] b, [real] c, *[real] y ) =
