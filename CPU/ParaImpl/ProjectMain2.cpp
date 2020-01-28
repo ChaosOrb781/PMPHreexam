@@ -101,7 +101,7 @@ int main()
         //RunTestOnProgram<funGPU>("Kernelized Dist Parallel", (fun)run_Kernelized_Rollback_Dist_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Kernelized Dist 2", (fun)run_Kernelized_Rollback_Dist_Alt, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Kernelized Dist 2 Parallel", (fun)run_Kernelized_Rollback_Dist_Alt_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Kernelized Dist 3", (fun)run_Distributed, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Distributed Rollback", (fun)run_Distributed, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Simple Kernel", (fun)run_SimpleKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 

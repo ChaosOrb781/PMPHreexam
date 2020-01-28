@@ -288,19 +288,16 @@ void rollback_Distributed(const uint outer, const uint numT,
         }
 
         //cout << "test 3" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i, j;
+        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+            uint o = gidx / (numY * numX);
+            uint plane_remain = gidx % (numY * numX);
+            uint j = plane_remain / numX;
+            uint i = plane_remain % numX;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            ////cout << "implicit x, t: " << t << " o: " << gidx << endl;
-            //	implicit x
-            for(j=0;j<numY;j++) {
-                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-                    a[((gidx * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
-                    b[((gidx * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-                    c[((gidx * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
-                }
-            }
+            a[((gidx * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+            b[((gidx * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+            c[((gidx * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
         }
 
         //cout << "test 4" << endl;
