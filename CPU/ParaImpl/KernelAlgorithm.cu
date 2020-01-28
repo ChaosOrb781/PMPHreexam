@@ -261,8 +261,12 @@ void setPayoff_Kernel(const int blocksize, device_vector<REAL>& myX, const uint 
     InitMyResult<<<num_blocks, blocksize>>>(outer, numX, numY, myX_p, myResult_p);
 }
 
-void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT, 
-    const uint numX, const uint numY, 
+void rollback_Kernel_CPU(
+    const int blocksize, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
     device_vector<REAL>& myTimeline, 
     device_vector<REAL>& myDxx,
     device_vector<REAL>& myDyy,
@@ -309,8 +313,9 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
 
         cout << "Rollback tridagpar 1" << endl;
         for (int j = 0; j < numY; j++) {
-            //cout << "t: " << t << endl;
+            cout << "t: " << t << endl;
             for (int o = 0; o < outer; o++) {
+                cout << "o: " << t << endl;
                 tridagPar(
                     &a_p[((o * numZ) + j) * numZ], 
                     &b_p[((o * numZ) + j) * numZ], 
@@ -348,8 +353,13 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
     }
 }
 
-void rollback_Kernel_GPU(const int blocksize, const int sgm_size, const uint outer, const uint numT, 
-    const uint numX, const uint numY, 
+void rollback_Kernel_GPU(
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
     device_vector<REAL>& myTimeline, 
     device_vector<REAL>& myDxx,
     device_vector<REAL>& myDyy,
