@@ -307,6 +307,7 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "Rollback tridagpar 1" << endl;
         for (int j = 0; j < numY; j++) {
             //cout << "t: " << t << endl;
             for (int o = 0; o < outer; o++) {
@@ -319,9 +320,7 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
                     &u_p[((o * numY) + j) * numX],
                     &yy_p[o * numZ]
                 );
-            }
-            //cudaDeviceSynchronize();
-            //gpuErr(cudaPeekAtLastError());
+            };
         }
 
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
@@ -332,6 +331,7 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "Rollback tridagpar 2" << endl;
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
                 tridagPar(
@@ -343,8 +343,6 @@ void rollback_Kernel_CPU(const int blocksize, const uint outer, const uint numT,
                     &myResult_p[((o * numX) + i) * numY],
                     &yy_p[o * numZ]
                 );
-                cudaDeviceSynchronize();
-                gpuErr(cudaPeekAtLastError());
             }
         }
     }
