@@ -1171,31 +1171,29 @@ void rollback_Kernelized_Dist_Flat(const uint outer, const uint numT,
             }
         }
 
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i, j;
+        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+            uint o = gidx / (numY * numX);
+            uint plane_remain = gidx % (numY * numX);
+            uint j = plane_remain / numX;
+            uint i = plane_remain % numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            for(j=0;j<numY;j++)
-            {
-                for(i=0;i<numX;i++) {
-                    v[((gidx * numX) + i) * numY + j] = 0.0;
+            v[((o * numX) + i) * numY + j] = 0.0;
 
-                    if(j > 0) {
-                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                        * myDyy[j * 4 + 0] )
-                                        * myResult[((gidx * numX) + i) * numY + j - 1];
-                    }
-                    v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                     * myDyy[j * 4 + 1] )
-                                     * myResult[((gidx * numX) + i) * numY + j];
-                    if(j < numY-1) {
-                        v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                        * myDyy[j * 4 + 2] )
-                                        * myResult[((gidx * numX) + i) * numY + j + 1];
-                    }
-                    u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
-                }
+            if(j > 0) {
+                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 0] )
+                                * myResult[((o * numX) + i) * numY + j - 1];
             }
+            v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 1] )
+                                * myResult[((o * numX) + i) * numY + j];
+            if(j < numY-1) {
+                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 2] )
+                                * myResult[((o * numX) + i) * numY + j + 1];
+            }
+            u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
         }
 
         for (int gidx = 0; gidx < outer; gidx++) {
