@@ -366,7 +366,7 @@ inline void tridagPar(
     // Recurrence 2: y[i] = y[i] - (a[i]/b[i-1])*y[i-1] --
     //   solved by scan with linear func comp operator  --
     //----------------------------------------------------
-    std::out << "test 5" << std::endl;
+    std::cout << "test 5" << std::endl;
     vector<MyReal2> lfuns(n);
     REAL y0 = r[0];
     std::cout << "test 6" << std::endl;
