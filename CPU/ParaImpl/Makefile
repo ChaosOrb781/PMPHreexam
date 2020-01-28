@@ -5,7 +5,7 @@ LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 INCLUDES  += -I ../include
 
 SOURCES_CPP =ProjectMain.cpp
-HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h ../include/TridagKernel.cu.h ../include/CudaUtilProj.cu.h
+HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h ../include/TridagKernel.cu.h ../include/CudaUtilProj.cu.h ./KernelAlgorithm.h
 OBJECTS     =ProjectMain.o
 EXECUTABLE  =runproject
 
