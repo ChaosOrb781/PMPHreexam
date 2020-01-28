@@ -376,7 +376,7 @@ inline void tridagPar(
     //   solved by scan with linear func comp operator  --
     //----------------------------------------------------
     std::cout << "test 5" << std::endl;
-    MyReal2* lfuns[n];
+    MyReal2 lfuns[n];
     REAL y0 = r[0];
     std::cout << "test 6" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
