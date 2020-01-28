@@ -21,7 +21,7 @@ $(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
 
 KernelAlgorithm.o:
 	nvcc $(INCLUDES) -arch=compute_75 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
-	nvcc -arch=compute_75 -dlink -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
+	nvcc -arch=compute_75 -dlink -rdc=true -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
 
 
 run_small: $(EXECUTABLE)
