@@ -298,6 +298,7 @@ void rollback_Kernel_CPU(
     uint numZ = numX > numY ? numX : numY;
 
     for (int t = 0; t <= numT - 2; t++) {
+        /*
         uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
         cudaDeviceSynchronize();
@@ -348,6 +349,109 @@ void rollback_Kernel_CPU(
                     &myResult_p[((o * numX) + i) * numY],
                     &yy_p[o * numZ]
                 );
+            }
+        }*/
+
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
+
+            if(i > 0) { 
+                u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 0] ) 
+                                * myResult[((o * numX) + (i-1)) * numY + j];
+            }
+            u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 1] )
+                            * myResult[((o * numX) + i) * numY + j];
+            if(i < numX-1) {
+                u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 2] )
+                                * myResult[((o * numX) + (i+1)) * numY + j];
+            }
+        }
+
+        //cout << "test 2" << endl;
+        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+            uint o = gidx / (numY * numX);
+            uint plane_remain = gidx % (numY * numX);
+            uint j = plane_remain / numX;
+            uint i = plane_remain % numX;
+            uint numZ = max(numX,numY);
+            v[((o * numX) + i) * numY + j] = 0.0;
+
+            if(j > 0) {
+                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 0] )
+                                * myResult[((o * numX) + i) * numY + j - 1];
+            }
+            v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 1] )
+                                * myResult[((o * numX) + i) * numY + j];
+            if(j < numY-1) {
+                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 2] )
+                                * myResult[((o * numX) + i) * numY + j + 1];
+            }
+            u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
+        }
+
+        //cout << "test 3" << endl;
+        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+            uint o = gidx / (numY * numX);
+            uint plane_remain = gidx % (numY * numX);
+            uint j = plane_remain / numX;
+            uint i = plane_remain % numX;
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+            b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+            c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+        }
+
+        //cout << "test 4" << endl;
+        for(uint j=0;j<numY;j++) {
+            for (int gidx = 0; gidx < outer; gidx++) {
+                uint numZ = max(numX,numY);
+                // here yy should have size [numX]
+                tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            }
+        }
+
+        //cout << "test 5" << endl;
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+            b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+            c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+        }
+
+        //cout << "test 6" << endl;
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+        }
+
+        for(uint i=0;i<numX;i++) {
+            for (int gidx = 0; gidx < outer; gidx++) {
+                // here yy should have size [numY]
+                uint numZ = max(numX,numY);
+                tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
             }
         }
     }
