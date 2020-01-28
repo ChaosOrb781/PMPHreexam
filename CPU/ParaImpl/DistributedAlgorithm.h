@@ -300,12 +300,14 @@ void rollback_Distributed(const uint outer, const uint numT,
         }
 
         //cout << "test 4" << endl;
-        for (int gidx = 0; gidx < outer * numY; gidx++) {
-            uint o = gidx / numY;
-            uint j = gidx % numY;
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint j;
             uint numZ = max(numX,numY);
-            // here yy should have size [numX]
-            tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,(o * numZ));
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            for(j=0;j<numY;j++) {
+                // here yy should have size [numX]
+                tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            }
         }
 
         //cout << "test 5" << endl;
@@ -332,12 +334,16 @@ void rollback_Distributed(const uint outer, const uint numT,
             y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
         }
 
-        //cout << "test 7" << endl;
-        for (int gidx = 0; gidx < outer * numX; gidx++) {
-            uint o = gidx / numX;
-            uint i = gidx % numX;
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint i;
             uint numZ = max(numX,numY);
-            tridagPar(a,((o * numZ) + i) * numZ,b,((o * numZ) + i) * numZ,c,((o * numZ) + i) * numZ,y,((o * numZ) + i) * numZ,numY,myResult, (o * numX + i) * numY,yy,(o * numZ));
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                // here yy should have size [numY]
+                tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            }
         }
     }
 }
@@ -426,13 +432,15 @@ void rollback_Distributed_para(const uint outer, const uint numT,
         }
 
         //cout << "test 4" << endl;
-//#pragma omp parallel for schedule(static)
-        for (int gidx = 0; gidx < outer * numY; gidx++) {
-            uint o = gidx / numY;
-            uint j = gidx % numY;
+#pragma omp parallel for schedule(static)
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint j;
             uint numZ = max(numX,numY);
-            // here yy should have size [numX]
-            tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,(o * numZ));
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            for(j=0;j<numY;j++) {
+                // here yy should have size [numX]
+                tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            }
         }
 
         //cout << "test 5" << endl;
@@ -462,12 +470,17 @@ void rollback_Distributed_para(const uint outer, const uint numT,
         }
 
         //cout << "test 7" << endl;
-//#pragma omp parallel for schedule(static)
-        for (int gidx = 0; gidx < outer * numX; gidx++) {
-            uint o = gidx / numX;
-            uint i = gidx % numX;
+#pragma omp parallel for schedule(static)
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint i;
             uint numZ = max(numX,numY);
-            tridagPar(a,((o * numZ) + i) * numZ,b,((o * numZ) + i) * numZ,c,((o * numZ) + i) * numZ,y,((o * numZ) + i) * numZ,numY,myResult, (o * numX + i) * numY,yy,(o * numZ));
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+            //	implicit y
+            for(i=0;i<numX;i++) { 
+                // here yy should have size [numY]
+                tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+            }
         }
     }
 }
