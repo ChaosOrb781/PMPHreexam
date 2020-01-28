@@ -3,6 +3,7 @@
 #include "CUDAKernels.cu"
 #include "Constants.h"
 #include "TridagPar.h"
+#include "TridagKernel.cu.h"
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
