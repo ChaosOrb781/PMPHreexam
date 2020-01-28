@@ -329,9 +329,11 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
                     &u_p[((o * numY) + j) * numX],
                     &yy_p[o * numZ]
                 );
+                cudaDeviceSynchronize();
+                gpuErr(cudaPeekAtLastError());
             }
-            cudaDeviceSynchronize();
-            gpuErr(cudaPeekAtLastError());
+            //cudaDeviceSynchronize();
+            //gpuErr(cudaPeekAtLastError());
         }
 
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
