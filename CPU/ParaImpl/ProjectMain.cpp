@@ -99,7 +99,8 @@ int main()
         RunTestOnProgram<funGPU>("Kernelized Parallel", (fun)run_SimpleKernelized_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Kernelized Flat", (fun)run_Kernelized_Rollback, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Kernelized Flat Parallel", (fun)run_Kernelized_Rollback_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Kernelized Flat Parallel Dist", (fun)run_Kernelized_Rollback_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized Dist", (fun)run_Kernelized_Rollback_Dist, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized Dist", (fun)run_Kernelized_Rollback_Dist_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Simple Kernel", (fun)run_SimpleKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
