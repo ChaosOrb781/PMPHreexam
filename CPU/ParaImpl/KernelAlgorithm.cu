@@ -318,6 +318,7 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
         }
         for (int j = 0; j < numY; j++) {
             for (int o = 0; o < outer; o++) {
+                cout << "o: " << o << endl;
                 TRIDAG_SOLVER<<<num_blocks2, blocksize, 32 * blocksize>>>(
                     &a_p[((o * numZ) + j) * numZ], 
                     &b_p[((o * numZ) + j) * numZ], 
