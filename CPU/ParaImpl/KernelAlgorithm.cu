@@ -290,12 +290,63 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
     REAL* y_p = raw_pointer_cast(&y[0]);
     REAL* yy_p = raw_pointer_cast(&yy[0]);
     REAL* myResult_p = raw_pointer_cast(&myResult[0]);
-    uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
-    //for (int t = 0; t <= numT - 2; t++) {
-    //    Rollback<<<num_blocks, blocksize, 32 * blocksize>>>(t, blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
-    //    cudaDeviceSynchronize();
-    //    gpuErr(cudaPeekAtLastError());
-    //}
+    for (int t = 0; t <= numT - 2; t++) {
+        uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
+        Rollback_1<<<num_blocks, blocksize>>>(t, numX, numY, myTimeline, myDxx, myVarX, u, myResult);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_2<<<num_blocks, blocksize>>>(t, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_3<<<num_blocks, blocksize>>>(t, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        uint num_blocks2 = (outer + blocksize - 1) / blocksize;
+        for (int j = 0; j < numY; j++) {
+            for (int o = 0; o < outer; o++) {
+                TRIDAG_SOLVER<<<num_blocks2, blocksize>>>(
+                    &a[((o * numZ) + j) * numZ], 
+                    &b[((o * numZ) + j) * numZ], 
+                    &c[((o * numZ) + j) * numZ],
+                    &u[((o * numY) + j) * numX],
+                    numX,
+                    sgm_size,
+                    &u[((o * numY) + j) * numX],
+                    &yy[o * numZ]
+                );
+            }
+            cudaDeviceSynchronize();
+            gpuErr(cudaPeekAtLastError());
+        }
+
+        Rollback_5<<<num_blocks, blocksize>>>(t, numX, numY, myTimeline, myDyy, myVarY, u, v, a, b, c);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_6<<<num_blocks, blocksize>>>(t, numX, numY, myTimeline, u, v, y);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        for (int i = 0; i < numX; i++) {
+            for (int o = 0; o < outer; o++) {
+                TRIDAG_SOLVER<<<num_blocks2, blocksize>>>(
+                    &a[((o * numZ) + i) * numZ], 
+                    &b[((o * numZ) + i) * numZ], 
+                    &c[((o * numZ) + i) * numZ],
+                    &y[((o * numZ) + i) * numZ],
+                    numY,
+                    sgm_size,
+                    &myResult[((o * numX) + i) * numY],
+                    &yy[o * numZ]
+                );
+            }
+            cudaDeviceSynchronize();
+            gpuErr(cudaPeekAtLastError());
+        }
+    }
 }
 
 int run_SimpleKernel(
@@ -377,7 +428,7 @@ int run_SimpleKernel(
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
     cout << "Test6" << endl;
-	//rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {

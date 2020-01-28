@@ -155,24 +155,13 @@ __global__ void InitParams(
 
 __global__ void Rollback_1 (
     int t,
-    const int blocksize, 
-    const int sgm_size, 
     const uint outer, 
-    const uint numT, 
     const uint numX, 
     const uint numY, 
     REAL* myTimeline, 
     REAL* myDxx,
-    REAL* myDyy,
     REAL* myVarX,
-    REAL* myVarY,
     REAL* u,
-    REAL* v,
-    REAL* a,
-    REAL* b,
-    REAL* c,
-    REAL* y,
-    REAL* yy,
     REAL* myResult
 ){
     /*
@@ -227,24 +216,14 @@ __global__ void Rollback_1 (
 
 __global__ void Rollback_2 (
     int t,
-    const int blocksize, 
-    const int sgm_size, 
     const uint outer, 
-    const uint numT, 
     const uint numX, 
     const uint numY, 
-    REAL* myTimeline, 
-    REAL* myDxx,
+    REAL* myTimeline,
     REAL* myDyy,
-    REAL* myVarX,
     REAL* myVarY,
     REAL* u,
     REAL* v,
-    REAL* a,
-    REAL* b,
-    REAL* c,
-    REAL* y,
-    REAL* yy,
     REAL* myResult
 ){
     //cout << "test 2" << endl;
@@ -300,25 +279,14 @@ __global__ void Rollback_2 (
 
 __global__ void Rollback_3 (
     int t,
-    const int blocksize, 
-    const int sgm_size, 
-    const uint outer, 
-    const uint numT, 
     const uint numX, 
     const uint numY, 
     REAL* myTimeline, 
     REAL* myDxx,
-    REAL* myDyy,
     REAL* myVarX,
-    REAL* myVarY,
-    REAL* u,
-    REAL* v,
     REAL* a,
     REAL* b,
-    REAL* c,
-    REAL* y,
-    REAL* yy,
-    REAL* myResult
+    REAL* c
 ){
     //cout << "test 3" << endl;
     /*
@@ -381,30 +349,20 @@ __global__ void Rollback_4 (
     }
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
-
 }
 
 __global__ void Rollback_5 (
     int t,
-    const int blocksize, 
-    const int sgm_size, 
-    const uint outer, 
-    const uint numT, 
     const uint numX, 
     const uint numY, 
-    REAL* myTimeline, 
-    REAL* myDxx,
+    REAL* myTimeline,
     REAL* myDyy,
-    REAL* myVarX,
     REAL* myVarY,
     REAL* u,
     REAL* v,
     REAL* a,
     REAL* b,
-    REAL* c,
-    REAL* y,
-    REAL* yy,
-    REAL* myResult
+    REAL* c
 ){
     //cout << "test 5" << endl;
     /*
@@ -422,29 +380,25 @@ __global__ void Rollback_5 (
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
+    uint o = gidx / (numX * numY);
+    uint plane_remain = gidx % (numX * numY);
+    uint i = plane_remain / numY;
+    uint j = plane_remain % numY;
+    uint numZ = max(numX,numY);
+    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+    a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+    b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+    c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
 }
 
 __global__ void Rollback_6 (
     int t,
-    const int blocksize, 
-    const int sgm_size, 
-    const uint outer, 
-    const uint numT, 
     const uint numX, 
     const uint numY, 
-    REAL* myTimeline, 
-    REAL* myDxx,
-    REAL* myDyy,
-    REAL* myVarX,
-    REAL* myVarY,
+    REAL* myTimeline,
     REAL* u,
     REAL* v,
-    REAL* a,
-    REAL* b,
-    REAL* c,
-    REAL* y,
-    REAL* yy,
-    REAL* myResult
+    REAL* y
 ){
     //cout << "test 6" << endl;
     /*
@@ -459,6 +413,14 @@ __global__ void Rollback_6 (
     }
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+
+    uint o = gidx / (numX * numY);
+    uint plane_remain = gidx % (numX * numY);
+    uint i = plane_remain / numY;
+    uint j = plane_remain % numY;
+    uint numZ = max(numX,numY);
+    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+    y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
 }
 
 __global__ void Rollback_7 (
