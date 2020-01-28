@@ -155,7 +155,7 @@ __global__ void InitParams(
 
 __global__ void Rollback_1 (
     int t,
-    const uint outer, 
+    const uint outer,
     const uint numX, 
     const uint numY, 
     REAL* myTimeline, 
@@ -190,33 +190,34 @@ __global__ void Rollback_1 (
     }
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    if (gidx < outer * numX * numY) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
 
-    uint o = gidx / (numX * numY);
-    uint plane_remain = gidx % (numX * numY);
-    uint i = plane_remain / numY;
-    uint j = plane_remain % numY;
-    uint numZ = max(numX,numY);
-    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-    u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
-
-    if(i > 0) { 
-        u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                        * myDxx[i * 4 + 0] ) 
-                        * myResult[((o * numX) + (i-1)) * numY + j];
-    }
-    u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                    * myDxx[i * 4 + 1] )
-                    * myResult[((o * numX) + i) * numY + j];
-    if(i < numX-1) {
-        u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                        * myDxx[i * 4 + 2] )
-                        * myResult[((o * numX) + (i+1)) * numY + j];
+        if(i > 0) { 
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 0] ) 
+                            * myResult[((o * numX) + (i-1)) * numY + j];
+        }
+        u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        * myDxx[i * 4 + 1] )
+                        * myResult[((o * numX) + i) * numY + j];
+        if(i < numX-1) {
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 2] )
+                            * myResult[((o * numX) + (i+1)) * numY + j];
+        }
     }
 }
 
 __global__ void Rollback_2 (
     int t,
-    const uint outer, 
+    const uint outer,
     const uint numX, 
     const uint numY, 
     REAL* myTimeline,
@@ -254,31 +255,34 @@ __global__ void Rollback_2 (
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
-    uint o = gidx / (numY * numX);
-    uint plane_remain = gidx % (numY * numX);
-    uint j = plane_remain / numX;
-    uint i = plane_remain % numX;
-    uint numZ = max(numX,numY);
-    v[((o * numX) + i) * numY + j] = 0.0;
+    if (gidx < outer * numX * numY) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = max(numX,numY);
+        v[((o * numX) + i) * numY + j] = 0.0;
 
-    if(j > 0) {
-        v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                        * myDyy[j * 4 + 0] )
-                        * myResult[((o * numX) + i) * numY + j - 1];
+        if(j > 0) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 0] )
+                            * myResult[((o * numX) + i) * numY + j - 1];
+        }
+        v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 1] )
+                            * myResult[((o * numX) + i) * numY + j];
+        if(j < numY-1) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 2] )
+                            * myResult[((o * numX) + i) * numY + j + 1];
+        }
+        u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
     }
-    v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                        * myDyy[j * 4 + 1] )
-                        * myResult[((o * numX) + i) * numY + j];
-    if(j < numY-1) {
-        v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                        * myDyy[j * 4 + 2] )
-                        * myResult[((o * numX) + i) * numY + j + 1];
-    }
-    u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
 }
 
 __global__ void Rollback_3 (
     int t,
+    const uint outer,
     const uint numX, 
     const uint numY, 
     REAL* myTimeline, 
@@ -304,15 +308,17 @@ __global__ void Rollback_3 (
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
-    uint o = gidx / (numY * numX);
-    uint plane_remain = gidx % (numY * numX);
-    uint j = plane_remain / numX;
-    uint i = plane_remain % numX;
-    uint numZ = max(numX,numY);
-    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-    a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
-    b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-    c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+    if (gidx < outer * numX * numY) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+        c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+    }
 }
 
 __global__ void Rollback_4 (
@@ -348,11 +354,13 @@ __global__ void Rollback_4 (
         }
     }
     */
-    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    //uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 }
 
 __global__ void Rollback_5 (
     int t,
+    const uint outer,
     const uint numX, 
     const uint numY, 
     REAL* myTimeline,
@@ -380,19 +388,22 @@ __global__ void Rollback_5 (
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
-    uint o = gidx / (numX * numY);
-    uint plane_remain = gidx % (numX * numY);
-    uint i = plane_remain / numY;
-    uint j = plane_remain % numY;
-    uint numZ = max(numX,numY);
-    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-    a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
-    b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
-    c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+    if (gidx < outer * numX * numY) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+        c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+    }
 }
 
 __global__ void Rollback_6 (
     int t,
+    const uint outer,
     const uint numX, 
     const uint numY, 
     REAL* myTimeline,
@@ -414,13 +425,15 @@ __global__ void Rollback_6 (
     */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
-    uint o = gidx / (numX * numY);
-    uint plane_remain = gidx % (numX * numY);
-    uint i = plane_remain / numY;
-    uint j = plane_remain % numY;
-    uint numZ = max(numX,numY);
-    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-    y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+    if (gidx < outer * numX * numY) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+    }
 }
 
 __global__ void Rollback_7 (
@@ -456,7 +469,8 @@ __global__ void Rollback_7 (
         }
     }
     */
-    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+    
+    //uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
 }
 
