@@ -359,8 +359,12 @@ void rollback_Kernel_CPU(
             uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
             cout << "test 1.1" << endl;
-            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            REAL dtInv = myTimeline_p[t+1];
             cout << "test 1.1.1" << endl;
+            dtInv -= myTimeline_p[t];
+            cout << "test 1.1.2" << endl;
+            dtInv = 1.0/dtInv;
+            //REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
             u_p[((o * numY) + j) * numX + i] = dtInv*myResult_p[((o * numX) + i) * numY + j];
 
             cout << "test 1.2" << endl;
