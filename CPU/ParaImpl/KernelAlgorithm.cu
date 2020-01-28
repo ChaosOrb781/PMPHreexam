@@ -377,7 +377,7 @@ void rollback_Kernel_CPU(
         thrust::copy(a.begin(), a.end(), a_h.begin());
         thrust::copy(b.begin(), b.end(), b_h.begin());
         thrust::copy(c.begin(), c.end(), c_h.begin());
-        thrust::copy(y.begin(), y.end(), y_h.begin());
+        host_vector<REAL> y_h(y);
         host_vector<REAL> myResult_h(myResult);
         thrust::copy(yy.begin(), yy.end(), yy_h.begin());
         for (int i = 0; i < numX; i++) {
@@ -598,7 +598,7 @@ int run_CPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     host_vector<REAL> myResult_h(outer*numX*numY);
-    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin())
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
 
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
@@ -770,7 +770,7 @@ int run_GPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     host_vector<REAL> myResult_h(outer*numX*numY);
-    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin())
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
 
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
