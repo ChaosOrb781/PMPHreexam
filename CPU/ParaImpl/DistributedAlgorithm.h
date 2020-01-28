@@ -300,11 +300,10 @@ void rollback_Distributed(const uint outer, const uint numT,
         }
 
         //cout << "test 4" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint j;
-            uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            for(j=0;j<numY;j++) {
+        for(uint j=0;j<numY;j++) {
+            for (int gidx = 0; gidx < outer; gidx++) {
+                uint numZ = max(numX,numY);
+                REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
                 // here yy should have size [numX]
                 tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
             }
@@ -334,14 +333,11 @@ void rollback_Distributed(const uint outer, const uint numT,
             y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
         }
 
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i;
-            uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            //cout << "implicit y, t: " << t << " o: " << gidx << endl;
-            //	implicit y
-            for(i=0;i<numX;i++) { 
+        for(uint i=0;i<numX;i++) {
+            for (int gidx = 0; gidx < outer; gidx++) {
                 // here yy should have size [numY]
+                uint numZ = max(numX,numY);
+                REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
                 tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
             }
         }
