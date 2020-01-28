@@ -2239,10 +2239,10 @@ int   run_Kernelized_Rollback_Dist_Alt_Parallel(
     uint numZ = max(numX, numY);
     vector<REAL> u(outer * numY * numX);
     vector<REAL> v(outer * numX * numY);
-    vector<REAL> a(outer * numZ);
-    vector<REAL> b(outer * numZ);
-    vector<REAL> c(outer * numZ);
-    vector<REAL> y(outer * numZ);
+    vector<REAL> a(outer * numZ * numZ);
+    vector<REAL> b(outer * numZ * numZ);
+    vector<REAL> c(outer * numZ * numZ);
+    vector<REAL> y(outer * numZ * numZ);
     vector<REAL> yy(outer * numZ);
 
     uint myXindex = 0;
