@@ -141,7 +141,6 @@ __global__ void InitParams(
         int plane_remain = gidx % (numX * numY);
         int i = plane_remain / numY;
         int j = plane_remain % numY;
-        __syncthreads();
         myVarX[gidx] = exp(2.0*(  beta*log(myX[i])   
                                     + myY[j]             
                                     - 0.5*nu*nu*myTimeline[t] )
@@ -176,91 +175,326 @@ __global__ void Rollback_1 (
     REAL* yy,
     REAL* myResult
 ){
+    /*
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
+
+        if(i > 0) { 
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 0] ) 
+                            * myResult[((o * numX) + (i-1)) * numY + j];
+        }
+        u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        * myDxx[i * 4 + 1] )
+                        * myResult[((o * numX) + i) * numY + j];
+        if(i < numX-1) {
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 2] )
+                            * myResult[((o * numX) + (i+1)) * numY + j];
+        }
+    }
+    */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
+    uint o = gidx / (numX * numY);
+    uint plane_remain = gidx % (numX * numY);
+    uint i = plane_remain / numY;
+    uint j = plane_remain % numY;
     uint numZ = max(numX,numY);
-
-    uint i, j;
-
     REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+    u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
 
-    //cout << "explicit x, t: " << t << " o: " << gidx << endl;
-    //	explicit x
-    __syncthreads();
-    for(i=0;i<numX;i++) {
-        for(j=0;j<numY;j++) {
-            u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+    if(i > 0) { 
+        u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        * myDxx[i * 4 + 0] ) 
+                        * myResult[((o * numX) + (i-1)) * numY + j];
+    }
+    u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                    * myDxx[i * 4 + 1] )
+                    * myResult[((o * numX) + i) * numY + j];
+    if(i < numX-1) {
+        u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        * myDxx[i * 4 + 2] )
+                        * myResult[((o * numX) + (i+1)) * numY + j];
+    }
+}
 
-            if(i > 0) { 
-                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                * myDxx[i * 4 + 0] ) 
-                                * myResult[((gidx * numX) + (i-1)) * numY + j];
-            }
-            u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                            * myDxx[i * 4 + 1] )
-                            * myResult[((gidx * numX) + i) * numY + j];
-            if(i < numX-1) {
-                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                * myDxx[i * 4 + 2] )
-                                * myResult[((gidx * numX) + (i+1)) * numY + j];
-            }
+__global__ void Rollback_2 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 2" << endl;
+    /*
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = max(numX,numY);
+        v[((o * numX) + i) * numY + j] = 0.0;
+
+        if(j > 0) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 0] )
+                            * myResult[((o * numX) + i) * numY + j - 1];
+        }
+        v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 1] )
+                            * myResult[((o * numX) + i) * numY + j];
+        if(j < numY-1) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 2] )
+                            * myResult[((o * numX) + i) * numY + j + 1];
+        }
+        u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
+    }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+
+    uint o = gidx / (numY * numX);
+    uint plane_remain = gidx % (numY * numX);
+    uint j = plane_remain / numX;
+    uint i = plane_remain % numX;
+    uint numZ = max(numX,numY);
+    v[((o * numX) + i) * numY + j] = 0.0;
+
+    if(j > 0) {
+        v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        * myDyy[j * 4 + 0] )
+                        * myResult[((o * numX) + i) * numY + j - 1];
+    }
+    v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        * myDyy[j * 4 + 1] )
+                        * myResult[((o * numX) + i) * numY + j];
+    if(j < numY-1) {
+        v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                        * myDyy[j * 4 + 2] )
+                        * myResult[((o * numX) + i) * numY + j + 1];
+    }
+    u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
+}
+
+__global__ void Rollback_3 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 3" << endl;
+    /*
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+        c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+    }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+
+    uint o = gidx / (numY * numX);
+    uint plane_remain = gidx % (numY * numX);
+    uint j = plane_remain / numX;
+    uint i = plane_remain % numX;
+    uint numZ = max(numX,numY);
+    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+    a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+    b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+    c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+}
+
+__global__ void Rollback_4 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 4" << endl;
+    /*
+    for(uint j=0;j<numY;j++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            // here yy should have size [numX]
+            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
         }
     }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
-    //cout << "explicit y, t: " << t << " o: " << gidx << endl;
-    //	explicit y
-    __syncthreads();
-    for(j=0;j<numY;j++)
-    {
-        for(i=0;i<numX;i++) {
-            v[((gidx * numX) + i) * numY + j] = 0.0;
+}
 
-            if(j > 0) {
-                v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 0] )
-                                * myResult[((gidx * numX) + i) * numY + j - 1];
-            }
-            v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 1] )
-                                * myResult[((gidx * numX) + i) * numY + j];
-            if(j < numY-1) {
-                v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 2] )
-                                * myResult[((gidx * numX) + i) * numY + j + 1];
-            }
-            u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
+__global__ void Rollback_5 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 5" << endl;
+    /*
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+        c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+    }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+
+}
+
+__global__ void Rollback_6 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 6" << endl;
+    /*
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+    }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+}
+
+__global__ void Rollback_7 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    //cout << "test 7" << endl;
+    /*
+    for(uint i=0;i<numX;i++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            // here yy should have size [numY]
+            uint numZ = max(numX,numY);
+            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
         }
     }
-
-    //cout << "implicit x, t: " << t << " o: " << gidx << endl;
-    //	implicit x
-    __syncthreads();
-    for(j=0;j<numY;j++) {
-        for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-            a[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
-            b[(gidx * numZ) + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-            c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
-        }
-        __syncthreads();
-        // here yy should have size [numX]
-        //TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,sgm_size,&u[((gidx * numY) + j) * numX],yy[gidx * numZ]);
-    }
-
-    //cout << "implicit y, t: " << t << " o: " << gidx << endl;
-    //	implicit y
-    __syncthreads();
-    for(i=0;i<numX;i++) { 
-        for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-            a[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
-            b[(gidx * numZ) + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
-            c[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
-        }
-        for(j=0;j<numY;j++)
-            y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
-        __syncthreads();
-        // here yy should have size [numY]
-        //TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,sgm_size,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
-    }
+    */
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
 }
 
