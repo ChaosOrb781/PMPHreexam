@@ -345,17 +345,17 @@ inline void tridagPar(
     // Recurrence 1: b[i] = b[i] - a[i]*c[i-1]/b[i-1] --
     //   solved by scan with 2x2 matrix mult operator --
     //--------------------------------------------------
-    cout << "test 1" << endl;
+    std::cout << "test 1" << std::endl;
     vector<MyReal4> mats(n);    // supposed to be in shared memory!
     REAL b0 = b[0];
-    cout << "test 2" << endl;
+    std::cout << "test 2" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         if (i==0) { mats[i].x = 1.0;  mats[i].y = 0.0;          mats[i].z = 0.0; mats[i].w = 1.0; }
         else      { mats[i].x = b[i]; mats[i].y = -a[i]*c[i-1]; mats[i].z = 1.0; mats[i].w = 0.0; }
     }
-    cout << "test 3" << endl;
+    std::cout << "test 3" << std::endl;
     inplaceScanInc<MatMult2b2>(n,mats);
-    cout << "test 4" << endl;
+    std::cout << "test 4" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         uu[i] = (mats[i].x*b0 + mats[i].y) / (mats[i].z*b0 + mats[i].w);
     }
@@ -364,17 +364,17 @@ inline void tridagPar(
     // Recurrence 2: y[i] = y[i] - (a[i]/b[i-1])*y[i-1] --
     //   solved by scan with linear func comp operator  --
     //----------------------------------------------------
-    cout << "test 5" << endl;
+    std::out << "test 5" << std::endl;
     vector<MyReal2> lfuns(n);
     REAL y0 = r[0];
-    cout << "test 6" << endl;
+    std::cout << "test 6" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
         else      { lfuns[i].x = r[i]; lfuns[i].y = -a[i]/uu[i-1]; }
     }
-    cout << "test 7" << endl;
+    std::cout << "test 7" << std::endl;
     inplaceScanInc<LinFunComp>(n,lfuns);
-    cout << "test 8" << endl;
+    std::cout << "test 8" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         u[i] = lfuns[i].x + y0*lfuns[i].y;
     }
@@ -384,16 +384,16 @@ inline void tridagPar(
     // Recurrence 3: backward recurrence solved via     --
     //             scan with linear func comp operator  --
     //----------------------------------------------------
-    cout << "test 9" << endl;
+    std::cout << "test 9" << std::endl;
     REAL yn = u[n-1]/uu[n-1];
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         int k = n - i - 1;
         if (i==0) { lfuns[0].x = 0.0;  lfuns[0].y = 1.0;           }
         else      { lfuns[i].x = u[k]/uu[k]; lfuns[i].y = -c[k]/uu[k]; }
     }
-    cout << "test 10" << endl;
+    std::cout << "test 10" << std::endl;
     inplaceScanInc<LinFunComp>(n,lfuns);
-    cout << "test 11" << endl;
+    std::cout << "test 11" << std::endl;
     for(int i=0; i<n; i++) { //parallel, map-like semantics
         u[n-i-1] = lfuns[i].x + yn*lfuns[i].y;
     }
