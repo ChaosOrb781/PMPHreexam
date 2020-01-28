@@ -8,7 +8,7 @@
 
 using namespace thrust;
 
-#define TEST_INIT_CORRECTNESS false
+#define TEST_INIT_CORRECTNESS true
 
 #define gpuErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -545,7 +545,7 @@ int run_CPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     cout << "Test6" << endl;
-	rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	//rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
