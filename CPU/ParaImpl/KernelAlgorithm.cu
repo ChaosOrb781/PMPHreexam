@@ -5,10 +5,11 @@
 #include "TridagPar.h"
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/copy.h>
 
 using namespace thrust;
 
-#define TEST_INIT_CORRECTNESS true
+#define TEST_INIT_CORRECTNESS false
 
 #define gpuErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -201,10 +202,20 @@ void rollback_Control(const uint outer, const uint numT,
     }
 }
 
-void initGrid_Kernel(const int blocksize, const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
-                const uint numX, const uint numY, const uint numT,
-                device_vector<REAL>& myX, device_vector<REAL>& myY, device_vector<REAL>& myTimeline,
-                uint& myXindex, uint& myYindex
+void initGrid_Kernel(
+    const int blocksize, 
+    const REAL s0, 
+    const REAL alpha, 
+    const REAL nu,
+    const REAL t, 
+    const uint numX, 
+    const uint numY, 
+    const uint numT,
+    device_vector<REAL>& myX, 
+    device_vector<REAL>& myY, 
+    device_vector<REAL>& myTimeline,
+    uint& myXindex, 
+    uint& myYindex
 ) {
     REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
     uint num_blocks = (numT + blocksize - 1) / blocksize;
@@ -228,8 +239,11 @@ void initGrid_Kernel(const int blocksize, const REAL s0, const REAL alpha, const
     InitMyY<<<num_blocks, blocksize>>>(numY, myYindex, logAlpha, dy, myY_p);
 }
 
-void initOperator_Kernel(const int blocksize, const uint numZ, device_vector<REAL>& myZ, 
-                        device_vector<REAL>& Dzz
+void initOperator_Kernel(
+    const int blocksize, 
+    const uint numZ, 
+    device_vector<REAL>& myZ, 
+    device_vector<REAL>& Dzz
 ) {
     REAL* myZ_p = raw_pointer_cast(&myZ[0]);
     REAL* Dzz_p = raw_pointer_cast(&Dzz[0]);
@@ -237,11 +251,20 @@ void initOperator_Kernel(const int blocksize, const uint numZ, device_vector<REA
     InitMyDzz<<<num_blocks, blocksize>>>(numZ, myZ_p, Dzz_p);
 }
 
-void updateParams_Kernel(const int blocksize, const REAL alpha, const REAL beta, const REAL nu,
-    const uint numX, const uint numY, const uint numT, 
-    device_vector<REAL>& myX, device_vector<REAL>& myY, device_vector<REAL>& myTimeline,
-    device_vector<REAL>& myVarX, device_vector<REAL>& myVarY)
-{
+void updateParams_Kernel(
+    const int blocksize, 
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    device_vector<REAL>& myX, 
+    device_vector<REAL>& myY, 
+    device_vector<REAL>& myTimeline,
+    device_vector<REAL>& myVarX, 
+    device_vector<REAL>& myVarY
+){
     REAL* myX_p = raw_pointer_cast(&myX[0]);
     REAL* myY_p = raw_pointer_cast(&myY[0]);
     REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
@@ -251,8 +274,12 @@ void updateParams_Kernel(const int blocksize, const REAL alpha, const REAL beta,
     InitParams<<<num_blocks, blocksize>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarX_p, myVarY_p);
 }
 
-void setPayoff_Kernel(const int blocksize, device_vector<REAL>& myX, const uint outer,
-    const uint numX, const uint numY,
+void setPayoff_Kernel(
+    const int blocksize, 
+    device_vector<REAL>& myX, 
+    const uint outer,
+    const uint numX, 
+    const uint numY,
     device_vector<REAL>& myResult)
 {
     REAL* myX_p = raw_pointer_cast(&myX[0]);
@@ -298,7 +325,6 @@ void rollback_Kernel_CPU(
     uint numZ = numX > numY ? numX : numY;
 
     for (int t = 0; t <= numT - 2; t++) {
-        /*
         uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
         cudaDeviceSynchronize();
@@ -313,21 +339,31 @@ void rollback_Kernel_CPU(
         gpuErr(cudaPeekAtLastError());
 
         cout << "Rollback tridagpar 1" << endl;
+        host_vector<REAL> a_h(a);
+        host_vector<REAL> b_h(b);
+        host_vector<REAL> c_h(c);
+        host_vector<REAL> u_h(u);
+        host_vector<REAL> yy_h(yy);
         for (int j = 0; j < numY; j++) {
             cout << "t: " << t << endl;
             for (int o = 0; o < outer; o++) {
                 cout << "o: " << t << endl;
                 tridagPar(
-                    &a_p[((o * numZ) + j) * numZ], 
-                    &b_p[((o * numZ) + j) * numZ], 
-                    &c_p[((o * numZ) + j) * numZ],
-                    &u_p[((o * numY) + j) * numX],
+                    a_h, ((o * numZ) + j) * numZ,
+                    b_h, ((o * numZ) + j) * numZ,
+                    c_h, ((o * numZ) + j) * numZ,
+                    u_h, ((o * numY) + j) * numX,
                     numX,
-                    &u_p[((o * numY) + j) * numX],
-                    &yy_p[o * numZ]
+                    u_h, ((o * numY) + j) * numX,
+                    yy_h, o * numZ
                 );
             };
         }
+        thrust::copy(a_h.begin(), a_h.end(), a.begin());
+        thrust::copy(b_h.begin(), b_h.end(), b.begin());
+        thrust::copy(c_h.begin(), c_h.end(), c.begin());
+        thrust::copy(u_h.begin(), u_h.end(), u.begin());
+        thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
@@ -338,133 +374,30 @@ void rollback_Kernel_CPU(
         gpuErr(cudaPeekAtLastError());
 
         cout << "Rollback tridagpar 2" << endl;
+        host_vector<REAL> a_h(a);
+        host_vector<REAL> b_h(b);
+        host_vector<REAL> c_h(c);
+        host_vector<REAL> y_h(y);
+        host_vector<REAL> myResult_h(myResult);
+        host_vector<REAL> yy_h(yy);
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
                 tridagPar(
-                    &a_p[((o * numZ) + i) * numZ], 
-                    &b_p[((o * numZ) + i) * numZ], 
-                    &c_p[((o * numZ) + i) * numZ],
-                    &y_p[((o * numZ) + i) * numZ],
-                    numY,
-                    &myResult_p[((o * numX) + i) * numY],
-                    &yy_p[o * numZ]
+                    a_h, ((o * numZ) + i) * numZ, 
+                    b_h, ((o * numZ) + i) * numZ, 
+                    c_h, ((o * numZ) + i) * numZ,
+                    y_h, ((o * numZ) + i) * numZ,   numY,
+                    myResult_h, ((o * numX) + i) * numY,
+                    yy_h, o * numZ
                 );
             }
-        }*/
-        cout << "test 1" << endl;
-        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
-            uint o = gidx / (numX * numY);
-            uint plane_remain = gidx % (numX * numY);
-            uint i = plane_remain / numY;
-            uint j = plane_remain % numY;
-            uint numZ = max(numX,numY);
-            cout << "test 1.1" << endl;
-            REAL dtInv = myTimeline_p[t+1];
-            cout << "test 1.1.1" << endl;
-            dtInv -= myTimeline_p[t];
-            cout << "test 1.1.2" << endl;
-            dtInv = 1.0/dtInv;
-            //REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
-            u_p[((o * numY) + j) * numX + i] = dtInv*myResult_p[((o * numX) + i) * numY + j];
-
-            cout << "test 1.2" << endl;
-            if(i > 0) { 
-                u_p[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
-                                * myDxx_p[i * 4 + 0] ) 
-                                * myResult_p[((o * numX) + (i-1)) * numY + j];
-            }
-            cout << "test 1.3" << endl;
-            u_p[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
-                            * myDxx_p[i * 4 + 1] )
-                            * myResult_p[((o * numX) + i) * numY + j];
-                            
-            cout << "test 1.4" << endl;
-            if(i < numX-1) {
-                u_p[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
-                                * myDxx_p[i * 4 + 2] )
-                                * myResult_p[((o * numX) + (i+1)) * numY + j];
-            }
-        }
-
-        cout << "test 2" << endl;
-        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
-            uint o = gidx / (numY * numX);
-            uint plane_remain = gidx % (numY * numX);
-            uint j = plane_remain / numX;
-            uint i = plane_remain % numX;
-            uint numZ = max(numX,numY);
-            v_p[((o * numX) + i) * numY + j] = 0.0;
-
-            if(j > 0) {
-                v_p[((o * numX) + i) * numY + j] += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
-                                * myDyy_p[j * 4 + 0] )
-                                * myResult_p[((o * numX) + i) * numY + j - 1];
-            }
-            v_p[((o * numX) + i) * numY + j]  += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
-                                * myDyy_p[j * 4 + 1] )
-                                * myResult_p[((o * numX) + i) * numY + j];
-            if(j < numY-1) {
-                v_p[((o * numX) + i) * numY + j] += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
-                                * myDyy_p[j * 4 + 2] )
-                                * myResult_p[((o * numX) + i) * numY + j + 1];
-            }
-            u_p[((o * numY) + j) * numX + i] += v_p[((o * numX) + i) * numY + j];
-        }
-
-        cout << "test 3" << endl;
-        for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
-            uint o = gidx / (numY * numX);
-            uint plane_remain = gidx % (numY * numX);
-            uint j = plane_remain / numX;
-            uint i = plane_remain % numX;
-            uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
-            a_p[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 0]);
-            b_p[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 1]);
-            c_p[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 2]);
-        }
-
-        cout << "test 4" << endl;
-        for(uint j=0;j<numY;j++) {
-            for (int gidx = 0; gidx < outer; gidx++) {
-                uint numZ = max(numX,numY);
-                // here yy should have size [numX]
-                tridagPar(a_p,((gidx * numZ) + j) * numZ,b_p,((gidx * numZ) + j) * numZ,c_p,((gidx * numZ) + j) * numZ,u_p,((gidx * numY) + j) * numX,numX,u_p,((gidx * numY) + j) * numX,yy_p,(gidx * numZ));
-            }
-        }
-
-        cout << "test 5" << endl;
-        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
-            uint o = gidx / (numX * numY);
-            uint plane_remain = gidx % (numX * numY);
-            uint i = plane_remain / numY;
-            uint j = plane_remain % numY;
-            uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
-            a_p[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 0]);
-            b_p[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 1]);
-            c_p[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 2]);
-        }
-
-        cout << "test 6" << endl;
-        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
-            uint o = gidx / (numX * numY);
-            uint plane_remain = gidx % (numX * numY);
-            uint i = plane_remain / numY;
-            uint j = plane_remain % numY;
-            uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
-            y_p[((o * numZ) + i) * numZ + j] = dtInv*u_p[((o * numY) + j) * numX + i] - 0.5*v_p[((o * numX) + i) * numY + j];
-        }
-
-        cout << "test 7" << endl;
-        for(uint i=0;i<numX;i++) {
-            for (int gidx = 0; gidx < outer; gidx++) {
-                // here yy should have size [numY]
-                uint numZ = max(numX,numY);
-                tridagPar(a_p,((gidx * numZ) + i) * numZ,b_p,((gidx * numZ) + i) * numZ,c_p,((gidx * numZ) + i) * numZ,y_p,((gidx * numZ) + i) * numZ,numY,myResult_p, (gidx * numX + i) * numY,yy_p,(gidx * numZ));
-            }
-        }
+        } 
+        thrust::copy(a_h.begin(), a_h.end(), a.begin());
+        thrust::copy(b_h.begin(), b_h.end(), b.begin());
+        thrust::copy(c_h.begin(), c_h.end(), c.begin());
+        thrust::copy(y_h.begin(), y_h.end(), y.begin());
+        thrust::copy(myResult_h.begin(), myResult_h.end(), myResult.begin());
+        thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
     }
 }
 
@@ -664,9 +597,12 @@ int run_CPUKernel(
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
+    host_vector<REAL> myResult_h(outer*numX*numY);
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin())
+
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
-        res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
+        res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
     }
 
 #if TEST_INIT_CORRECTNESS
@@ -833,9 +769,12 @@ int run_GPUKernel(
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
+    host_vector<REAL> myResult_h(outer*numX*numY);
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin())
+
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
-        res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
+        res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
     }
 
 #if TEST_INIT_CORRECTNESS
