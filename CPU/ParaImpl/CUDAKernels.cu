@@ -3,7 +3,7 @@
 
 #include <cuda_runtime.h>
 #include "Constants.h"
-#include "TridagPar.h"
+#include "TridagKernel.cu.h"
 
 ///numT iterations
 __global__ void InitMyTimeline(
@@ -65,8 +65,10 @@ __global__ void InitMyDzz(
         uint row = gidx % 4;
         uint col = gidx / 4;
         REAL dl, du;
+        __syncthreads();
         dl = (col == 0) ? 0.0 : myZ[col] - myZ[col - 1];
         du = (col == numZ - 1) ? 0.0 : myZ[col + 1] - myZ[col];
+        __syncthreads();
         Dzz[gidx] = col > 0 && col < numZ-1 ?
                     (row == 0 ? 2.0/dl/(dl+du) :
                     (row == 1 ? -2.0*(1.0/dl + 1.0/du)/(dl+du) :
@@ -98,6 +100,7 @@ __global__ void InitMyResult(
         uint plane_remain = gidx % (numX * numY);
         uint i = plane_remain / numY;
         //int j = plane_remain % numY
+        __syncthreads();
         REAL a = myX[i]-0.001*(REAL)o;
         myResult[gidx] = a > 0.0 ? a : (REAL)0.0;
     }
@@ -138,15 +141,127 @@ __global__ void InitParams(
         int plane_remain = gidx % (numX * numY);
         int i = plane_remain / numY;
         int j = plane_remain % numY;
+        __syncthreads();
         myVarX[gidx] = exp(2.0*(  beta*log(myX[i])   
                                     + myY[j]             
                                     - 0.5*nu*nu*myTimeline[t] )
                                 );
+        __syncthreads();
         myVarY[gidx] = exp(2.0*(  alpha*log(myX[i])   
                                     + myY[j]             
                                     - 0.5*nu*nu*myTimeline[t] )
                                 ); // nu*nu
     }
+}
+
+__global__ void Rollback_1 (
+    int t,
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    REAL* myTimeline, 
+    REAL* myDxx,
+    REAL* myDyy,
+    REAL* myVarX,
+    REAL* myVarY,
+    REAL* u,
+    REAL* v,
+    REAL* a,
+    REAL* b,
+    REAL* c,
+    REAL* y,
+    REAL* yy,
+    REAL* myResult
+){
+    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
+
+    uint numZ = max(numX,numY);
+
+    uint i, j;
+
+    REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+
+    //cout << "explicit x, t: " << t << " o: " << gidx << endl;
+    //	explicit x
+    __syncthreads();
+    for(i=0;i<numX;i++) {
+        for(j=0;j<numY;j++) {
+            u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+
+            if(i > 0) { 
+                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 0] ) 
+                                * myResult[((gidx * numX) + (i-1)) * numY + j];
+            }
+            u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 1] )
+                            * myResult[((gidx * numX) + i) * numY + j];
+            if(i < numX-1) {
+                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 2] )
+                                * myResult[((gidx * numX) + (i+1)) * numY + j];
+            }
+        }
+    }
+
+    //cout << "explicit y, t: " << t << " o: " << gidx << endl;
+    //	explicit y
+    __syncthreads();
+    for(j=0;j<numY;j++)
+    {
+        for(i=0;i<numX;i++) {
+            v[((gidx * numX) + i) * numY + j] = 0.0;
+
+            if(j > 0) {
+                v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 0] )
+                                * myResult[((gidx * numX) + i) * numY + j - 1];
+            }
+            v[((gidx * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 1] )
+                                * myResult[((gidx * numX) + i) * numY + j];
+            if(j < numY-1) {
+                v[((gidx * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                                * myDyy[j * 4 + 2] )
+                                * myResult[((gidx * numX) + i) * numY + j + 1];
+            }
+            u[((gidx * numY) + j) * numX + i] += v[((gidx * numX) + i) * numY + j]; 
+        }
+    }
+
+    //cout << "implicit x, t: " << t << " o: " << gidx << endl;
+    //	implicit x
+    __syncthreads();
+    for(j=0;j<numY;j++) {
+        for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
+            a[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+            b[(gidx * numZ) + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+            c[(gidx * numZ) + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+        }
+        __syncthreads();
+        // here yy should have size [numX]
+        TRIDAGSOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,sgm_size,&u[((gidx * numY) + j) * numX],yy[gidx * numZ]);
+    }
+
+    //cout << "implicit y, t: " << t << " o: " << gidx << endl;
+    //	implicit y
+    __syncthreads();
+    for(i=0;i<numX;i++) { 
+        for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
+            a[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+            b[(gidx * numZ) + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+            c[(gidx * numZ) + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+        }
+        for(j=0;j<numY;j++)
+            y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
+        __syncthreads();
+        // here yy should have size [numY]
+        TRIDAGSOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,sgm_size,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
+    }
+
 }
 
 #endif

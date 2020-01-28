@@ -12,7 +12,7 @@
 #define RUN_ALL false //will enable all and also experimental tests
 #define RUN_CPU_EXPERIMENTAL true
 
-#define Block 16
+#define Block 256
 
 typedef int (*fun)();
 typedef int (*funCPU)(const uint, const uint, const uint, const uint, const REAL, const REAL, const REAL, const REAL, const REAL, REAL*);
@@ -99,7 +99,8 @@ int main()
         RunTestOnProgram<funGPU>("Kernelized Parallel", (fun)run_SimpleKernelized_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Kernelized Flat", (fun)run_Kernelized_Rollback, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Kernelized Flat Parallel", (fun)run_Kernelized_Rollback_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Simple Kernel", (fun)run_SimpleKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Kernelized Flat Parallel Dist", (fun)run_Kernelized_Rollback_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        //RunTestOnProgram<funGPU>("Simple Kernel", (fun)run_SimpleKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;

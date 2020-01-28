@@ -2,86 +2,85 @@
 #define SCAN_KERS
 
 #include <cuda_runtime.h>
+#include "Constants.h"
 
-typedef float REAL;
-
-class MyReal2 {
+class MyReal2_ker {
   public:
     REAL x; REAL y;
 
-    __device__ __host__ inline MyReal2() {
+    __device__ __host__ inline MyReal2_ker() {
         x = 0.0; y = 0.0; 
     }
-    __device__ __host__ inline MyReal2(const REAL& a, const REAL& b) {
+    __device__ __host__ inline MyReal2_ker(const REAL& a, const REAL& b) {
         x = a; y = b;
     }
-    __device__ __host__ inline MyReal2(const MyReal2& i4) { 
+    __device__ __host__ inline MyReal2_ker(const MyReal2_ker& i4) { 
         x = i4.x; y = i4.y;
     }
-    volatile __device__ __host__ inline MyReal2& operator=(const MyReal2& i4) volatile {
+    volatile __device__ __host__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) volatile {
         x = i4.x; y = i4.y;
         return *this;
     }
-    __device__ __host__ inline MyReal2& operator=(const MyReal2& i4) {
+    __device__ __host__ inline MyReal2_ker& operator=(const MyReal2_ker& i4) {
         x = i4.x; y = i4.y;
         return *this;
     }
 };
 
-class MyReal4 {
+class MyReal4_ker {
   public:
     REAL x; REAL y; REAL z; REAL w;
 
-    __device__ __host__ inline MyReal4() {
+    __device__ __host__ inline MyReal4_ker() {
         x = 0.0; y = 0.0; z = 0.0; w = 0.0; 
     }
-    __device__ __host__ inline MyReal4(const REAL& a, const REAL& b, const REAL& c, const REAL& d) {
+    __device__ __host__ inline MyReal4_ker(const REAL& a, const REAL& b, const REAL& c, const REAL& d) {
         x = a; y = b; z = c; w = d; 
     }
-    __device__ __host__ inline MyReal4(const MyReal4& i4) { 
+    __device__ __host__ inline MyReal4_ker(const MyReal4_ker& i4) { 
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
     }
-    volatile __device__ __host__ inline MyReal4& operator=(const MyReal4& i4) volatile {
+    volatile __device__ __host__ inline MyReal4_ker& operator=(const MyReal4_ker& i4) volatile {
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
         return *this;
     }
-    __device__ __host__ inline MyReal4& operator=(const MyReal4& i4) {
+    __device__ __host__ inline MyReal4_ker& operator=(const MyReal4_ker& i4) {
         x = i4.x; y = i4.y; z = i4.z; w = i4.w; 
         return *this;
     }
 };
 
-class LinFunComp {
+class LinFunComp_ker {
   public:
-    typedef MyReal2 BaseType;
+    typedef MyReal2_ker BaseType;
 
     static __device__ __host__ inline
-    MyReal2 apply(volatile MyReal2& a, volatile MyReal2& b) {
-      return MyReal2( b.x + b.y*a.x, a.y*b.y );
+    MyReal2_ker apply(volatile MyReal2_ker& a, volatile MyReal2_ker& b) {
+      return MyReal2_ker( b.x + b.y*a.x, a.y*b.y );
     }
 
     static __device__ __host__ inline 
-    MyReal2 identity() { 
-      return MyReal2(0.0, 1.0);
+    MyReal2_ker identity() { 
+      return MyReal2_ker(0.0, 1.0);
     }
 };
 
-class MatMult2b2 {
+class MatMult2b2_ker {
   public:
-    typedef MyReal4 BaseType;
+    typedef MyReal4_ker BaseType;
 
     static __device__ __host__ inline
-    MyReal4 apply(volatile MyReal4& a, volatile MyReal4& b) {
+    MyReal4_ker apply(volatile MyReal4_ker& a, volatile MyReal4_ker& b) {
       REAL val = 1.0/(a.x*b.x);
-      return MyReal4( (b.x*a.x + b.y*a.z)*val,
+      return MyReal4_ker( (b.x*a.x + b.y*a.z)*val,
                       (b.x*a.y + b.y*a.w)*val,
                       (b.z*a.x + b.w*a.z)*val,
                       (b.z*a.y + b.w*a.w)*val );
     }
 
     static __device__ __host__ inline 
-    MyReal4 identity() { 
-      return MyReal4(1.0,  0.0, 0.0, 1.0);
+    MyReal4_ker identity() { 
+      return MyReal4_ker(1.0,  0.0, 0.0, 1.0);
     }
 };
 
@@ -236,9 +235,9 @@ TRIDAG_SOLVER(  REAL* a,
     // total shared memory (declared outside)
     extern __shared__ char sh_mem[];
     // shared memory space for the 2x2 matrix multiplication SCAN
-    volatile MyReal4* mat_sh = (volatile MyReal4*)sh_mem;
+    volatile MyReal4_ker* mat_sh = (volatile MyReal4_ker*)sh_mem;
     // shared memory space for the linear-function composition SCAN
-    volatile MyReal2* lin_sh = (volatile MyReal2*) (mat_sh + blockDim.x);
+    volatile MyReal2_ker* lin_sh = (volatile MyReal2_ker*) (mat_sh + blockDim.x);
     // shared memory space for the flag array
     volatile int*     flg_sh = (volatile int*    ) (lin_sh + blockDim.x);
     
@@ -254,11 +253,11 @@ TRIDAG_SOLVER(  REAL* a,
     const unsigned int beg_seg_ind = (gid / sgm_sz) * sgm_sz;
     REAL b0 = (gid < n) ? b[beg_seg_ind] : 1.0;
     mat_sh[tid] = (gid!=beg_seg_ind && gid < n) ?
-                    MyReal4(b[gid], -a[gid]*c[gid-1], 1.0, 0.0) :
-                    MyReal4(1.0,                 0.0, 0.0, 1.0) ;
-    // 1.b) inplaceScanInc<MatMult2b2>(n,mats);
+                    MyReal4_ker(b[gid], -a[gid]*c[gid-1], 1.0, 0.0) :
+                    MyReal4_ker(1.0,                 0.0, 0.0, 1.0) ;
+    // 1.b) inplaceScanInc<MatMult2b2_ker>(n,mats);
     __syncthreads();
-    MyReal4 res4 = sgmScanIncBlock <MatMult2b2, MyReal4, int>(mat_sh, flg_sh, tid);
+    MyReal4_ker res4 = sgmScanIncBlock <MatMult2b2_ker, MyReal4_ker, int>(mat_sh, flg_sh, tid);
     // 1.c) second map
     if(gid < n) {
         uu[gid] = (res4.x*b0 + res4.y) / (res4.z*b0 + res4.w) ;
@@ -276,11 +275,11 @@ TRIDAG_SOLVER(  REAL* a,
     // 2.a) first map
     REAL y0 = (gid < n) ? r[beg_seg_ind] : 1.0;
     lin_sh[tid] = (gid!=beg_seg_ind && gid < n) ?
-                    MyReal2(r[gid], -a[gid]/uu[gid-1]) :
-                    MyReal2(0.0,    1.0              ) ;
-    // 2.b) inplaceScanInc<LinFunComp>(n,lfuns);
+                    MyReal2_ker(r[gid], -a[gid]/uu[gid-1]) :
+                    MyReal2_ker(0.0,    1.0              ) ;
+    // 2.b) inplaceScanInc<LinFunComp_ker>(n,lfuns);
     __syncthreads();
-    MyReal2 res2 = sgmScanIncBlock <LinFunComp, MyReal2, int>(lin_sh, flg_sh, tid);
+    MyReal2_ker res2 = sgmScanIncBlock <LinFunComp_ker, MyReal2_ker, int>(lin_sh, flg_sh, tid);
     // 2.c) second map
     if(gid < n) {
         u[gid] = res2.x + y0*res2.y;
@@ -300,11 +299,11 @@ TRIDAG_SOLVER(  REAL* a,
     const unsigned int k = (end_seg_ind - gid) + beg_seg_ind ;  
     REAL yn = u[end_seg_ind] / uu[end_seg_ind];
     lin_sh[tid] = (gid!=beg_seg_ind && gid < n) ?
-                    MyReal2( u[k]/uu[k], -c[k]/uu[k] ) :
-                    MyReal2( 0.0,        1.0         ) ;
-    // 3.b) inplaceScanInc<LinFunComp>(n,lfuns);
+                    MyReal2_ker( u[k]/uu[k], -c[k]/uu[k] ) :
+                    MyReal2_ker( 0.0,        1.0         ) ;
+    // 3.b) inplaceScanInc<LinFunComp_ker>(n,lfuns);
     __syncthreads();
-    MyReal2 res3 = sgmScanIncBlock <LinFunComp, MyReal2, int>(lin_sh, flg_sh, tid);
+    MyReal2_ker res3 = sgmScanIncBlock <LinFunComp_ker, MyReal2_ker, int>(lin_sh, flg_sh, tid);
     __syncthreads();
     // 3.c) second map
     if(gid < n) {
