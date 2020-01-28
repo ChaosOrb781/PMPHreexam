@@ -290,6 +290,9 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
     REAL* y_p = raw_pointer_cast(&y[0]);
     REAL* yy_p = raw_pointer_cast(&yy[0]);
     REAL* myResult_p = raw_pointer_cast(&myResult[0]);
+
+    uint numZ = numX > numY ? numX : numY;
+
     for (int t = 0; t <= numT - 2; t++) {
         uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
@@ -364,6 +367,8 @@ int run_SimpleKernel(
 ) {
     int procs = 0;
 
+    int sgm_size = 8;
+
     cout << "initializing device memory" << endl;
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
@@ -427,9 +432,12 @@ int run_SimpleKernel(
     updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
+
     cout << "Test6" << endl;
-	rollback_Kernel(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
-	
+	rollback_Kernel(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
     cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
