@@ -360,6 +360,7 @@ void rollback_Kernel_CPU(
             uint numZ = max(numX,numY);
             cout << "test 1.1" << endl;
             REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            cout << "test 1.1.1" << endl;
             u_p[((o * numY) + j) * numX + i] = dtInv*myResult_p[((o * numX) + i) * numY + j];
 
             cout << "test 1.2" << endl;
