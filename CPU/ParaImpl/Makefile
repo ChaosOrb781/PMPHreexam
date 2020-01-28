@@ -1,5 +1,5 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudadevrt -lcudart
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudadevrt
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include
@@ -20,8 +20,8 @@ $(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
 	$(CXX) -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
 
 KernelAlgorithm.o:
-	nvcc $(INCLUDES) -arch=sm_35 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
-	nvcc -arch=sm_35 -dlink -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
+	nvcc $(INCLUDES) -arch=sm_35 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o -lcudadevrt
+	nvcc -arch=sm_35 -dlink -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudadevrt
 
 
 run_small: $(EXECUTABLE)
