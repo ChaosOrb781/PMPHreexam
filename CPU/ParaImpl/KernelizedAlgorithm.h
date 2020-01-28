@@ -1147,28 +1147,27 @@ void rollback_Kernelized_Dist_Flat(const uint outer, const uint numT,
     vector<REAL>& myResult
 ) {
     for (int t = 0; t <= numT - 2; t++) {
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i, j;
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain % numY;
+            uint j = plane_remain / numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            for(i=0;i<numX;i++) {
-                for(j=0;j<numY;j++) {
-                    u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
+            u[((gidx * numY) + j) * numX + i] = dtInv*myResult[((gidx * numX) + i) * numY + j];
 
-                    if(i > 0) { 
-                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                      * myDxx[i * 4 + 0] ) 
-                                      * myResult[((gidx * numX) + (i-1)) * numY + j];
-                    }
-                    u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                    * myDxx[i * 4 + 1] )
-                                    * myResult[((gidx * numX) + i) * numY + j];
-                    if(i < numX-1) {
-                        u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                      * myDxx[i * 4 + 2] )
-                                      * myResult[((gidx * numX) + (i+1)) * numY + j];
-                    }
-                }
+            if(i > 0) { 
+                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 0] ) 
+                                * myResult[((gidx * numX) + (i-1)) * numY + j];
+            }
+            u[((gidx * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 1] )
+                            * myResult[((gidx * numX) + i) * numY + j];
+            if(i < numX-1) {
+                u[((gidx * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                                * myDxx[i * 4 + 2] )
+                                * myResult[((gidx * numX) + (i+1)) * numY + j];
             }
         }
 
