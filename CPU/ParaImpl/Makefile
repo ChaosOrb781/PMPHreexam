@@ -14,6 +14,8 @@ SOURCES_CPP_2 =ProjectMain2.cpp
 OBJECTS_2     =ProjectMain2.o
 EXECUTABLE_2  =runproject2
 
+EXECUTABLE_3  =rundebugproject
+
 default: cpu
 
 $(OBJECTS_1): $(SOURCES_CPP_1)
@@ -28,7 +30,7 @@ $(EXECUTABLE_1): KernelAlgorithm.o $(OBJECTS_1)
 $(EXECUTABLE_2): KernelAlgorithm.o $(OBJECTS_2)
 	$(CXX) -o $(EXECUTABLE_2) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_2) KernelAlgorithm.o
 $(EXECUTABLE_3): KernelAlgorithm_debug.o $(OBJECTS_2)
-	$(CXX) -o $(EXECUTABLE_2) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_2) KernelAlgorithm_debug.o
+	$(CXX) -o $(EXECUTABLE_3) $(CXXFLAGS) $(INCLUDES) $(OBJECTS_2) KernelAlgorithm_debug.o
 
 KernelAlgorithm.o:
 	nvcc $(INCLUDES) -c KernelAlgorithm.cu
