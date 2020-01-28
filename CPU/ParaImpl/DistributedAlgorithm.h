@@ -268,7 +268,6 @@ void rollback_Distributed(const uint outer, const uint numT,
             uint j = plane_remain / numX;
             uint i = plane_remain % numX;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
             v[((o * numX) + i) * numY + j] = 0.0;
 
             if(j > 0) {
@@ -305,52 +304,40 @@ void rollback_Distributed(const uint outer, const uint numT,
             uint o = gidx / numY;
             uint j = gidx % numY;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
             // here yy should have size [numX]
             tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,(o * numZ));
         }
 
         //cout << "test 5" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i, j;
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
-            //	implicit y
-            for(i=0;i<numX;i++) { 
-                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-                    a[((gidx * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
-                    b[((gidx * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
-                    c[((gidx * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
-                }
-            }
+            a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+            b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+            c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
         }
 
         //cout << "test 6" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
-            uint i, j;
+        for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+            uint o = gidx / (numX * numY);
+            uint plane_remain = gidx % (numX * numY);
+            uint i = plane_remain / numY;
+            uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
             REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
-            //	implicit y
-            for(i=0;i<numX;i++) { 
-                for(j=0;j<numY;j++) {
-                    y[((gidx * numZ) + i) * numZ + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
-                }
-            }
+            y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
         }
 
         //cout << "test 7" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
-            uint i;
+            uint o = gidx / numX;
+            uint i = gidx % numX;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            ////cout << "implicit y, t: " << t << " o: " << gidx << endl;
-            //	implicit y
-            for(i=0;i<numX;i++) { 
-                // here yy should have size [numY]
-                tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
-            }
+            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
         }
     }
 }
