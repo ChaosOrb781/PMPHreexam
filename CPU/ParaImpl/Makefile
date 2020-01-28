@@ -1,5 +1,5 @@
 CXX        = g++
-CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart -lcudadevrt
+CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -L/usr/local/cuda/lib64/ -libcudart
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
 INCLUDES  += -I ../include -I/usr/local/cuda/include
