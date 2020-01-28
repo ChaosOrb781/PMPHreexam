@@ -69,9 +69,9 @@ run_medium_2: $(EXECUTABLE_2)
 run_large_2: $(EXECUTABLE_2)
 	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
 
-run_kernel_debug: $(EXECUTABLE_3)$
-	cat ../Data/Small/input.data ../Data/Small/output.data | cuda-memcheck ./$(EXECUTABLE_3) 2> Debug.txt
+run_kernel_debug: $(EXECUTABLE_3)
+	cat ../Data/Small/input.data ../Data/Small/output.data | cuda-memcheck ./$(EXECUTABLE_3) 2
 
 clean:
-	rm -f Debug.txt $(EXECUTABLE_1) $(EXECUTABLE_2) $(OBJECTS_1)
+	rm -f Debug.txt $(EXECUTABLE_1) $(EXECUTABLE_2) $(EXECUTABLE_3) $(OBJECTS_1)
 
