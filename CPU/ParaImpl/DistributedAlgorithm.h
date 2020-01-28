@@ -462,7 +462,7 @@ void rollback_Distributed_para(const uint outer, const uint numT,
         }
 
         //cout << "test 7" << endl;
-#pragma omp parallel for schedule(static)
+//#pragma omp parallel for schedule(static)
         for (int gidx = 0; gidx < outer * numX; gidx++) {
             uint o = gidx / numX;
             uint i = gidx % numX;
