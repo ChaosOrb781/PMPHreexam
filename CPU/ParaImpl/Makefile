@@ -20,8 +20,8 @@ $(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
 	$(CXX) -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
 
 KernelAlgorithm.o:
-	nvcc $(INCLUDES) -arch=sm_35 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o
-	nvcc -arch=sm_35 -dlink -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudadevrt -lcudart
+	nvcc $(INCLUDES) -arch=sm_35 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
+	nvcc -arch=sm_35 -dlink -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
 
 
 run_small: $(EXECUTABLE)
