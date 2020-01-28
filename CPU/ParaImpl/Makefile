@@ -2,7 +2,7 @@ CXX        = g++
 CXXFLAGS   = -fopenmp -O3 -DWITH_FLOATS=0 -std=c++11 -lcuda -lcudart -lcudadevrt
 LIB        = -L$(OPENCL_LIBDIR) -lOpenCL
 
-INCLUDES  += -I ../include
+INCLUDES  += -I ../include -I/usr/local/cuda/include
 
 SOURCES_CPP =ProjectMain.cpp
 HELPERS     =../include/Constants.h ../include/ParseInput.h ../include/ParserC.h ../include/OpenmpUtil.h ../include/TridagKernel.cu.h ../include/CudaUtilProj.cu.h ./KernelAlgorithm.h
@@ -20,8 +20,8 @@ $(EXECUTABLE): KernelAlgorithm.o $(OBJECTS)
 	$(CXX) -o $(EXECUTABLE) $(CXXFLAGS) $(INCLUDES) $(OBJECTS) KernelAlgorithm.o
 
 KernelAlgorithm.o:
-	nvcc $(INCLUDES) -arch=compute_75 -rdc=true -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
-	nvcc -arch=compute_75 -dlink -rdc=true -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudart -lcudadevrt
+	nvcc $(INCLUDES) -arch=sm_35 -dc KernelAlgorithm.cu -o KernelAlgorithm_nolink.o
+	nvcc -arch=sm_35 -dlink -rdc=true -o KernelAlgorithm.o KernelAlgorithm_nolink.o -lcudadevrt
 
 
 run_small: $(EXECUTABLE)
