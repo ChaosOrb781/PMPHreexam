@@ -649,7 +649,7 @@ int run_CPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     cout << "Test6" << endl;
-	//rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
