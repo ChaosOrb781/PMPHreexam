@@ -358,21 +358,21 @@ void rollback_Kernel_CPU(
             uint i = plane_remain / numY;
             uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
+            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            u_p[((o * numY) + j) * numX + i] = dtInv*myResult_p[((o * numX) + i) * numY + j];
 
             if(i > 0) { 
-                u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                * myDxx[i * 4 + 0] ) 
-                                * myResult[((o * numX) + (i-1)) * numY + j];
+                u_p[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
+                                * myDxx_p[i * 4 + 0] ) 
+                                * myResult_p[((o * numX) + (i-1)) * numY + j];
             }
-            u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                            * myDxx[i * 4 + 1] )
-                            * myResult[((o * numX) + i) * numY + j];
+            u_p[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
+                            * myDxx_p[i * 4 + 1] )
+                            * myResult_p[((o * numX) + i) * numY + j];
             if(i < numX-1) {
-                u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                                * myDxx[i * 4 + 2] )
-                                * myResult[((o * numX) + (i+1)) * numY + j];
+                u_p[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX_p[((t * numX) + i) * numY + j]
+                                * myDxx_p[i * 4 + 2] )
+                                * myResult_p[((o * numX) + (i+1)) * numY + j];
             }
         }
 
@@ -383,22 +383,22 @@ void rollback_Kernel_CPU(
             uint j = plane_remain / numX;
             uint i = plane_remain % numX;
             uint numZ = max(numX,numY);
-            v[((o * numX) + i) * numY + j] = 0.0;
+            v_p[((o * numX) + i) * numY + j] = 0.0;
 
             if(j > 0) {
-                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 0] )
-                                * myResult[((o * numX) + i) * numY + j - 1];
+                v_p[((o * numX) + i) * numY + j] += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
+                                * myDyy_p[j * 4 + 0] )
+                                * myResult_p[((o * numX) + i) * numY + j - 1];
             }
-            v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 1] )
-                                * myResult[((o * numX) + i) * numY + j];
+            v_p[((o * numX) + i) * numY + j]  += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
+                                * myDyy_p[j * 4 + 1] )
+                                * myResult_p[((o * numX) + i) * numY + j];
             if(j < numY-1) {
-                v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
-                                * myDyy[j * 4 + 2] )
-                                * myResult[((o * numX) + i) * numY + j + 1];
+                v_p[((o * numX) + i) * numY + j] += ( 0.5* myVarY_p[((t * numX) + i) * numY + j]
+                                * myDyy_p[j * 4 + 2] )
+                                * myResult_p[((o * numX) + i) * numY + j + 1];
             }
-            u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
+            u_p[((o * numY) + j) * numX + i] += v_p[((o * numX) + i) * numY + j];
         }
 
         //cout << "test 3" << endl;
@@ -408,10 +408,10 @@ void rollback_Kernel_CPU(
             uint j = plane_remain / numX;
             uint i = plane_remain % numX;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
-            b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-            c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            a_p[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 0]);
+            b_p[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 1]);
+            c_p[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX_p[((t * numX) + i) * numY + j]*myDxx_p[i * 4 + 2]);
         }
 
         //cout << "test 4" << endl;
@@ -419,7 +419,7 @@ void rollback_Kernel_CPU(
             for (int gidx = 0; gidx < outer; gidx++) {
                 uint numZ = max(numX,numY);
                 // here yy should have size [numX]
-                tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+                tridagPar(a_p,((gidx * numZ) + j) * numZ,b_p,((gidx * numZ) + j) * numZ,c_p,((gidx * numZ) + j) * numZ,u_p,((gidx * numY) + j) * numX,numX,u_p,((gidx * numY) + j) * numX,yy_p,(gidx * numZ));
             }
         }
 
@@ -430,10 +430,10 @@ void rollback_Kernel_CPU(
             uint i = plane_remain / numY;
             uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
-            b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
-            c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            a_p[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 0]);
+            b_p[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 1]);
+            c_p[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY_p[((t * numX) + i) * numY + j]*myDyy_p[j * 4 + 2]);
         }
 
         //cout << "test 6" << endl;
@@ -443,15 +443,15 @@ void rollback_Kernel_CPU(
             uint i = plane_remain / numY;
             uint j = plane_remain % numY;
             uint numZ = max(numX,numY);
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-            y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+            REAL dtInv = 1.0/(myTimeline_p[t+1]-myTimeline_p[t]);
+            y_p[((o * numZ) + i) * numZ + j] = dtInv*u_p[((o * numY) + j) * numX + i] - 0.5*v_p[((o * numX) + i) * numY + j];
         }
 
         for(uint i=0;i<numX;i++) {
             for (int gidx = 0; gidx < outer; gidx++) {
                 // here yy should have size [numY]
                 uint numZ = max(numX,numY);
-                tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+                tridagPar(a_p,((gidx * numZ) + i) * numZ,b_p,((gidx * numZ) + i) * numZ,c_p,((gidx * numZ) + i) * numZ,y_p,((gidx * numZ) + i) * numZ,numY,myResult_p, (gidx * numX + i) * numY,yy_p,(gidx * numZ));
             }
         }
     }
