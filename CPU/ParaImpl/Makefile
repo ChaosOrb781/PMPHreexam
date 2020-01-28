@@ -44,6 +44,25 @@ run_large: $(EXECUTABLE_1) $(EXECUTABLE_2)
 	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
 	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
 
+
+run_small_1: $(EXECUTABLE_1)
+	cat ../Data/Small/input.data ../Data/Small/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+
+run_medium_1: $(EXECUTABLE_1)
+	cat ../Data/Medium/input.data ../Data/Medium/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+
+run_large_1: $(EXECUTABLE_1)
+	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+
+run_small_2: $(EXECUTABLE_2)
+	cat ../Data/Small/input.data ../Data/Small/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
+
+run_medium_2: $(EXECUTABLE_2)
+	cat ../Data/Medium/input.data ../Data/Medium/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
+
+run_large_2: $(EXECUTABLE_2)
+	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
+
 clean:
 	rm -f Debug.txt $(EXECUTABLE_1) $(EXECUTABLE_2) $(OBJECTS_1)
 

@@ -333,7 +333,7 @@ void rollback_Distributed(const uint outer, const uint numT,
         }
 
         //cout << "test 7" << endl;
-        for (int gidx = 0; gidx < outer; gidx++) {
+        for (int gidx = 0; gidx < outer * numX; gidx++) {
             uint o = gidx / numX;
             uint i = gidx % numX;
             uint numZ = max(numX,numY);
