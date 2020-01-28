@@ -236,6 +236,7 @@ void rollback_Distributed(const uint outer, const uint numT,
     vector<REAL>& myResult
 ) {
     for (int t = 0; t <= numT - 2; t++) {
+        cout << "test 1" << endl;
         for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
             uint o = gidx / (numX * numY);
             uint plane_remain = gidx % (numX * numY);
@@ -260,6 +261,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
+        cout << "test 2" << endl;
         for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
             uint o = gidx / (numY * numX);
             uint plane_remain = gidx % (numY * numX);
@@ -285,6 +287,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
         }
 
+        cout << "test 3" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
@@ -299,6 +302,8 @@ void rollback_Distributed(const uint outer, const uint numT,
                 }
             }
         }
+
+        cout << "test 4" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint j;
             uint numZ = max(numX,numY);
@@ -309,6 +314,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
+        cout << "test 5" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
@@ -324,6 +330,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
+        cout << "test 6" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i, j;
             uint numZ = max(numX,numY);
@@ -337,6 +344,7 @@ void rollback_Distributed(const uint outer, const uint numT,
             }
         }
 
+        cout << "test 7" << endl;
         for (int gidx = 0; gidx < outer; gidx++) {
             uint i;
             uint numZ = max(numX,numY);
