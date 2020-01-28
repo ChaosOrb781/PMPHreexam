@@ -354,7 +354,7 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
         }
         for (int i = 0; i < numX; i++) {
             for (int o = 0; o < outer; o++) {
-                TRIDAG_SOLVER<<<num_blocks2, blocksize, 64 * blocksize>>>(
+                TRIDAG_SOLVER<<<num_blocks2, blocksize, 32 * blocksize>>>(
                     &a_p[((o * numZ) + i) * numZ], 
                     &b_p[((o * numZ) + i) * numZ], 
                     &c_p[((o * numZ) + i) * numZ],
@@ -409,10 +409,10 @@ int run_SimpleKernel(
     uint numZ = std::max(numX, numY);
     device_vector<REAL> u(outer * numY * numX);
     device_vector<REAL> v(outer * numX * numY);
-    device_vector<REAL> a(outer * numZ);
-    device_vector<REAL> b(outer * numZ);
-    device_vector<REAL> c(outer * numZ);
-    device_vector<REAL> y(outer * numZ);
+    device_vector<REAL> a(outer * numZ * numZ);
+    device_vector<REAL> b(outer * numZ * numZ);
+    device_vector<REAL> c(outer * numZ * numZ);
+    device_vector<REAL> y(outer * numZ * numZ);
     device_vector<REAL> yy(outer * numZ);
 
     uint myXindex = 0;
