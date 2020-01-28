@@ -34,12 +34,15 @@ KernelAlgorithm.o:
 
 run_small: $(EXECUTABLE_1) $(EXECUTABLE_2)
 	cat ../Data/Small/input.data ../Data/Small/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+	cat ../Data/Small/input.data ../Data/Small/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
 
 run_medium: $(EXECUTABLE_1) $(EXECUTABLE_2)
 	cat ../Data/Medium/input.data ../Data/Medium/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+	cat ../Data/Medium/input.data ../Data/Medium/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
 
 run_large: $(EXECUTABLE_1) $(EXECUTABLE_2)
 	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_1) 2> Debug.txt
+	cat ../Data/Large/input.data ../Data/Large/output.data | ./$(EXECUTABLE_2) 2> Debug.txt
 
 clean:
 	rm -f Debug.txt $(EXECUTABLE_1) $(EXECUTABLE_2) $(OBJECTS_1)
