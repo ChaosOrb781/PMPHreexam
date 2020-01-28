@@ -243,7 +243,7 @@ __global__ void Rollback_1 (
         }
         __syncthreads();
         // here yy should have size [numX]
-        TRIDAGSOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,sgm_size,&u[((gidx * numY) + j) * numX],yy[gidx * numZ]);
+        TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&u[((gidx * numY) + j) * numX],numX,sgm_size,&u[((gidx * numY) + j) * numX],yy[gidx * numZ]);
     }
 
     //cout << "implicit y, t: " << t << " o: " << gidx << endl;
@@ -259,7 +259,7 @@ __global__ void Rollback_1 (
             y[(gidx * numZ) + j] = dtInv*u[((gidx * numY) + j) * numX + i] - 0.5*v[((gidx * numX) + i) * numY + j];
         __syncthreads();
         // here yy should have size [numY]
-        TRIDAGSOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,sgm_size,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
+        TRIDAG_SOLVER(&a[gidx * numZ],&b[gidx * numZ],&c[gidx * numZ],&y[gidx * numZ],numY,sgm_size,&myResult[(gidx * numX + i) * numY],&yy[gidx * numZ]);
     }
 
 }

@@ -291,11 +291,11 @@ void rollback_Kernel(const int blocksize, const int sgm_size, const uint outer, 
     REAL* yy_p = raw_pointer_cast(&yy[0]);
     REAL* myResult_p = raw_pointer_cast(&myResult[0]);
     uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
-    for (int t = 0; t <= numT - 2; t++) {
-        Rollback<<<num_blocks, blocksize, 32 * blocksize>>>(t, blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
-        cudaDeviceSynchronize();
-        gpuErr(cudaPeekAtLastError());
-    }
+    //for (int t = 0; t <= numT - 2; t++) {
+    //    Rollback<<<num_blocks, blocksize, 32 * blocksize>>>(t, blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    //    cudaDeviceSynchronize();
+    //    gpuErr(cudaPeekAtLastError());
+    //}
 }
 
 int run_SimpleKernel(
