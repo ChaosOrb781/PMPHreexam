@@ -1957,21 +1957,21 @@ int   run_Distributed_Separation(
     vector<REAL> b(outer * numZ * numZ);
     vector<REAL> c(outer * numZ * numZ);
     vector<REAL> y(outer * numZ * numZ);
-    vector<REAL> yy(outer * numZ);
+    vector<REAL> yy(outer * numZ * numZ);
 
     uint myXindex = 0;
     uint myYindex = 0;
 
-    cout << "Test1" << endl;
+    //cout << "Test1" << endl;
 	initGrid_Distributed(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
-    cout << "Test2" << endl;
+    //cout << "Test2" << endl;
     initOperator_Distributed(numX, myX, myDxx);
 
-    cout << "Test3" << endl;
+    //cout << "Test3" << endl;
     initOperator_Distributed(numY, myY, myDyy);
 
-    cout << "Test4" << endl;
+    //cout << "Test4" << endl;
     setPayoff_Distributed(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
@@ -1983,27 +1983,27 @@ int   run_Distributed_Separation(
     }
 #endif
 
-    cout << "Test5" << endl;
+    //cout << "Test5" << endl;
     updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
-    cout << "Test6" << endl;
+    //cout << "Test6" << endl;
     for (int t = 0; t <= numT - 2; t++) {
-        cout << "Test6.1" << endl;
+        //cout << "Test6.1" << endl;
 	    rollback_Distributed_1(t, outer, numX, numY, myTimeline, myDxx, myVarX, u, myResult);
-        cout << "Test6.2" << endl;
+        //cout << "Test6.2" << endl;
 	    rollback_Distributed_2(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
-        cout << "Test6.3" << endl;
+        //cout << "Test6.3" << endl;
 	    rollback_Distributed_3(t, outer, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
-        cout << "Test6.4" << endl;
+        //cout << "Test6.4" << endl;
 	    rollback_Distributed_4(t, outer, numX, numY, u, a, b, c, yy);
-        cout << "Test6.5" << endl;
+        //cout << "Test6.5" << endl;
 	    rollback_Distributed_5(t, outer, numX, numY, myTimeline, myDyy, myVarY, a, b, c);
-        cout << "Test6.6" << endl;
+        //cout << "Test6.6" << endl;
 	    rollback_Distributed_6(t, outer, numX, numY, myTimeline, u, v, y);
-        cout << "Test6.7" << endl;
+        //cout << "Test6.7" << endl;
 	    rollback_Distributed_7(t, outer, numX, numY, a, b, c, y, yy, myResult);
     }
 	
-    cout << "Test7" << endl;
+    //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
     }
