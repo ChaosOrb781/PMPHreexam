@@ -989,7 +989,7 @@ void rollback_Kernel_Test_GPU(
             for (int i = 0; i < outer * numY * numX; i++) {
                 if (std::abs(temp[i] - u_h[i]) > 0.0001 ) {
                     cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i] << endl;
-                    //exit(0);
+                    exit(0);
                 }
             }
             for (int i = 0; i < outer * numZ; i++) {
