@@ -1032,15 +1032,14 @@ void rollback_Distributed_1_Final(
                 REAL myDxxT1 = myDxxT[1 * numX + gidx];
                 REAL myDxxT2 = myDxxT[2 * numX + gidx];
 
-                REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
                 REAL myResultT_mid  = myResultT[((o * numY) + j) * numX + gidx];
-                REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
 
                 REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
 
                 u[((o * numY) + j) * numX + gidx] = dtInv * myResultT_mid;
 
                 if(gidx > 0) { 
+                    REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
                     u[((o * numY) + j) * numX + gidx] += 
                         0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
                 }
@@ -1049,6 +1048,7 @@ void rollback_Distributed_1_Final(
                     0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
 
                 if(gidx < numX-1) {
+                    REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
                     u[((o * numY) + j) * numX + gidx] += 
                         0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
                 }
@@ -1081,15 +1081,14 @@ void rollback_Distributed_2_Final(
                 REAL myDyyT1 = myDyyT[1 * numY + gidx];
                 REAL myDyyT2 = myDyyT[2 * numY + gidx];
 
-                REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
                 REAL myResult_mid  = myResult[((o * numX) + i) * numY + gidx];
-                REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
 
                 REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
 
                 v[((o * numX) + i) * numY + gidx] = dtInv * myResult_mid;
 
                 if(gidx > 0) { 
+                    REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
                     v[((o * numX) + i) * numY + gidx] += 
                         0.5*( myVarY_val * myDyyT0 ) * myResult_low;
                 }
@@ -1098,12 +1097,12 @@ void rollback_Distributed_2_Final(
                     0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
 
                 if(gidx < numY-1) {
+                    REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
                     v[((o * numX) + i) * numY + gidx] += 
                         0.5*( myVarY_val * myDyyT2 ) * myResult_high;
                 }
-                cout << "Test inner 1 [" << o <<"][" << i <<"][" << gidx <<"]" << endl;
+
                 uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
-                cout << "Test inner 2 [" << o <<"][" << i <<"][" << gidx <<"]" << endl;
             }
         }
     }
