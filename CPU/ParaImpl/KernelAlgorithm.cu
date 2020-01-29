@@ -668,6 +668,7 @@ void rollback_Kernel_Test_CPU(
     uint numZ = numX > numY ? numX : numY;
 
     for (int t = 0; t <= numT - 2; t++) {
+        cout << "CPU test t: " << t << "/" << numT - 2 << endl;
         uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
         cudaDeviceSynchronize();
@@ -901,6 +902,7 @@ void rollback_Kernel_Test_GPU(
     uint numZ = numX > numY ? numX : numY;
 
     for (int t = 0; t <= numT - 2; t++) {
+        cout << "GPU test t: " << t << "/" << numT - 2 << endl;
         uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
         cudaDeviceSynchronize();
