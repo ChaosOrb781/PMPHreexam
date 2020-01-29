@@ -523,20 +523,6 @@ __global__ void Rollback_2Coalesced1 (
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
     if (gidx < numY) {
-        /*
-        If threads in the same warp access (read) the same location in the same instruction/clock cycle, 
-        the memory subsystem will use a "broadcast" mechanism so that only one read of that location is 
-        required, and all threads using that data will receive it in the same transaction. This will not 
-        result in additional transactions to service the request from multiple threads in this scenario.
-        https://devtalk.nvidia.com/default/topic/1043273/cuda-programming-and-performance/accessing-same-global-memory-address-within-warps/
-        */
-        __syncthreads();
-        //Just 2 reads, should not require shared memory to spare one memory 1 cycle
-        REAL dtInv1 = myTimeline[t];
-        REAL dtInv2 = myTimeline[t+1];
-        REAL dtInv = 1.0/(dtInv2-dtInv1);
-
-
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 __syncthreads();

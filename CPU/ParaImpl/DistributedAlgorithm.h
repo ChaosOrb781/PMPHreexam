@@ -2526,15 +2526,15 @@ int   run_Distributed_Final(
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
                     if (test_a[((o * numX) + i) * numY + j] != a[((o * numX) + i) * numY + j]) {
-                        cout << "a failed! a[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        cout << "a2 failed! a[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
                         return 1;
                     }
                     if (test_b[((o * numX) + i) * numY + j] != b[((o * numX) + i) * numY + j]) {
-                        cout << "b failed! b[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        cout << "b2 failed! b[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
                         return 1;
                     }
                     if (test_c[((o * numX) + i) * numY + j] != c[((o * numX) + i) * numY + j]) {
-                        cout << "c failed! c[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        cout << "c2 failed! c[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
                         return 1;
                     }
                 }
