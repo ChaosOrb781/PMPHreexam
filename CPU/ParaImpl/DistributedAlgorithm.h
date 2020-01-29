@@ -2415,7 +2415,33 @@ int   run_Distributed_Final(
         }
 #endif
         matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
+#if TEST_INIT_CORRECTNESS
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (myResultInit[((o * numX) + i) * numY + j] != myResult[((o * numX) + i) * numY + j]) {
+                        cout << "myresult4 failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
+                        return 1;
+                    }
+                }
+            }
+        }
+#endif
         matTransposeDistPlane(u, uT, outer, numY, numX);
+#if TEST_INIT_CORRECTNESS
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (uT[((o * numX) + i) * numY + j] != u[((o * numY) + j) * numX + i]) {
+                        cout << "u transpose failed! u[" << o << "][" << j << "][" << i << "] did not match! was" << endl;
+                        return 1;
+                    }
+                }
+            }
+        }
+#endif
         //cout << "Test6.2" << endl;
         rollback_Distributed_2_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, uT, v, myResult);
         //cout << "Test6.3" << endl;
@@ -2426,13 +2452,13 @@ int   run_Distributed_Final(
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
+                    if (test_v[((o * numX) + i) * numY + j] != v[((o * numX) + i) * numY + j]) {
+                        cout << "v failed! v[" << o << "][" << i << "][" << j << "] did not match! was " << v[((o * numX) + i) * numY + j] << " expected " << test_v[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
                     if (test_u[((o * numY) + j) * numX + i] != uT[((o * numX) + i) * numY + j]) {
                         cout << "u2 failed! u[" << o << "][" << j << "][" << i << "] did not match! was " << uT[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
-                        return 1;
-                    }
-                    if (test_v[((o * numX) + i) * numY + j] != v[((o * numX) + i) * numY + j]) {
-                        cout << "v failed! v[" << o << "][" << i << "][" << j << "] did not match! was " << v[((o * numX) + i) * numY + j] << " expected " << test_v[((o * numX) + i) * numY + j] << endl;
                         return 1;
                     }
                 }
