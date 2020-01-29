@@ -3,7 +3,7 @@
 
 #include "InterchangedAlgorithm.h"
 
-#define TEST_INIT_CORRECTNESS true
+#define TEST_INIT_CORRECTNESS false
 
 void initGrid_Distributed(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
@@ -1134,9 +1134,9 @@ void rollback_Distributed_3_Final(
             cout << "[0][1][0] = " << myVarXT[((t * numY) + j) * numX + i] << " " << myDxxT[0 * numX + i] << endl;
         }
 
-        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[0 * numX + i]);
-        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[1 * numX + i]);
-        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[2 * numX + i]);
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[2 * numX + i]);
     }
 }
 
