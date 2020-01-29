@@ -130,7 +130,7 @@ void rollback_Control_1(
         uint plane_remain = gidx % (numX * numY);
         uint i = plane_remain / numY;
         uint j = plane_remain % numY;
-        uint numZ = numX > numY ? numX : numY;
+        //uint numZ = numX > numY ? numX : numY;
         REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
         u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
 
@@ -167,7 +167,7 @@ void rollback_Control_2(
         uint plane_remain = gidx % (numY * numX);
         uint j = plane_remain / numX;
         uint i = plane_remain % numX;
-        uint numZ = numX > numY ? numX : numY;
+        //uint numZ = numX > numY ? numX : numY;
         v[((o * numX) + i) * numY + j] = 0.0;
 
         if(j > 0) {
@@ -674,7 +674,7 @@ void rollback_Kernel_Test(
         gpuErr(cudaPeekAtLastError());
         rollback_Control_1(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, u_h, myResult_h);
         host_vector<REAL> temp(u);
-        for (int i = 0; i < outer * numY * numX) {
+        for (int i = 0; i < outer * numY * numX; i++) {
             if (std::abs(temp[i] - u_h[i]) > 0.0001) {
                 cout << "Rollback 1 index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
                 exit(0);
@@ -688,7 +688,7 @@ void rollback_Kernel_Test(
         rollback_Control_2(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, myResult_h);
         temp = u;
         host_vector<REAL> temp2(v);
-        for (int i = 0; i < outer * numX * numY) {
+        for (int i = 0; i < outer * numX * numY; i++) {
             if (std::abs(temp2[i] - v_h[i]) > 0.0001) {
                 cout << "Rollback 2(v) index " << i << " failed to be equal, got " << v_h[i] << " expected " << temp2[i];
                 exit(0);
@@ -707,7 +707,7 @@ void rollback_Kernel_Test(
         temp = a;
         temp2 = b;
         temp3 = c;
-        for (int i = 0; i < outer * numZ * numZ) {
+        for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
                 cout << "Rollback 3(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
                 exit(0);
@@ -751,13 +751,13 @@ void rollback_Kernel_Test(
             rollback_Control_4(t, j, outer, numX, numY, u_h, a_h, b_h, c_h, yy_h);
             temp = u;
             temp2 = yy;
-            for (int i = 0; i < outer * numZ * numZ) {
+            for (int i = 0; i < outer * numZ * numZ; i++) {
                 if (std::abs(temp[i] - u_h[i]) > 0.0001) {
                     cout << "Rollback 2(u) index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
                     exit(0);
                 }
             }
-            for (int i = 0; i < outer * numZ) {
+            for (int i = 0; i < outer * numZ; i++) {
                 if (std::abs(temp2[i] - yy_h[i]) > 0.0001) {
                     cout << "Rollback 2(yy) index " << i << " failed to be equal, got " << yy_h[i] << " expected " << temp2[i];
                     exit(0);
@@ -774,7 +774,7 @@ void rollback_Kernel_Test(
         temp = a;
         temp2 = b;
         temp3 = c;
-        for (int i = 0; i < outer * numZ * numZ) {
+        for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
                 cout << "Rollback 5(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
                 exit(0);
@@ -794,7 +794,7 @@ void rollback_Kernel_Test(
         gpuErr(cudaPeekAtLastError());
         rollback_Control_6(t, outer, numX, numY, myTimeline_h, u_h, v_h, y_h);
         temp = y;
-        for (int i = 0; i < outer * numZ * numZ) {
+        for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - y_h[i]) > 0.0001) {
                 cout << "Rollback 6 index " << i << " failed to be equal, got " << y_h[i] << " expected " << temp[i];
                 exit(0);
@@ -826,9 +826,9 @@ void rollback_Kernel_Test(
             }
             rollback_Control_7(t, i, outer, numX, numY, a_h, b_h, c_h, y_h, yy_h, myResult_h);
             temp = myResult;
-            for (int i = 0; i < outer * numX * numY) {
-                if (std::abs(temp[i] - myResult_h[i]) > 0.0001) {
-                    cout << "Rollback 7 index " << i << " failed to be equal, got " << myResult_h[i] << " expected " << temp[i];
+            for (int j = 0; j < outer * numX * numY; j++) {
+                if (std::abs(temp[j] - myResult_h[j]) > 0.0001) {
+                    cout << "Rollback 7 index " << j << " failed to be equal, got " << myResult_h[j] << " expected " << temp[j];
                     exit(0);
                 }
             }
