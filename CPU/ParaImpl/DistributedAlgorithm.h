@@ -1101,8 +1101,9 @@ void rollback_Distributed_2_Final(
                     v[((o * numX) + i) * numY + gidx] += 
                         0.5*( myVarY_val * myDyyT2 ) * myResult_high;
                 }
-                
+                cout << "Test inner 1 [" << o <<"][" << i <<"][" << gidx <<"]" << endl;
                 uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
+                cout << "Test inner 2 [" << o <<"][" << i <<"][" << gidx <<"]" << endl;
             }
         }
     }
@@ -1289,7 +1290,7 @@ void rollback_Distributed_1_Final_para(
     }
 }
 
-void rollback_Distributed_2_Final1_para(
+void rollback_Distributed_2_Final_para(
     int t,
     const uint outer,
     const uint numX, 
