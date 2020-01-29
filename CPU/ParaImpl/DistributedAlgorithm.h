@@ -2419,9 +2419,9 @@ int   run_Distributed_Final(
 #endif
         matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
         matTransposeDistPlane(u, uT, outer, numY, numX);
-        //cout << "Test6.2" << endl;
+        cout << "Test6.2" << endl;
         rollback_Distributed_2_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, uT, v, myResult);
-        //cout << "Test6.3" << endl;
+        cout << "Test6.3" << endl;
         //cout << "Test6.5" << endl;
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_v(outer * numX * numY);
