@@ -453,7 +453,7 @@ void rollback_Distributed_4(
         for (int gidx = 0; gidx < outer; gidx++) {
             uint numZ = max(numX,numY);
             // here yy should have size [numX]
-            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,((gidx * numZ) + j) * numZ);
         }
     }
 }
@@ -1172,7 +1172,7 @@ void rollback_Distributed_4_Final(
         for (int gidx = 0; gidx < outer; gidx++) {
             uint numZ = max(numX,numY);
             // here yy should have size [numX]
-            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,((gidx * numZ) + j) * numZ);
         }
     }
 }
@@ -2441,7 +2441,7 @@ int   run_Distributed_Final(
         rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_v(outer * numX * numY);
-        rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, u, v, myResult);
+        rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_u, test_v, myResult);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
@@ -2489,6 +2489,20 @@ int   run_Distributed_Final(
 #endif
         //cout << "Test6.8" << endl;
         rollback_Distributed_4_Final(t, outer, numX, numY, u, a, b, c, yy);
+#if TEST_INIT_CORRECTNESS
+        rollback_Distributed_4(t, outer, numX, numY, test_u, a, b, c, yy);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_u[((o * numY) + j) * numX + i] != u[((o * numY) + j) * numX + i]) {
+                        cout << "u3 failed! u[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.9" << endl;
         rollback_Distributed_5_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, a, b, c);
 #if TEST_INIT_CORRECTNESS
