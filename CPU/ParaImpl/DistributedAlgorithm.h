@@ -1064,7 +1064,6 @@ void rollback_Distributed_2_Final1(
     const vector<REAL> myTimeline,
     const vector<REAL> myDyyT,
     const vector<REAL> myVarY,
-    vector<REAL>& u,
     vector<REAL>& v,
     vector<REAL>& myResult
 ) {
@@ -2451,10 +2450,10 @@ int   run_Distributed_Final(
         }
 #endif
         matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
-        //cout << "Test6.2" << endl;
-        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarY, u, v, myResult);
-        //cout << "Test6.3" << endl;
         matTransposeDistPlane(u, uT, outer, numY, numX);
+        //cout << "Test6.2" << endl;
+        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarY, v, myResult);
+        //cout << "Test6.3" << endl;
         //cout << "Test6.5" << endl;
         rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
 #if TEST_INIT_CORRECTNESS
@@ -2469,7 +2468,7 @@ int   run_Distributed_Final(
                         return 1;
                     }
                     if (test_v[((o * numX) + i) * numY + j] != v[((o * numX) + i) * numY + j]) {
-                        cout << "v failed! v[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        cout << "v failed! v[" << o << "][" << i << "][" << j << "] did not match! was " << v[((o * numX) + i) * numY + j] << " expected " << test_v[((o * numX) + i) * numY + j] << endl;
                         return 1;
                     }
                 }
