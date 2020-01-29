@@ -2547,6 +2547,7 @@ int   run_Distributed_Final(
 #endif
         cout << "Test6.11" << endl;
         rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
+        cout << "Test6.12" << endl;
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_myResult(outer * numX * numY);
         rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, myResult);
@@ -2555,16 +2556,16 @@ int   run_Distributed_Final(
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
                     if (test_myResult[((o * numX) + i) * numY + j] != myResult[((o * numX) + i) * numY + j]) {
-                        cout << "a failed! a[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        cout << "myresult failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
                         return 1;
                     }
                 }
             }
         }
 #endif
-        cout << "Test6.12" << endl;
-        matTransposeDistPlane(myResult, myResultT, outer, numX, numY);
         cout << "Test6.13" << endl;
+        matTransposeDistPlane(myResult, myResultT, outer, numX, numY);
+        cout << "Test6.14" << endl;
     }
 	
     //cout << "Test7" << endl;
