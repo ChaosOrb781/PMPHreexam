@@ -676,7 +676,7 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp(u);
         for (int i = 0; i < outer * numY * numX; i++) {
             if (std::abs(temp[i] - u_h[i]) > 0.0001) {
-                cout << "Rollback 1 index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                cout << "Rollback 1 index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
                 exit(0);
             }
         }
@@ -690,11 +690,11 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp2(v);
         for (int i = 0; i < outer * numX * numY; i++) {
             if (std::abs(temp2[i] - v_h[i]) > 0.0001) {
-                cout << "Rollback 2(v) index " << i << " failed to be equal, got " << v_h[i] << " expected " << temp2[i];
+                cout << "Rollback 2(v) index [" << i / (numX * numY) << "][" << (i % (numX * numY)) / numY << "][" << (i % (numX * numY)) % numY << "] failed to be equal, got " << v_h[i] << " expected " << temp2[i];
                 exit(0);
             }
             if (std::abs(temp[i] - u_h[i]) > 0.0001) {
-                cout << "Rollback 2(u) index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                cout << "Rollback 2(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
                 exit(0);
             }
         }
@@ -709,15 +709,15 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp3(c);
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
-                cout << "Rollback 3(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                cout << "Rollback 3(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i];
                 exit(0);
             }
             if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
-                cout << "Rollback 3(b) index " << i << " failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                cout << "Rollback 3(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i];
                 exit(0);
             }
             if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
-                cout << "Rollback 3(c) index " << i << " failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                cout << "Rollback 3(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i];
                 exit(0);
             }
         }
@@ -753,13 +753,13 @@ void rollback_Kernel_Test(
             temp2 = yy;
             for (int i = 0; i < outer * numZ * numZ; i++) {
                 if (std::abs(temp[i] - u_h[i]) > 0.0001) {
-                    cout << "Rollback 2(u) index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                    cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
                     exit(0);
                 }
             }
             for (int i = 0; i < outer * numZ; i++) {
                 if (std::abs(temp2[i] - yy_h[i]) > 0.0001) {
-                    cout << "Rollback 2(yy) index " << i << " failed to be equal, got " << yy_h[i] << " expected " << temp2[i];
+                    cout << "Rollback 4(yy) index [" << i / numZ << "][" << i % numZ << "] failed to be equal, got " << yy_h[i] << " expected " << temp2[i];
                     exit(0);
                 }
             }
@@ -776,15 +776,15 @@ void rollback_Kernel_Test(
         temp3 = c;
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
-                cout << "Rollback 5(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                cout << "Rollback 5(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i];
                 exit(0);
             }
             if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
-                cout << "Rollback 5(b) index " << i << " failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                cout << "Rollback 5(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i];
                 exit(0);
             }
             if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
-                cout << "Rollback 5(c) index " << i << " failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                cout << "Rollback 5(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i];
                 exit(0);
             }
         }
@@ -796,7 +796,7 @@ void rollback_Kernel_Test(
         temp = y;
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - y_h[i]) > 0.0001) {
-                cout << "Rollback 6 index " << i << " failed to be equal, got " << y_h[i] << " expected " << temp[i];
+                cout << "Rollback 6 index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << y_h[i] << " expected " << temp[i];
                 exit(0);
             }
         }
@@ -828,7 +828,7 @@ void rollback_Kernel_Test(
             temp = myResult;
             for (int j = 0; j < outer * numX * numY; j++) {
                 if (std::abs(temp[j] - myResult_h[j]) > 0.0001) {
-                    cout << "Rollback 7 index " << j << " failed to be equal, got " << myResult_h[j] << " expected " << temp[j];
+                    cout << "Rollback 7 index [" << j / (numX * numY) << "][" << (j % (numX * numY)) / numY << "][" << (j % (numX * numY)) % numY << "] failed to be equal, got " << myResult_h[j] << " expected " << temp[j];
                     exit(0);
                 }
             }
@@ -850,7 +850,7 @@ int run_CPUKernel(
                       REAL*  res   // [outer] RESULT
 ) {
     int procs = blocksize;
-    
+
     int sgm_size = 8;
 
 	device_vector<REAL> myX(numX);       // [numX]
