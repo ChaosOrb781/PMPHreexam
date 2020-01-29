@@ -2365,12 +2365,12 @@ int   run_Distributed_Final(
     cout << "Test4" << endl;
     setPayoff_Distributed_T_Final(myX, outer, numX, numY, myResultT);
 #if TEST_INIT_CORRECTNESS
-    vector<REAL> myResult(outer * numX * numY);
-    matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
+    vector<REAL> myResultInit(outer * numX * numY);
+    matTransposeDistPlane(myResultT, myResultInit, outer, numY, numX);
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+                myResultCopy[((o * numX) + i) * numY + j] = myResultInit[((o * numX) + i) * numY + j]; 
             }
         }
     }
