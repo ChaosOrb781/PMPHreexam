@@ -2799,6 +2799,7 @@ int   run_Distributed_Final_para(
 
     //cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
+        cout << "t: " << t << endl;
 #if TEST_INIT_CORRECTNESS
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
