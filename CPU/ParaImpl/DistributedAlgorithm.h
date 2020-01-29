@@ -2550,7 +2550,7 @@ int   run_Distributed_Final(
         cout << "Test6.12" << endl;
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_myResult(outer * numX * numY);
-        rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, myResult);
+        rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, test_myResult);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
