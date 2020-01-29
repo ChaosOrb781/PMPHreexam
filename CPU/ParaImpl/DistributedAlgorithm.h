@@ -3,7 +3,7 @@
 
 #include "InterchangedAlgorithm.h"
 
-#define TEST_INIT_CORRECTNESS true
+#define TEST_INIT_CORRECTNESS false
 
 void initGrid_Distributed(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
@@ -2415,7 +2415,6 @@ int   run_Distributed_Final(
     updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
 
 #if TEST_INIT_CORRECTNESS
-    vector<REAL> test_myResult(outer * numX * numY);
     updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 #endif
 
@@ -2427,7 +2426,7 @@ int   run_Distributed_Final(
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
-                    if (test_myResult[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
+                    if (myResultInit[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
                         cout << "myresult3 failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
                         return 1;
                     }
@@ -2451,6 +2450,7 @@ int   run_Distributed_Final(
             }   
         }
 #endif
+        matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
         //cout << "Test6.2" << endl;
         rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarY, u, v, myResult);
         //cout << "Test6.3" << endl;
@@ -2459,7 +2459,7 @@ int   run_Distributed_Final(
         rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_v(outer * numX * numY);
-        rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_u, test_v, myResult);
+        rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_u, test_v, myResultInit);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
@@ -2567,7 +2567,7 @@ int   run_Distributed_Final(
         rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
         //cout << "Test6.12" << endl;
 #if TEST_INIT_CORRECTNESS
-        rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, test_myResult);
+        rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, myResultInit);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
