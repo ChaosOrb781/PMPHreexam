@@ -102,11 +102,11 @@ __global__ void InitMyDzzTCoalesced(
         __syncthreads();
         DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / dl / (dl + du) : 0.0;
         __syncthreads();
-        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 / (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
+        DzzT[1 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 / (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
         __syncthreads();
-        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
+        DzzT[2 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
         __syncthreads();
-        DzzT[0 * numZ + gidx] = 0.0;
+        DzzT[3 * numZ + gidx] = 0.0;
     }
 }
 
