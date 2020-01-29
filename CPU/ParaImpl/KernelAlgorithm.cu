@@ -512,6 +512,122 @@ void rollback_Kernel_GPU(
     }
 }
 
+//Do some individual tests of each kernel against sequential solution!
+void rollback_Kernel_Test(
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    device_vector<REAL>& myTimeline, 
+    device_vector<REAL>& myDxx,
+    device_vector<REAL>& myDyy,
+    device_vector<REAL>& myVarX,
+    device_vector<REAL>& myVarY,
+    device_vector<REAL>& u,
+    device_vector<REAL>& v,
+    device_vector<REAL>& a,
+    device_vector<REAL>& b,
+    device_vector<REAL>& c,
+    device_vector<REAL>& y,
+    device_vector<REAL>& yy,
+    device_vector<REAL>& myResult
+) {
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    REAL* myDxx_p = raw_pointer_cast(&myDxx[0]);
+    REAL* myDyy_p = raw_pointer_cast(&myDyy[0]);
+    REAL* myVarX_p = raw_pointer_cast(&myVarX[0]);
+    REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
+    REAL* u_p = raw_pointer_cast(&u[0]);
+    REAL* v_p = raw_pointer_cast(&v[0]);
+    REAL* a_p = raw_pointer_cast(&a[0]);
+    REAL* b_p = raw_pointer_cast(&b[0]);
+    REAL* c_p = raw_pointer_cast(&c[0]);
+    REAL* y_p = raw_pointer_cast(&y[0]);
+    REAL* yy_p = raw_pointer_cast(&yy[0]);
+    REAL* myResult_p = raw_pointer_cast(&myResult[0]);
+
+    uint numZ = numX > numY ? numX : numY;
+
+    for (int t = 0; t <= numT - 2; t++) {
+        uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
+        Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_2<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, myResult_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_3<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        uint num_blocks2 = (outer + blocksize - 1) / blocksize;
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numX % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
+        for (int j = 0; j < numY; j++) {
+            //cout << "t: " << t << endl;
+            for (int o = 0; o < outer; o++) {
+                TRIDAG_SOLVER<<<num_blocks2, blocksize, sizeof(MyReal4_ker) * blocksize + sizeof(MyReal2_ker) * blocksize + sizeof(int) * blocksize>>>(
+                    &a_p[((o * numZ) + j) * numZ], 
+                    &b_p[((o * numZ) + j) * numZ], 
+                    &c_p[((o * numZ) + j) * numZ],
+                    &u_p[((o * numY) + j) * numX],
+                    numX,
+                    sgm_size,
+                    &u_p[((o * numY) + j) * numX],
+                    &yy_p[o * numZ]
+                );
+                cudaDeviceSynchronize();
+                gpuErr(cudaPeekAtLastError());
+            }
+            //cudaDeviceSynchronize();
+            //gpuErr(cudaPeekAtLastError());
+        }
+
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        Rollback_6<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, u_p, v_p, y_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numY % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
+        for (int i = 0; i < numX; i++) {
+            for (int o = 0; o < outer; o++) {
+                TRIDAG_SOLVER<<<num_blocks2, blocksize, sizeof(MyReal4_ker) * blocksize + sizeof(MyReal2_ker) * blocksize + sizeof(int) * blocksize>>>(
+                    &a_p[((o * numZ) + i) * numZ], 
+                    &b_p[((o * numZ) + i) * numZ], 
+                    &c_p[((o * numZ) + i) * numZ],
+                    &y_p[((o * numZ) + i) * numZ],
+                    numY,
+                    sgm_size,
+                    &myResult_p[((o * numX) + i) * numY],
+                    &yy_p[o * numZ]
+                );
+                cudaDeviceSynchronize();
+                gpuErr(cudaPeekAtLastError());
+            }
+        }
+    }
+}
+
 int run_CPUKernel(
                 const uint   outer,
                 const uint   numX,

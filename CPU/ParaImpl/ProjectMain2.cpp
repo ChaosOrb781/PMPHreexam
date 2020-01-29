@@ -103,6 +103,8 @@ int main()
         //RunTestOnProgram<funGPU>("Kernelized Dist 2 Parallel", (fun)run_Kernelized_Rollback_Dist_Alt_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Distributed Rollback", (fun)run_Distributed, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Distributed Parallel", (fun)run_Distributed_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Separation Rollback", (fun)run_Distributed_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Separation Rollback Parallel", (fun)run_Distributed_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Simple Kernel CPU", (fun)run_CPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Simple Kernel GPU", (fun)run_GPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
