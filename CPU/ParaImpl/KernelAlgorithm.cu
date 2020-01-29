@@ -706,7 +706,7 @@ void rollback_Kernel_Test(
         rollback_Control_3(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, a_h, b_h, c_h);
         temp = a;
         temp2 = b;
-        temp3 = c;
+        host_vector<REAL> temp3(c);
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
                 cout << "Rollback 3(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
@@ -850,6 +850,8 @@ int run_CPUKernel(
                       REAL*  res   // [outer] RESULT
 ) {
     int procs = blocksize;
+    
+    int sgm_size = 8;
 
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
@@ -912,7 +914,7 @@ int run_CPUKernel(
 
     //cout << "Test6" << endl;
     //rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
-    rollback_Kernel_Test(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    rollback_Kernel_Test(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
