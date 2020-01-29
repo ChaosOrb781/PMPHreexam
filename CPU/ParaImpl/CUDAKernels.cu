@@ -551,7 +551,7 @@ __global__ void Rollback_2Coalesced1 (
                 REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
 
                 __syncthreads();
-                v[((o * numX) + i) * numY + gidx] = dtInv * myResult_mid;
+                v[((o * numX) + i) * numY + gidx] = 0.0;
 
                 __syncthreads();
                 if(gidx > 0) { 
