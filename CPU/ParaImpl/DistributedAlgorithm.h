@@ -466,8 +466,6 @@ void rollback_Distributed_5(
     const vector<REAL> myTimeline,
     const vector<REAL> myDyy,
     const vector<REAL> myVarY,
-    vector<REAL>& u,
-    vector<REAL>& v,
     vector<REAL>& a,
     vector<REAL>& b,
     vector<REAL>& c
@@ -663,8 +661,6 @@ void rollback_Distributed_5_para(
     const vector<REAL> myTimeline,
     const vector<REAL> myDyy,
     const vector<REAL> myVarY,
-    vector<REAL>& u,
-    vector<REAL>& v,
     vector<REAL>& a,
     vector<REAL>& b,
     vector<REAL>& c
@@ -2031,7 +2027,7 @@ int   run_Distributed_Separation(
 	    rollback_Distributed_2(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
 	    rollback_Distributed_3(t, outer, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
 	    rollback_Distributed_4(t, outer, numX, numY, u, a, b, c, yy);
-	    rollback_Distributed_5(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, a, b, c);
+	    rollback_Distributed_5(t, outer, numX, numY, myTimeline, myDyy, myVarY, a, b, c);
 	    rollback_Distributed_6(t, outer, numX, numY, myTimeline, u, v, y);
 	    rollback_Distributed_7(t, outer, numX, numY, a, b, c, y, yy, myResult);
     }
@@ -2194,7 +2190,7 @@ int   run_Distributed_Separation_Parallel(
 	    rollback_Distributed_2_para(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
 	    rollback_Distributed_3_para(t, outer, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
 	    rollback_Distributed_4_para(t, outer, numX, numY, u, a, b, c, yy);
-	    rollback_Distributed_5_para(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, a, b, c);
+	    rollback_Distributed_5_para(t, outer, numX, numY, myTimeline, myDyy, myVarY, a, b, c);
 	    rollback_Distributed_6_para(t, outer, numX, numY, myTimeline, u, v, y);
 	    rollback_Distributed_7_para(t, outer, numX, numY, a, b, c, y, yy, myResult);
     }
@@ -2495,6 +2491,31 @@ int   run_Distributed_Final(
         rollback_Distributed_4_Final(t, outer, numX, numY, u, a, b, c, yy);
         //cout << "Test6.9" << endl;
         rollback_Distributed_5_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, a, b, c);
+#if TEST_INIT_CORRECTNESS
+        vector<REAL> test_a2(outer * numZ * numZ);
+        vector<REAL> test_b2(outer * numZ * numZ);
+        vector<REAL> test_c2(outer * numZ * numZ);
+        rollback_Distributed_5(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_a2, test_b2, test_c2);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_a[((o * numX) + i) * numY + j] != a[((o * numX) + i) * numY + j]) {
+                        cout << "a failed! a[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        return 1;
+                    }
+                    if (test_b[((o * numX) + i) * numY + j] != b[((o * numX) + i) * numY + j]) {
+                        cout << "b failed! b[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
+                    if (test_c[((o * numX) + i) * numY + j] != c[((o * numX) + i) * numY + j]) {
+                        cout << "c failed! c[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.10" << endl;
         rollback_Distributed_6_Final(t, outer, numX, numY, myTimeline, uT, v, y);
         //cout << "Test6.11" << endl;
