@@ -361,20 +361,14 @@ void rollback_Distributed_1(
         uint j = plane_remain % numY;
         uint numZ = max(numX,numY);
         REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-        u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
+        u[((o * numY) + j) * numX + i]      = dtInv * myResult[((o * numX) + i) * numY + j];
 
         if(i > 0) { 
-            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                            * myDxx[i * 4 + 0] ) 
-                            * myResult[((o * numX) + (i-1)) * numY + j];
+            u[((o * numY) + j) * numX + i] += 0.5* ( 0.5*myVarX[((t * numX) + i) * numY + j] * myDxx[i * 4 + 0] ) * myResult[((o * numX) + (i-1)) * numY + j];
         }
-        u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                        * myDxx[i * 4 + 1] )
-                        * myResult[((o * numX) + i) * numY + j];
+        u[((o * numY) + j) * numX + i]     += 0.5* ( 0.5*myVarX[((t * numX) + i) * numY + j] * myDxx[i * 4 + 1] ) * myResult[((o * numX) + i) * numY + j];
         if(i < numX-1) {
-            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
-                            * myDxx[i * 4 + 2] )
-                            * myResult[((o * numX) + (i+1)) * numY + j];
+            u[((o * numY) + j) * numX + i] += 0.5* ( 0.5*myVarX[((t * numX) + i) * numY + j] * myDxx[i * 4 + 2] ) * myResult[((o * numX) + (i+1)) * numY + j];
         }
     }
 }
@@ -2413,7 +2407,7 @@ int   run_Distributed_Final(
     updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
     //cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
-        //cout << "Test6.1" << endl;
+        cout << "t: " << t << endl;
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_u(outer * numY * numX);
