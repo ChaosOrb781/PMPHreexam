@@ -2360,10 +2360,10 @@ int   run_Distributed_Final(
     initOperator_Distributed_T_Final(numX, myX, myDxxT);
 #if TEST_INIT_CORRECTNESS
     vector<REAL> testA(3 * 4); //3 rows, 4 cols
-    vector<REAL> testB(3 * 4); //4 rows, 3 cols
+    vector<REAL> testB(4 * 3); //4 rows, 3 cols
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 4; j++) {
-            testA[i * 4 + j] = i * j;
+            testA[i * 4 + j] = (i+1) * (j+1);
             cout << "testA[" << i << "][" << j << "] = " << (i+1) * (j+1) << endl;
         }
     }
