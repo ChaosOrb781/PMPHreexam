@@ -1962,16 +1962,16 @@ int   run_Distributed_Separation(
     uint myXindex = 0;
     uint myYindex = 0;
 
-    //cout << "Test1" << endl;
+    cout << "Test1" << endl;
 	initGrid_Distributed(s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
 
-    //cout << "Test2" << endl;
+    cout << "Test2" << endl;
     initOperator_Distributed(numX, myX, myDxx);
 
-    //cout << "Test3" << endl;
+    cout << "Test3" << endl;
     initOperator_Distributed(numY, myY, myDyy);
 
-    //cout << "Test4" << endl;
+    cout << "Test4" << endl;
     setPayoff_Distributed(myX, outer, numX, numY, myResult);
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
@@ -1983,9 +1983,9 @@ int   run_Distributed_Separation(
     }
 #endif
 
-    //cout << "Test5" << endl;
+    cout << "Test5" << endl;
     updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
-    //cout << "Test6" << endl;
+    cout << "Test6" << endl;
     for (int t = 0; t <= numT - 2; t++) {
 	    rollback_Distributed_1(t, outer, numX, numY, myTimeline, myDxx, myVarX, u, myResult);
 	    rollback_Distributed_2(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
@@ -1996,7 +1996,7 @@ int   run_Distributed_Separation(
 	    rollback_Distributed_7(t, outer, numX, numY, a, b, c, y, yy, myResult);
     }
 	
-    //cout << "Test7" << endl;
+    cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
     }
