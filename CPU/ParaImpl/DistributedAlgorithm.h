@@ -2352,13 +2352,27 @@ int   run_Distributed_Final(
 
     //cout << "Test2" << endl;
     initOperator_Distributed_T_Final(numX, myX, myDxxT);
+    //cout << "Test3" << endl;
+    initOperator_Distributed_T_Final(numY, myY, myDyyT);
+
 #if TEST_INIT_CORRECTNESS
-     vector<REAL> testMyDxx(numX * 4);
+    vector<REAL> testMyDxx(numX * 4);
     initOperator_Distributed(numX, myX, testMyDxx);
     for (int i = 0; i < numX; i++) {
         for (int j = 0; j < 4; j++) {
             if (abs(testMyDxx[i * 4 + j] - myDxxT[j * numX + i]) > 0.00001f) {
                 cout << "Transpose fail: myDxx[" << i << "][" << j << "] did not match! was " << myDxxT[j * numX + i] << " expected " << testMyDxx[i * 4 + j] << endl;
+                return 1;
+            }
+        }
+    }
+
+    vector<REAL> testMyDyy(numY * 4);
+    initOperator_Distributed(numY, myY, testMyDyy);
+    for (int i = 0; i < numY; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (abs(testMyDyy[i * 4 + j] - myDyyT[j * numY + i]) > 0.00001f) {
+                cout << "Transpose fail: myDyy[" << i << "][" << j << "] did not match! was " << myDyyT[j * numY + i] << " expected " << testMyDyy[i * 4 + j] << endl;
                 return 1;
             }
         }
@@ -2385,8 +2399,6 @@ int   run_Distributed_Final(
     }
 #endif
 
-    //cout << "Test3" << endl;
-    initOperator_Distributed_T_Final(numY, myY, myDyyT);
 
     //cout << "Test4" << endl;
     setPayoff_Distributed_T_Final(myX, outer, numX, numY, myResultT);
@@ -2431,6 +2443,25 @@ int   run_Distributed_Final(
         matTransposeDistPlane(u, uT, outer, numY, numX);
         //cout << "Test6.5" << endl;
         rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
+#if TEST_INIT_CORRECTNESS
+        vector<REAL> test_v(outer * numX * numY);
+        rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, u, v, myResult);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_u[((o * numY) + j) * numX + i] != u[((o * numY) + j) * numX + i]) {
+                        cout << "u2 failed! u[" << o << "][" << j << "][" << i << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        return 1;
+                    }
+                    if (test_v[((o * numX) + i) * numY + j] != v[((o * numX) + i) * numY + j]) {
+                        cout << "v failed! v[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.6" << endl;
         matTransposeDistPlane(uT, u, outer, numX, numY);
         //cout << "Test6.7" << endl;
