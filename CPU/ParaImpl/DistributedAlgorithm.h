@@ -2486,7 +2486,7 @@ int   run_Distributed_Final(
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
                     if (test_a[((o * numY) + j) * numX + i] != a[((o * numY) + j) * numX + i]) {
-                        cout << "a failed! a[" << o << "][" << j << "][" << i << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        cout << "a failed! a[" << o << "][" << j << "][" << i << "] did not match! was " << a[((o * numY) + j) * numX + i] << " expected " << test_a[((o * numY) + j) * numX + i] << endl;
                         return 1;
                     }
                     if (test_b[((o * numY) + j) * numX + i] != b[((o * numY) + j) * numX + i]) {
