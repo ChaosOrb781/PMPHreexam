@@ -1987,12 +1987,19 @@ int   run_Distributed_Separation(
     updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cout << "Test6" << endl;
     for (int t = 0; t <= numT - 2; t++) {
+        cout << "Test6.1" << endl;
 	    rollback_Distributed_1(t, outer, numX, numY, myTimeline, myDxx, myVarX, u, myResult);
+        cout << "Test6.2" << endl;
 	    rollback_Distributed_2(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
+        cout << "Test6.3" << endl;
 	    rollback_Distributed_3(t, outer, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
+        cout << "Test6.4" << endl;
 	    rollback_Distributed_4(t, outer, numX, numY, u, a, b, c, yy);
+        cout << "Test6.5" << endl;
 	    rollback_Distributed_5(t, outer, numX, numY, myTimeline, myDyy, myVarY, a, b, c);
+        cout << "Test6.6" << endl;
 	    rollback_Distributed_6(t, outer, numX, numY, myTimeline, u, v, y);
+        cout << "Test6.7" << endl;
 	    rollback_Distributed_7(t, outer, numX, numY, a, b, c, y, yy, myResult);
     }
 	
