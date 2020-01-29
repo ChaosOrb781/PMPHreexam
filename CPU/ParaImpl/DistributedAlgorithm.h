@@ -2530,6 +2530,21 @@ int   run_Distributed_Final(
         matTransposeDistPlane(u, uT, outer, numY, numX);
         //cout << "Test6.10" << endl;
         rollback_Distributed_6_Final(t, outer, numX, numY, myTimeline, uT, v, y);
+#if TEST_INIT_CORRECTNESS
+        vector<REAL> test_y(outer * numZ * numZ);
+        rollback_Distributed_6(t, outer, numX, numY, myTimeline, test_u, test_v, test_y);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_y[((o * numX) + i) * numY + j] != y[((o * numX) + i) * numY + j]) {
+                        cout << "a failed! a[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.11" << endl;
         rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
         //cout << "Test6.12" << endl;
