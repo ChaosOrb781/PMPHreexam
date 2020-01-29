@@ -1991,6 +1991,7 @@ int   run_Distributed_Separation(
 	    rollback_Distributed_1(t, outer, numX, numY, myTimeline, myDxx, myVarX, u, myResult);
         //cout << "Test6.2" << endl;
 	    rollback_Distributed_2(t, outer, numX, numY, myTimeline, myDyy, myVarY, u, v, myResult);
+        cout << "t: " << t << " v[0][0][0] = " << v[0];
         //cout << "Test6.3" << endl;
 	    rollback_Distributed_3(t, outer, numX, numY, myTimeline, myDxx, myVarX, a, b, c);
         //cout << "Test6.4" << endl;
