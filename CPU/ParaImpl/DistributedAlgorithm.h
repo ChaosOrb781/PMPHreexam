@@ -430,9 +430,9 @@ void rollback_Distributed_3(
         uint i = plane_remain % numX;
         uint numZ = max(numX,numY);
         REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-        a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+        a[((o * numZ) + j) * numZ + i] =	   - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
         b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
-        c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+        c[((o * numZ) + j) * numZ + i] =	   - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
     }
 }
 
@@ -1129,6 +1129,10 @@ void rollback_Distributed_3_Final(
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        if (o == 0 && j == 1 && i == 0) {
+            cout << "[0][1][0] = " << myVarXT[((t * numY) + j) * numX + i] << " " << myDxxT[0 * numX + i] << endl;
+        }
 
         a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[0 * numX + i]);
         b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[1 * numX + i]);
