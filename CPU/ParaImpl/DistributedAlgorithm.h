@@ -2422,7 +2422,7 @@ int   run_Distributed_Final(
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
                     if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.00001f) {
-                        cout << "u failed! myDxx[" << i << "][" << j << "] did not match! was " << myDxxT[j * numX + i] << " expected " << testMyDxx[i * 4 + j] << endl;
+                        cout << "u failed! u[" << o << "][" << i << "][" << j << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
                         return 1;
                     }
                 }
