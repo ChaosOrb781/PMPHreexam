@@ -1056,7 +1056,7 @@ void rollback_Distributed_1_Final(
         }
     }
 }
-void rollback_Distributed_2_Final1(
+void rollback_Distributed_2_Final(
     int t,
     const uint outer,
     const uint numX, 
@@ -1064,6 +1064,7 @@ void rollback_Distributed_2_Final1(
     const vector<REAL> myTimeline,
     const vector<REAL> myDyyT,
     const vector<REAL> myVarY,
+    vector<REAL>& uT,
     vector<REAL>& v,
     vector<REAL>& myResult
 ) {
@@ -1100,23 +1101,7 @@ void rollback_Distributed_2_Final1(
                     v[((o * numX) + i) * numY + gidx] += 
                         0.5*( myVarY_val * myDyyT2 ) * myResult_high;
                 }
-            }
-        }
-    }
-}
-
-void rollback_Distributed_2_Final2(
-    int t,
-    const uint outer,
-    const uint numX, 
-    const uint numY,
-    vector<REAL>& uT,
-    vector<REAL>& v
-) {
-    //cout << "test 2" << endl;
-    for (int gidx = 0; gidx < numY; gidx++) {
-        for (int o = 0; o < outer; o++) {
-            for (int i = 0; i < numX; i++) {
+                
                 uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
             }
         }
@@ -1312,6 +1297,7 @@ void rollback_Distributed_2_Final1_para(
     const vector<REAL> myTimeline,
     const vector<REAL> myDyyT,
     const vector<REAL> myVarY,
+    vector<REAL>& uT,
     vector<REAL>& v,
     vector<REAL>& myResult
 ) {
@@ -1349,25 +1335,7 @@ void rollback_Distributed_2_Final1_para(
                     v[((o * numX) + i) * numY + gidx] += 
                         0.5*( myVarY_val * myDyyT2 ) * myResult_high;
                 }
-            }
-        }
-    }
-}
 
-
-void rollback_Distributed_2_Final2_para(
-    int t,
-    const uint outer,
-    const uint numX, 
-    const uint numY,
-    vector<REAL>& uT,
-    vector<REAL>& v
-) {
-    //cout << "test 2" << endl;
-#pragma omp parallel for schedule(static)
-    for (int gidx = 0; gidx < numY; gidx++) {
-        for (int o = 0; o < outer; o++) {
-            for (int i = 0; i < numX; i++) {
                 uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
             }
         }
@@ -2452,10 +2420,9 @@ int   run_Distributed_Final(
         matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
         matTransposeDistPlane(u, uT, outer, numY, numX);
         //cout << "Test6.2" << endl;
-        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarY, v, myResult);
+        rollback_Distributed_2_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, uT, v, myResult);
         //cout << "Test6.3" << endl;
         //cout << "Test6.5" << endl;
-        rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_v(outer * numX * numY);
         rollback_Distributed_2(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_u, test_v, myResultInit);
