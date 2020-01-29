@@ -455,12 +455,12 @@ void rollback_Distributed_4(
     vector<REAL>& yy
 ) {
     //cout << "test 4" << endl;
-    for (int gidx = 0; gidx < outer * numY; gidx++) {
-        uint o = gidx / numY;
-        uint j = gidx % numY;
-        uint numZ = max(numX,numY);
-        // here yy should have size [numX]
-        tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,((o * numZ) + j) * numZ);
+    for(uint j=0;j<numY;j++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint numZ = max(numX,numY);
+            // here yy should have size [numX]
+            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+        }
     }
 }
 
@@ -526,12 +526,12 @@ void rollback_Distributed_7(
     vector<REAL>& yy,
     vector<REAL>& myResult
 ) {
-    for (int gidx = 0; gidx < outer * numX; gidx++) {
-        uint o = gidx / numX;
-        uint i = gidx % numX;
-        // here yy should have size [numY]
-        uint numZ = max(numX,numY);
-        tridagPar(a,((o * numZ) + i) * numZ,b,((o * numZ) + i) * numZ,c,((o * numZ) + i) * numZ,y,((o * numZ) + i) * numZ,numY,myResult, (o * numX + i) * numY,yy,((o * numZ) + i) * numZ);
+    for(uint i=0;i<numX;i++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            // here yy should have size [numY]
+            uint numZ = max(numX,numY);
+            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+        }
     }
 }
 
