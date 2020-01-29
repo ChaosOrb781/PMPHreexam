@@ -2527,6 +2527,7 @@ int   run_Distributed_Final(
             }   
         }
 #endif
+        matTransposeDistPlane(u, uT, outer, numY, numX);
         //cout << "Test6.10" << endl;
         rollback_Distributed_6_Final(t, outer, numX, numY, myTimeline, uT, v, y);
         //cout << "Test6.11" << endl;
