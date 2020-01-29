@@ -773,6 +773,7 @@ void initMyTimeline_Distributed_Final_para(
     const uint numT, 
     vector<REAL>& myTimeline
 ) {
+#pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < numT; gidx++)
         myTimeline[gidx] = t*gidx/(numT-1);
 }
@@ -789,6 +790,7 @@ void initMyX_Distributed_Final_para(
     const REAL dx = stdX/numX;
     myXindex = static_cast<unsigned>(s0/dx) % numX;
 
+#pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < numX; gidx++)
         myX[gidx] = gidx*dx - myXindex*dx + s0;
 }
@@ -807,6 +809,7 @@ void initMyY_Distributed_Final_para(
     const REAL logAlpha = log(alpha);
     myYindex = static_cast<unsigned>(numY/2.0);
 
+#pragma omp parallel for schedule(static)
     for(uint gidx = 0; gidx < numY; gidx++)
         myY[gidx] = gidx*dy - myYindex*dy + logAlpha;
 }
@@ -846,9 +849,9 @@ void initOperator_Distributed_T_Final_para(
         REAL du = high - mid;
 
         DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / dl / (dl + du) : 0.0;
-        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 / (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
-        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
-        DzzT[0 * numZ + gidx] = 0.0;
+        DzzT[1 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 * (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
+        DzzT[2 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
+        DzzT[3 * numZ + gidx] = 0.0;
     }
 }
 
