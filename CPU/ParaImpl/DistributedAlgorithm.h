@@ -3,7 +3,7 @@
 
 #include "InterchangedAlgorithm.h"
 
-#define TEST_INIT_CORRECTNESS true
+#define TEST_INIT_CORRECTNESS false
 
 void initGrid_Distributed(  const REAL s0, const REAL alpha, const REAL nu,const REAL t, 
                 const unsigned numX, const unsigned numY, const unsigned numT,
@@ -2413,13 +2413,17 @@ int   run_Distributed_Final(
     //cout << "Test5" << endl;
     updateParams_Distributed_VarXT_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarXT);
     updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
+
+#if TEST_INIT_CORRECTNESS
+    updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+#endif
+
     cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
         cout << "t: " << t << endl;
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_u(outer * numY * numX);
-        updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
         rollback_Distributed_1(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_u, myResultInit);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
