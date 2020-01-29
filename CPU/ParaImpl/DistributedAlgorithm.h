@@ -2359,13 +2359,24 @@ int   run_Distributed_Final(
     //cout << "Test2" << endl;
     initOperator_Distributed_T_Final(numX, myX, myDxxT);
 #if TEST_INIT_CORRECTNESS
+     vector<REAL> testMyDxx(numX * 4);
+    initOperator_Distributed(numX, myX, testMyDxx);
+    for (int i = 0; i < numX; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (abs(testMyDxx[i * 4 + j] - myDxxT[j * numX + i]) > 0.00001f) {
+                cout << "Transpose fail: myDxx[" << i << "][" << j << "] did not match! was " << myDxxT[j * numX + i] << " expected " << testMyDxx[i * 4 + j] << endl;
+                return 1;
+            }
+        }
+    }
+
     vector<REAL> testA(2 * 3 * 4); //3 rows, 4 cols
     vector<REAL> testB(2 * 4 * 3); //4 rows, 3 cols
     for (int o = 0; o < 2; o++) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 4; j++) {
                 testA[((o * 3) + i) * 4 + j] = (i+1) * (j+1) + o;
-                cout << "testA[" << o << "][" << i << "][" << j << "] = " << (i+1) * (j+1) + o << endl;
+                //cout << "testA[" << o << "][" << i << "][" << j << "] = " << (i+1) * (j+1) + o << endl;
             }
         }
     }
@@ -2374,7 +2385,7 @@ int   run_Distributed_Final(
     for (int o = 0; o < 2; o++) {
         for (int j = 0; j < 4; j++) {
             for (int i = 0; i < 3; i++) {
-                cout << "testB[" << o << "][" << j << "][" << i << "] = " << testB[((o * 4) + j) * 3 + i] << "?= testA[" << o << "][" << i << "][" << j << "] =" << testA[((o * 3) + i) * 4 + j] << endl;
+                //cout << "testB[" << o << "][" << j << "][" << i << "] = " << testB[((o * 4) + j) * 3 + i] << "?= testA[" << o << "][" << i << "][" << j << "] =" << testA[((o * 3) + i) * 4 + j] << endl;
             }
         }
     }
