@@ -1025,7 +1025,7 @@ void rollback_Distributed_1_Final(
     const vector<REAL> myTimeline, 
     const vector<REAL> myDxxT,
     const vector<REAL> myVarXT,
-    const vector<REAL>& myResultT,
+    const vector<REAL> myResultT,
     vector<REAL>& u
 ) {
     //cout << "test 1" << endl;
@@ -2417,7 +2417,7 @@ int   run_Distributed_Final(
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_u(outer * numY * numX);
-        rollback_Distributed_1(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_u, myResult);
+        rollback_Distributed_1(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_u, myResultInit);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
