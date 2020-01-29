@@ -751,8 +751,8 @@ void rollback_Kernel_Test(
             rollback_Control_4(t, j, outer, numX, numY, u_h, a_h, b_h, c_h, yy_h);
             temp = u;
             temp2 = yy;
-            for (int i = 0; i < outer * numZ * numZ; i++) {
-                if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+            for (int i = 0; i < outer * numY * numX; i++) {
+                if (std::abs(temp[i] - u_h[i]) > 0.0001 ) {
                     cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
                     exit(0);
                 }
