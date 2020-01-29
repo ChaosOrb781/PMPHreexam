@@ -2466,6 +2466,31 @@ int   run_Distributed_Final(
         matTransposeDistPlane(uT, u, outer, numX, numY);
         //cout << "Test6.7" << endl;
         rollback_Distributed_3_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, a, b, c);
+#if TEST_INIT_CORRECTNESS
+        vector<REAL> test_a(outer * numZ * numZ);
+        vector<REAL> test_b(outer * numZ * numZ);
+        vector<REAL> test_c(outer * numZ * numZ);
+        rollback_Distributed_3(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_a, test_b, test_c);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_a[((o * numY) + j) * numX + i] != a[((o * numY) + j) * numX + i]) {
+                        cout << "a failed! a[" << o << "][" << j << "][" << i << "] did not match! was " << u[((o * numY) + j) * numX + i] << " expected " << test_u[((o * numY) + j) * numX + i] << endl;
+                        return 1;
+                    }
+                    if (test_b[((o * numY) + j) * numX + i] != b[((o * numY) + j) * numX + i]) {
+                        cout << "b failed! b[" << o << "][" << j << "][" << i << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
+                    if (test_c[((o * numY) + j) * numX + i] != c[((o * numY) + j) * numX + i]) {
+                        cout << "c failed! c[" << o << "][" << j << "][" << i << "] did not match! was " << u[((o * numX) + i) * numY + j] << " expected " << test_u[((o * numX) + i) * numY + j] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.8" << endl;
         rollback_Distributed_4_Final(t, outer, numX, numY, u, a, b, c, yy);
         //cout << "Test6.9" << endl;
