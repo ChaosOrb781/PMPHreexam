@@ -1036,22 +1036,21 @@ void rollback_Distributed_1_Final(
 
                 REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
 
-                u[((o * numY) + j) * numX + gidx] = dtInv * myResultT_mid;
+                REAL temp = dtInv * myResultT_mid;
 
                 if(gidx > 0) { 
                     REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
-                    u[((o * numY) + j) * numX + gidx] += 
-                        0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
+                    temp += 0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
                 }
 
-                u[((o * numY) + j) * numX + gidx]  +=  
-                    0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
+                temp += 0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
 
                 if(gidx < numX-1) {
                     REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
-                    u[((o * numY) + j) * numX + gidx] += 
-                        0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
+                    temp += 0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
                 }
+
+                u[((o * numY) + j) * numX + gidx] = temp;
             }
         }
     }
@@ -1085,24 +1084,22 @@ void rollback_Distributed_2_Final(
 
                 REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
 
-                v[((o * numX) + i) * numY + gidx] = dtInv * myResult_mid;
+                REAL temp = dtInv * myResult_mid;
 
                 if(gidx > 0) { 
                     REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
-                    v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarY_val * myDyyT0 ) * myResult_low;
+                    temp += ( myVarY_val * myDyyT0 ) * myResult_low;
                 }
 
-                v[((o * numX) + i) * numY + gidx]  +=  
-                    0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
+                temp += ( myVarY_val * myDyyT1 ) * myResult_mid;
 
                 if(gidx < numY-1) {
                     REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
-                    v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarY_val * myDyyT2 ) * myResult_high;
+                    temp += ( myVarY_val * myDyyT2 ) * myResult_high;
                 }
 
-                uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
+                v[((o * numX) + i) * numY + gidx] = temp;
+                uT[((o * numX) + i) * numY + gidx] += temp;
             }
         }
     }
@@ -2419,9 +2416,9 @@ int   run_Distributed_Final(
 #endif
         matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
         matTransposeDistPlane(u, uT, outer, numY, numX);
-        cout << "Test6.2" << endl;
+        //cout << "Test6.2" << endl;
         rollback_Distributed_2_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, uT, v, myResult);
-        cout << "Test6.3" << endl;
+        //cout << "Test6.3" << endl;
         //cout << "Test6.5" << endl;
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_v(outer * numX * numY);
