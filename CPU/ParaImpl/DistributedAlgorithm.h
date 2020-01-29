@@ -2351,18 +2351,18 @@ int   run_Distributed_Final(
     uint myXindex = 0;
     uint myYindex = 0;
 
-    //cout << "Test1" << endl;
+    cout << "Test1" << endl;
     initMyTimeline_Distributed_Final(t, numT, myTimeline);
 	initMyX_Distributed_Final(s0, alpha, t, numX, myX, myXindex);
     initMyY_Distributed_Final(s0, alpha, nu, t, numY, myY, myYindex);
 
-    //cout << "Test2" << endl;
+    cout << "Test2" << endl;
     initOperator_Distributed_T_Final(numX, myX, myDxxT);
 
-    //cout << "Test3" << endl;
+    cout << "Test3" << endl;
     initOperator_Distributed_T_Final(numY, myY, myDyyT);
 
-    //cout << "Test4" << endl;
+    cout << "Test4" << endl;
     setPayoff_Distributed_T_Final(myX, outer, numX, numY, myResultT);
 #if TEST_INIT_CORRECTNESS
     vector<REAL> myResult(outer * numX * numY);
@@ -2376,25 +2376,37 @@ int   run_Distributed_Final(
     }
 #endif
 
-    //cout << "Test5" << endl;
+    cout << "Test5" << endl;
     updateParams_Distributed_VarXT_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarXT);
     updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
-    //cout << "Test6" << endl;
+    cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
+        cout << "Test6.1" << endl;
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
+        cout << "Test6.2" << endl;
         rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarX, u, v, myResult);
+        cout << "Test6.3" << endl;
         matTransposeDistPlane(u, uT, outer, numY, numX);
+        cout << "Test6.5" << endl;
         rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
+        cout << "Test6.6" << endl;
         matTransposeDistPlane(uT, u, outer, numX, numY);
+        cout << "Test6.7" << endl;
         rollback_Distributed_3_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, a, b, c);
+        cout << "Test6.8" << endl;
         rollback_Distributed_4_Final(t, outer, numX, numY, u, a, b, c, yy);
+        cout << "Test6.9" << endl;
         rollback_Distributed_5_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, a, b, c);
+        cout << "Test6.10" << endl;
         rollback_Distributed_6_Final(t, outer, numX, numY, myTimeline, uT, v, y);
+        cout << "Test6.11" << endl;
         rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
+        cout << "Test6.12" << endl;
         matTransposeDistPlane(myResult, myResultT, outer, numX, numY);
+        cout << "Test6.13" << endl;
     }
 	
-    //cout << "Test7" << endl;
+    cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
     }
