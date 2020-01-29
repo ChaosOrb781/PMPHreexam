@@ -735,6 +735,794 @@ void rollback_Distributed_7_para(
     }
 }
 
+void initMyTimeline_Distributed_Final(
+    const REAL t,
+    const uint numT, 
+    vector<REAL>& myTimeline
+) {
+    for(uint gidx = 0; gidx < numT; gidx++)
+        myTimeline[gidx] = t*gidx/(numT-1);
+}
+
+void initMyX_Distributed_Final(  
+    const REAL s0, 
+    const REAL alpha, 
+    const REAL t, 
+    const unsigned numX,
+    vector<REAL>& myX,
+    uint& myXindex
+) {
+    const REAL stdX = 20.0*alpha*s0*sqrt(t);
+    const REAL dx = stdX/numX;
+    myXindex = static_cast<unsigned>(s0/dx) % numX;
+
+    for(uint gidx = 0; gidx < numX; gidx++)
+        myX[gidx] = gidx*dx - myXindex*dx + s0;
+}
+
+void initMyY_Distributed_Final(  
+    const REAL s0,
+    const REAL alpha,
+    const REAL nu,
+    const REAL t,
+    const unsigned numY, 
+    vector<REAL>& myY, 
+    uint& myYindex
+) {
+    const REAL stdY = 10.0*nu*sqrt(t);
+    const REAL dy = stdY/numY;
+    const REAL logAlpha = log(alpha);
+    myYindex = static_cast<unsigned>(numY/2.0);
+
+    for(uint gidx = 0; gidx < numY; gidx++)
+        myY[gidx] = gidx*dy - myYindex*dy + logAlpha;
+}
+
+void initMyTimeline_Distributed_Final_para(
+    const REAL t,
+    const uint numT, 
+    vector<REAL>& myTimeline
+) {
+    for(uint gidx = 0; gidx < numT; gidx++)
+        myTimeline[gidx] = t*gidx/(numT-1);
+}
+
+void initMyX_Distributed_Final_para(  
+    const REAL s0, 
+    const REAL alpha, 
+    const REAL t, 
+    const unsigned numX,
+    vector<REAL>& myX,
+    uint& myXindex
+) {
+    const REAL stdX = 20.0*alpha*s0*sqrt(t);
+    const REAL dx = stdX/numX;
+    myXindex = static_cast<unsigned>(s0/dx) % numX;
+
+    for(uint gidx = 0; gidx < numX; gidx++)
+        myX[gidx] = gidx*dx - myXindex*dx + s0;
+}
+
+void initMyY_Distributed_Final_para(  
+    const REAL s0,
+    const REAL alpha,
+    const REAL nu,
+    const REAL t,
+    const unsigned numY, 
+    vector<REAL>& myY, 
+    uint& myYindex
+) {
+    const REAL stdY = 10.0*nu*sqrt(t);
+    const REAL dy = stdY/numY;
+    const REAL logAlpha = log(alpha);
+    myYindex = static_cast<unsigned>(numY/2.0);
+
+    for(uint gidx = 0; gidx < numY; gidx++)
+        myY[gidx] = gidx*dy - myYindex*dy + logAlpha;
+}
+
+void initOperator_Distributed_T_Final(  
+    const uint& numZ, 
+    const vector<REAL>& myZ, 
+    vector<REAL>& DzzT
+) {
+    for (int gidx = 0; gidx < numZ; gidx++) {
+        REAL low = gidx > 0 ? myZ[gidx - 1] : 0.0;
+        REAL mid = myZ[gidx];
+        REAL high = gidx < numZ - 1 ? myZ[gidx + 1] : 0.0;
+
+        REAL dl = mid - low;
+        REAL du = high - mid;
+
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / dl / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 / (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = 0.0;
+    }
+}
+
+void initOperator_Distributed_T_Final_para(  
+    const uint& numZ, 
+    const vector<REAL>& myZ, 
+    vector<REAL>& DzzT
+) {
+#pragma omp parallel for schedule(static)
+	for (int gidx = 0; gidx < numZ; gidx++) {
+        REAL low = gidx > 0 ? myZ[gidx - 1] : 0.0;
+        REAL mid = myZ[gidx];
+        REAL high = gidx < numZ - 1 ? myZ[gidx + 1] : 0.0;
+
+        REAL dl = mid - low;
+        REAL du = high - mid;
+
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / dl / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? -2.0 / (1.0 / dl + 1.0 / du) / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = gidx > 0 && gidx < numZ - 1 ? 2.0 / du / (dl + du) : 0.0;
+        DzzT[0 * numZ + gidx] = 0.0;
+    }
+}
+
+void updateParams_Distributed_VarXT_Final(
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    const vector<REAL> myX, 
+    const vector<REAL> myY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& myVarXT
+){
+    //load myTimeline and myY into shared memory (entire)
+    vector<REAL> myT_sh(myTimeline);
+    vector<REAL> myY_sh(myY);
+
+    for (int gidx = 0; gidx < numX; gidx++) {
+        for (int t = 0; t < numT; t++) {
+            for (int j = 0; j < numY; j++) { 
+                REAL val1 = beta*log(myX[gidx]);
+                REAL val2 = myY_sh[j];
+                REAL val3 = - 0.5*nu*nu*myT_sh[t];
+
+                myVarXT[((t * numY) + j) * numX + gidx] = exp(2.0*(val1 + val2 + val3));
+            }
+        }
+    }
+}
+
+void updateParams_Distributed_VarY_Final(
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    const vector<REAL> myX, 
+    const vector<REAL> myY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& myVarY
+){
+    //load myTimeline and myY into shared memory (entire)
+    vector<REAL> myT_sh(myTimeline);
+    vector<REAL> myX_sh(myX);
+    
+    for (int gidx = 0; gidx < numY; gidx++) {
+        for (int t = 0; t < numT; t++) {
+            for (int i = 0; i < numX; i++) { 
+                REAL val1 = alpha*log(myX_sh[i]);
+                REAL val2 = myY[gidx];
+                REAL val3 = - 0.5*nu*nu*myT_sh[t];
+
+                myVarY[((t * numX) + i) * numY + gidx] = exp(2.0*(val1 + val2 + val3));
+            }
+        }
+    }
+}
+
+void updateParams_Distributed_VarXT_Final_para(
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    const vector<REAL> myX, 
+    const vector<REAL> myY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& myVarXT
+){
+    //load myTimeline and myY into shared memory (entire)
+    vector<REAL> myT_sh(myTimeline);
+    vector<REAL> myY_sh(myY);
+
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < numX; gidx++) {
+        for (int t = 0; t < numT; t++) {
+            for (int j = 0; j < numY; j++) { 
+                REAL val1 = beta*log(myX[gidx]);
+                REAL val2 = myY_sh[j];
+                REAL val3 = - 0.5*nu*nu*myT_sh[t];
+
+                myVarXT[((t * numY) + j) * numX + gidx] = exp(2.0*(val1 + val2 + val3));
+            }
+        }
+    }
+}
+
+void updateParams_Distributed_VarY_Final_para(
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    const vector<REAL> myX, 
+    const vector<REAL> myY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& myVarY
+){
+    //load myTimeline and myY into shared memory (entire)
+    vector<REAL> myT_sh(myTimeline);
+    vector<REAL> myX_sh(myX);
+
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < numY; gidx++) {
+        for (int t = 0; t < numT; t++) {
+            for (int i = 0; i < numX; i++) { 
+                REAL val1 = alpha*log(myX_sh[i]);
+                REAL val2 = myY[gidx];
+                REAL val3 = - 0.5*nu*nu*myT_sh[t];
+
+                myVarY[((t * numX) + i) * numY + gidx] = exp(2.0*(val1 + val2 + val3));
+            }
+        }
+    }
+}
+
+void setPayoff_Distributed_T_Final(
+    const vector<REAL> myX, 
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& myResultT
+){
+    for(uint gidx = 0; gidx < numX; gidx++) {
+        REAL x = myX[gidx];
+        for (int o = 0; o < outer; o++) {
+            for (int j = 0; j < numY; j++) {
+                REAL payoff = x-0.001*(REAL)o;
+                myResultT[((o * numY) + j) * numX + gidx] = payoff > 0.0 ? payoff : (REAL)0.0;
+            }
+        }
+    }
+}
+
+void setPayoff_Distributed_T_Final_para(
+    const vector<REAL> myX, 
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& myResultT
+){
+#pragma omp parallel for schedule(static)
+    for(uint gidx = 0; gidx < numX; gidx++) {
+        REAL x = myX[gidx];
+        for (int o = 0; o < outer; o++) {
+            for (int j = 0; j < numY; j++) {
+                REAL payoff = x-0.001*(REAL)o;
+                myResultT[((o * numY) + j) * numX + gidx] = payoff > 0.0 ? payoff : (REAL)0.0;
+            }
+        }
+    }
+}
+
+void rollback_Distributed_1_Final(
+    int t,
+    const uint outer, 
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline, 
+    const vector<REAL> myDxxT,
+    const vector<REAL> myVarXT,
+    const vector<REAL>& myResultT,
+    vector<REAL>& u
+) {
+    //cout << "test 1" << endl;
+    for (int gidx = 0; gidx < numX; gidx++) {
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        for (int o = 0; o < outer; o++) {
+            for (int j = 0; j < numY; j++) {
+                REAL myDxxT0 = myDxxT[0 * numX + gidx];
+                REAL myDxxT1 = myDxxT[1 * numX + gidx];
+                REAL myDxxT2 = myDxxT[2 * numX + gidx];
+
+                REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
+                REAL myResultT_mid  = myResultT[((o * numY) + j) * numX + gidx];
+                REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
+
+                REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
+
+                u[((o * numY) + j) * numX + gidx] = dtInv * myResultT_mid;
+
+                if(gidx > 0) { 
+                    u[((o * numY) + j) * numX + gidx] += 
+                        0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
+                }
+
+                u[((o * numY) + j) * numX + gidx]  +=  
+                    0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
+
+                if(gidx < numX-1) {
+                    u[((o * numY) + j) * numX + gidx] += 
+                        0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
+                }
+            }
+        }
+    }
+}
+void rollback_Distributed_2_Final1(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    const vector<REAL> myDyyT,
+    const vector<REAL> myVarY,
+    vector<REAL>& u,
+    vector<REAL>& v,
+    vector<REAL>& myResult
+) {
+    //cout << "test 2" << endl;
+    for (int gidx = 0; gidx < numY; gidx++) {
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                REAL myDyyT0 = myDyyT[0 * numY + gidx];
+                REAL myDyyT1 = myDyyT[1 * numY + gidx];
+                REAL myDyyT2 = myDyyT[2 * numY + gidx];
+
+                REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
+                REAL myResult_mid  = myResult[((o * numX) + i) * numY + gidx];
+                REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
+
+                REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
+
+                v[((o * numX) + i) * numY + gidx] = dtInv * myResult_mid;
+
+                if(gidx > 0) { 
+                    v[((o * numX) + i) * numY + gidx] += 
+                        0.5*( myVarY_val * myDyyT0 ) * myResult_low;
+                }
+
+                v[((o * numX) + i) * numY + gidx]  +=  
+                    0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
+
+                if(gidx < numY-1) {
+                    v[((o * numX) + i) * numY + gidx] += 
+                        0.5*( myVarY_val * myDyyT2 ) * myResult_high;
+                }
+            }
+        }
+    }
+}
+
+void rollback_Distributed_2_Final2(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& uT,
+    vector<REAL>& v
+) {
+    //cout << "test 2" << endl;
+    for (int gidx = 0; gidx < numY; gidx++) {
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
+            }
+        }
+    }
+}
+
+void rollback_Distributed_3_Final(
+    int t,
+    const uint outer,
+    const uint numX,
+    const uint numY,
+    const vector<REAL> myTimeline, 
+    const vector<REAL> myDxxT,
+    const vector<REAL> myVarXT,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c
+) {
+    //cout << "test 3" << endl;
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint i = plane_remain % numX;
+        uint j = plane_remain / numX;
+
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[2 * numX + i]);
+    }
+}
+
+
+void rollback_Distributed_4_Final(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& u,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c,
+    vector<REAL>& yy
+) {
+    //cout << "test 4" << endl;
+    for(uint j=0;j<numY;j++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            uint numZ = max(numX,numY);
+            // here yy should have size [numX]
+            tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+        }
+    }
+}
+
+void rollback_Distributed_5_Final(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    const vector<REAL> myDyyT,
+    const vector<REAL> myVarY,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c
+) {
+    //cout << "test 5" << endl;
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[0 * numY + j]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[1 * numY + j]);
+        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[2 * numY + j]);
+    }
+}
+
+void rollback_Distributed_6_Final(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& uT,
+    vector<REAL>& v,
+    vector<REAL>& y
+) {
+    //cout << "test 6" << endl;
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        y[((o * numZ) + i) * numZ + j] = dtInv*uT[((o * numX) + i) * numY + j] - 0.5*v[((o * numX) + i) * numY + j];
+    }
+}
+
+void rollback_Distributed_7_Final(
+    int t,
+    const uint outer, 
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c,
+    vector<REAL>& y,
+    vector<REAL>& yy,
+    vector<REAL>& myResult
+) {
+    for(uint i=0;i<numX;i++) {
+        for (int gidx = 0; gidx < outer; gidx++) {
+            // here yy should have size [numY]
+            uint numZ = max(numX,numY);
+            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
+        }
+    }
+}
+
+void rollback_Distributed_1_Final_para(
+    int t,
+    const uint outer, 
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline, 
+    const vector<REAL> myDxxT,
+    const vector<REAL> myVarXT,
+    const vector<REAL>& myResultT,
+    vector<REAL>& u
+) {
+    //cout << "test 1" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < numX; gidx++) {
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        for (int o = 0; o < outer; o++) {
+            for (int j = 0; j < numY; j++) {
+                REAL myDxxT0 = myDxxT[0 * numX + gidx];
+                REAL myDxxT1 = myDxxT[1 * numX + gidx];
+                REAL myDxxT2 = myDxxT[2 * numX + gidx];
+
+                REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
+                REAL myResultT_mid  = myResultT[((o * numY) + j) * numX + gidx];
+                REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
+
+                REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
+
+                u[((o * numY) + j) * numX + gidx] = dtInv * myResultT_mid;
+
+                if(gidx > 0) { 
+                    u[((o * numY) + j) * numX + gidx] += 
+                        0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
+                }
+
+                u[((o * numY) + j) * numX + gidx]  +=  
+                    0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
+
+                if(gidx < numX-1) {
+                    u[((o * numY) + j) * numX + gidx] += 
+                        0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
+                }
+            }
+        }
+    }
+}
+
+void rollback_Distributed_2_Final1_para(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    const vector<REAL> myDyyT,
+    const vector<REAL> myVarY,
+    vector<REAL>& v,
+    vector<REAL>& myResult
+) {
+    //cout << "test 2" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < numY; gidx++) {
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                REAL myDyyT0 = myDyyT[0 * numY + gidx];
+                REAL myDyyT1 = myDyyT[1 * numY + gidx];
+                REAL myDyyT2 = myDyyT[2 * numY + gidx];
+
+                REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
+                REAL myResult_mid  = myResult[((o * numX) + i) * numY + gidx];
+                REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
+
+                REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
+
+                v[((o * numX) + i) * numY + gidx] = dtInv * myResult_mid;
+
+                if(gidx > 0) { 
+                    v[((o * numX) + i) * numY + gidx] += 
+                        0.5*( myVarY_val * myDyyT0 ) * myResult_low;
+                }
+
+                v[((o * numX) + i) * numY + gidx]  +=  
+                    0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
+
+                if(gidx < numY-1) {
+                    v[((o * numX) + i) * numY + gidx] += 
+                        0.5*( myVarY_val * myDyyT2 ) * myResult_high;
+                }
+            }
+        }
+    }
+}
+
+
+void rollback_Distributed_2_Final2(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& uT,
+    vector<REAL>& v
+) {
+    //cout << "test 2" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < numY; gidx++) {
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
+            }
+        }
+    }
+}
+
+
+void rollback_Distributed_3_Final_para(
+    int t,
+    const uint outer,
+    const uint numX,
+    const uint numY,
+    const vector<REAL> myTimeline, 
+    const vector<REAL> myDxxT,
+    const vector<REAL> myVarXT,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c
+) {
+    //cout << "test 3" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint i = plane_remain % numX;
+        uint j = plane_remain / numX;
+
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[2 * numX + i]);
+    }
+}
+
+
+void rollback_Distributed_4_Final_para(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& u,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c,
+    vector<REAL>& yy
+) {
+    //cout << "test 4" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < outer * numY; gidx++) {
+        uint o = gidx / numY;
+        uint j = gidx % numY;
+        uint numZ = max(numX,numY);
+        // here yy should have size [numX]
+        tridagPar(a,((o * numZ) + j) * numZ,b,((o * numZ) + j) * numZ,c,((o * numZ) + j) * numZ,u,((o * numY) + j) * numX,numX,u,((o * numY) + j) * numX,yy,((o * numZ) + j) * numZ);
+    }
+}
+
+void rollback_Distributed_5_Final_para(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    const vector<REAL> myDyyT,
+    const vector<REAL> myVarY,
+    vector<REAL>& u,
+    vector<REAL>& v,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c
+) {
+    //cout << "test 5" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[0 * numY + j]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[1 * numY + j]);
+        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[2 * numY + j]);
+    }
+}
+
+void rollback_Distributed_6_Final_para(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const vector<REAL> myTimeline,
+    vector<REAL>& uT,
+    vector<REAL>& v,
+    vector<REAL>& y
+) {
+    //cout << "test 6" << endl;
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = max(numX,numY);
+
+        REAL dtInv1 = myTimeline[t];
+        REAL dtInv2 = myTimeline[t+1];
+        REAL dtInv = 1.0/(dtInv2-dtInv1);
+
+        y[((o * numZ) + i) * numZ + j] = dtInv*uT[((o * numX) + i) * numY + j] - 0.5*v[((o * numX) + i) * numY + j];
+    }
+}
+
+void rollback_Distributed_7_Final_para(
+    int t,
+    const uint outer, 
+    const uint numX, 
+    const uint numY,
+    vector<REAL>& a,
+    vector<REAL>& b,
+    vector<REAL>& c,
+    vector<REAL>& y,
+    vector<REAL>& yy,
+    vector<REAL>& myResult
+) {
+#pragma omp parallel for schedule(static)
+    for (int gidx = 0; gidx < outer * numX; gidx++) {
+        uint o = gidx / numX;
+        uint i = gidx % numX;
+        // here yy should have size [numY]
+        uint numZ = max(numX,numY);
+        tridagPar(a,((o * numZ) + i) * numZ,b,((o * numZ) + i) * numZ,c,((o * numZ) + i) * numZ,y,((o * numZ) + i) * numZ,numY,myResult, (o * numX + i) * numY,yy,((o * numZ) + i) * numZ);
+    }
+}
+
 void rollback_Distributed_para(const uint outer, const uint numT, 
     const uint numX, const uint numY, 
     const vector<REAL> myTimeline, 
@@ -1506,6 +2294,195 @@ int   run_Distributed_Separation_Parallel(
     }
 #endif
     return procs;
+}
+
+void matTransposeDist(vector<REAL> A, vector<REAL> trA, uint planeIndex, int rowsA, int colsA) {
+    for(int i = 0; i < rowsA; i++) {
+        for(int j = 0; j < colsA; j++) {
+            trA[planeIndex + j*rowsA + i] = A[planeIndex + i*colsA + j];
+        }
+    }
+}
+
+void matTransposeDistPlane(vector<REAL> A, vector<REAL> trA, int planes, int rowsA, int colsA) {
+    for (unsigned i = 0; i < planes; i++) {
+        matTransposeDist(A, trA, i * rowsA * colsA, rowsA, colsA);
+    }
+}
+
+int   run_Distributed_Final(  
+                const uint   outer,
+                const uint   numX,
+                const uint   numY,
+                const uint   numT,
+                const REAL   s0,
+                const REAL   t, 
+                const REAL   alpha, 
+                const REAL   nu, 
+                const REAL   beta,
+                const uint   blocksize,
+                      REAL*  res   // [outer] RESULT
+) {
+    vector<REAL> myX(numX);       // [numX]
+    vector<REAL> myY(numY);       // [numY]
+    vector<REAL> myTimeline(numT);// [numT]
+    vector<REAL> myDxxT(4 * numX);       // [4][numX]
+    vector<REAL> myDyyT(4 * numY);       // [4][numY]
+    vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
+    vector<REAL> myResultT(outer * numY * numX); // [outer][numY][numX]
+    vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    vector<REAL> myVarXT(numT * numY * numX);   // [numT][numY][numX]
+    vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
+    uint numZ = max(numX, numY);
+    vector<REAL> u(outer * numY * numX);
+    vector<REAL> uT(outer * numX * numY);
+    vector<REAL> v(outer * numX * numY);
+    vector<REAL> a(outer * numZ * numZ);
+    vector<REAL> b(outer * numZ * numZ);
+    vector<REAL> c(outer * numZ * numZ);
+    vector<REAL> y(outer * numZ * numZ);
+    vector<REAL> yy(outer * numZ * numZ);
+
+    uint myXindex = 0;
+    uint myYindex = 0;
+
+    //cout << "Test1" << endl;
+    initMyTimeline_Distributed_Final(t, numT, myTimeline);
+	initMyX_Distributed_Final(s0, alpha, t, numX, myX, myXindex);
+    initMyY_Distributed_Final(s0, alpha, nu, t, numY, myY, myYindex);
+
+    //cout << "Test2" << endl;
+    initOperator_Distributed_T_Final(numX, myX, myDxxT);
+
+    //cout << "Test3" << endl;
+    initOperator_Distributed_T_Final(numY, myY, myDyyT);
+
+    //cout << "Test4" << endl;
+    setPayoff_Distributed_T_Final(myX, outer, numX, numY, myResultT);
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResult(outer * numX * numY);
+    matTransposeDistPlane(myResultT, myResult, outer, numY, numX);
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+            }
+        }
+    }
+#endif
+
+    //cout << "Test5" << endl;
+    updateParams_Distributed_VarXT_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarXT);
+    updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
+    //cout << "Test6" << endl;
+	for (int t = 0; t <= numT - 2; t++) {
+	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
+        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarX, u, v, myResult);
+        matTransposeDistPlane(u, uT, outer, numY, numX);
+        rollback_Distributed_2_Final2(t, outer, numX, numY, uT, v);
+        matTransposeDistPlane(uT, u, outer, numX, numY);
+        rollback_Distributed_3_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, a, b, c);
+        rollback_Distributed_4_Final(t, outer, numX, numY, u, a, b, c, yy);
+        rollback_Distributed_5_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, a, b, c);
+        rollback_Distributed_6_Final(t, outer, numX, numY, myTimeline, uT, v, y);
+        rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
+        matTransposeDistPlane(myResult, myResultT, outer, numX, numY);
+    }
+	
+    //cout << "Test7" << endl;
+	for(uint i = 0; i < outer; i++) {
+        res[i] = myResult[((i * numX) + myXindex) * numY + myYindex];
+    }
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL>                   TestmyX(numX);       // [numX]
+    vector<REAL>                   TestmyY(numY);       // [numY]
+    vector<REAL>                   TestmyTimeline(numT);// [numT]
+    vector<vector<REAL> >          TestmyDxx(numX, vector<REAL>(4));     // [numX][4]
+    vector<vector<REAL> >          TestmyDyy(numY, vector<REAL>(4));     // [numY][4]
+    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL>>(numX, vector<REAL>(numY))); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL>>(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+
+    initGrid_Interchanged(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    for (int i = 0; i < numX; i ++) {
+        if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
+            cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
+            return 1;
+        }
+    }
+    for (int i = 0; i < numY; i ++) {
+        if (abs(myY[i] - TestmyY[i]) > 0.00001f) {
+            cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
+            return 1;
+        }
+    }
+    for (int i = 0; i < numT; i ++) {
+        if (abs(myTimeline[i] - TestmyTimeline[i]) > 0.00001f) {
+            cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
+            return 1;
+        }
+    }
+
+    vector<REAL> myDxx(numX * 4);
+    matTransposeDist(myDxxT, myDxx, 4, numX);
+    initOperator_Interchanged(numX, TestmyX, TestmyDxx);
+    for (int i = 0; i < numX; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
+                cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
+                return 1;
+            }
+        }
+    }
+
+    vector<REAL> myDyy(numY * 4);
+    matTransposeDist(myDyyT, myDyy, 4, numY);
+    initOperator_Interchanged(numY, TestmyY, TestmyDyy);
+    for (int i = 0; i < numY; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
+                cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
+                return 1;
+            }
+        }
+    }
+
+    setPayoff_Interchanged(TestmyX, outer, numX, numY, TestmyResult);
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myResultCopy[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResultCopy[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                    return 1;
+                }
+            }
+        }
+    }
+    
+    matTransposeDistPlane(myVarXT, myVarX, numT, numY, numX);
+    updateParams_Interchanged(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    for (int t = 0; t < numT; t ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) > 0.00001f) {
+                    cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
+                    return 1;
+                }
+                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) > 0.00001f) {
+                    cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
+                    return 1;
+                }
+            }
+        }
+    }
+#endif
+    return 1;
 }
 
 #endif

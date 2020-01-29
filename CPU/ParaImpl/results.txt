@@ -1,0 +1,68 @@
+[Running programs with: outer:  16, X:  32, Y: 256, T:  90, B: 256]
+|_Program_________________________|_VALIDITY_|_# OF THREADS_|_TIME TAKEN_|_SPEEDUP_|
+|Original                         |         1|             1|     2441022|    1.000|
+|Simple Parallel                  |         1|            32|      213299|   11.444|
+|Simple Parallel Static           |         1|            32|      197696|   12.347|
+|Simple Parallel Dynamic          |         1|            30|      216992|   11.249|
+|Interchanged                     |         1|             1|     2459641|    0.992|
+|Interchanged Optimized           |         1|             1|     1258893|    1.939|
+|Parallel Interchanged            |         1|            30|      279978|    8.719|
+|Parallel Interchanged Optimized  |         1|            30|      166732|   14.640|
+|Kernelized (256)                 |         1|             1|     1352979|    1.804|
+|Kernelized Parallel (256)        |         1|            30|      151340|   16.129|
+|Kernelized Flat (256)            |         1|             1|     1223982|    1.994|
+|Kernelized Flat Parallel (256)   |         1|            30|      163158|   14.961|
+|Kernelized Dist (256)            |         1|             1|     1356422|    1.800|
+|Kernelized Dist Parallel (256)   |         1|            30|      163220|   14.955|
+|Kernelized Dist 2 (256)          |         1|             1|     1478737|    1.651|
+|Kernelized Dist 2 Parallel (256) |         1|            30|      204564|   11.933|
+|Distributed Rollback (256)       |         1|             1|     2426378|    1.006|
+|Distributed Parallel (256)       |         1|            30|     1030564|    2.369|
+|Separation Rollback (256)        |         1|             1|     2995886|    0.815|
+|Separation Rollback Parallel (256)|         1|            30|     1236966|    1.973|
+
+[Running programs with: outer:  32, X:  47, Y: 181, T:  93, B: 256]
+|_Program_________________________|_VALIDITY_|_# OF THREADS_|_TIME TAKEN_|_SPEEDUP_|
+|Original                         |         1|             1|     5234963|    1.000|
+|Simple Parallel                  |         1|            32|      307874|   17.004|
+|Simple Parallel Static           |         1|            32|      290494|   18.021|
+|Simple Parallel Dynamic          |         1|            30|      444404|   11.780|
+|Interchanged                     |         1|             1|     5677239|    0.922|
+|Interchanged Optimized           |         1|             1|     2627696|    1.992|
+|Parallel Interchanged            |         1|            30|      557105|    9.397|
+|Parallel Interchanged Optimized  |         1|            30|      302675|   17.296|
+|Kernelized (256)                 |         1|             1|     2828329|    1.851|
+|Kernelized Parallel (256)        |         1|            30|      280307|   18.676|
+|Kernelized Flat (256)            |         1|             1|     2840531|    1.843|
+|Kernelized Flat Parallel (256)   |         1|            30|      299408|   17.484|
+|Kernelized Dist (256)            |         1|             1|     2636165|    1.986|
+|Kernelized Dist Parallel (256)   |         1|            30|      288822|   18.125|
+|Kernelized Dist 2 (256)          |         1|             1|     2691794|    1.945|
+|Kernelized Dist 2 Parallel (256) |         1|            30|      308045|   16.994|
+|Distributed Rollback (256)       |         1|             1|     3850354|    1.360|
+|Distributed Parallel (256)       |         1|            30|      735240|    7.120|
+|Separation Rollback (256)        |         1|             1|     4492741|    1.165|
+|Separation Rollback Parallel (256)|         1|            30|     1287427|    4.066|
+
+[Running programs with: outer: 128, X: 256, Y: 256, T: 128, B: 256]
+|_Program_________________________|_VALIDITY_|_# OF THREADS_|_TIME TAKEN_|_SPEEDUP_|
+|Original                         |         1|             1|   230331077|    1.000|
+|Simple Parallel                  |         1|            32|    16155675|   14.257|
+|Simple Parallel Static           |         1|            32|    12283152|   18.752|
+|Simple Parallel Dynamic          |         1|            30|    13537710|   17.014|
+|Interchanged                     |         1|             1|   237637783|    0.969|
+|Interchanged Optimized           |         1|             1|   112650301|    2.045|
+|Parallel Interchanged            |         1|            30|    15731517|   14.641|
+|Parallel Interchanged Optimized  |         1|            30|     8647517|   26.636|
+|Kernelized (256)                 |         1|             1|   118395259|    1.945|
+|Kernelized Parallel (256)        |         1|            30|     8426406|   27.334|
+|Kernelized Flat (256)            |         1|             1|   129729639|    1.775|
+|Kernelized Flat Parallel (256)   |         1|            30|     8091989|   28.464|
+|Kernelized Dist (256)            |         1|             1|   127352712|    1.809|
+|Kernelized Dist Parallel (256)   |         1|            30|     9101615|   25.307|
+|Kernelized Dist 2 (256)          |         1|             1|   144560455|    1.593|
+|Kernelized Dist 2 Parallel (256) |         1|            30|    12729620|   18.094|
+|Distributed Rollback (256)       |         1|             1|   183592959|    1.255|
+|Distributed Parallel (256)       |         1|            29|    15063810|   15.290|
+|Separation Rollback (256)        |         1|             1|   201965417|    1.140|
+|Separation Rollback Parallel (256)|         1|            29|    31128371|    7.399|
