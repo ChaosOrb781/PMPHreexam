@@ -233,7 +233,7 @@ __global__ void InitParamsVarXTCoalesced(
     //load in myT, not good if gab between blocksize and numY is large
     for (int i = 0; i < numT; i += blockDim.x) {
         if (i + tidx < numT) {
-            myT_sh[i + tidx] = myT[i + tidx];
+            myT_sh[i + tidx] = myTimeline[i + tidx];
         }
     }
     __syncthreads();
@@ -286,7 +286,7 @@ __global__ void InitParamsVarYCoalesced(
     //load in myT, not good if gab between blocksize and numY is large
     for (int i = 0; i < numT; i += blockDim.x) {
         if (i + tidx < numT) {
-            myT_sh[i + tidx] = myT[i + tidx];
+            myT_sh[i + tidx] = myTimeline[i + tidx];
         }
     }
     __syncthreads();
@@ -559,17 +559,17 @@ __global__ void Rollback_2Coalesced1 (
                 __syncthreads();
                 if(gidx > 0) { 
                     v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarXT_val * myDyyT0 ) * myResultT_low;
+                        0.5*( myVarY_val * myDyyT0 ) * myResult_low;
                 }
 
                 __syncthreads();
                 v[((o * numX) + i) * numY + gidx]  +=  
-                    0.5*( myVarXT_val * myDyyT1 ) * myResultT_mid;
+                    0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
 
                 __syncthreads();
                 if(gidx < numY-1) {
                     v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarXT_val * myDyyT2 ) * myResultT_high;
+                        0.5*( myVarY_val * myDyyT2 ) * myResult_high;
                 }
             }
         }

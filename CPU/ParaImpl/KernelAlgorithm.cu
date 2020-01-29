@@ -464,7 +464,7 @@ void rollback_Kernel_CPU(
         thrust::copy(u_h.begin(), u_h.end(), u.begin());
         thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
-        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
@@ -486,7 +486,7 @@ void rollback_Kernel_CPU(
                     c_h, ((o * numZ) + i) * numZ,
                     y_h, ((o * numZ) + i) * numZ,   numY,
                     myResult_h, ((o * numX) + i) * numY,
-                    yy_h, ((o * numZ) + j) * numZ
+                    yy_h, ((o * numZ) + i) * numZ
                 );
             }
         } 
@@ -580,7 +580,7 @@ void rollback_Kernel_GPU(
 
         }
 
-        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
@@ -606,7 +606,7 @@ void rollback_Kernel_GPU(
                     numY,
                     sgm_size,
                     &myResult_p[((o * numX) + i) * numY],
-                    &yy_p[((o * numZ) + j) * numZ]
+                    &yy_p[((o * numZ) + i) * numZ]
                 );
                 cudaDeviceSynchronize();
                 gpuErr(cudaPeekAtLastError());
@@ -773,7 +773,7 @@ void rollback_Kernel_Test_CPU(
         thrust::copy(u_h_k.begin(), u_h_k.end(), u.begin());
         thrust::copy(yy_h_k.begin(), yy_h_k.end(), yy.begin());
 
-        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
         rollback_Control_5(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, a_h, b_h, c_h);
@@ -829,7 +829,7 @@ void rollback_Kernel_Test_CPU(
                     c_h_k, ((o * numZ) + i) * numZ,
                     y_h_k, ((o * numZ) + i) * numZ,   numY,
                     myResult_h_k, ((o * numX) + i) * numY,
-                    yy_h_k, ((o * numZ) + j) * numZ
+                    yy_h_k, ((o * numZ) + i) * numZ
                 );
             }
             rollback_Control_7(t, i, outer, numX, numY, a_h, b_h, c_h, y_h, yy_h, myResult_h);
@@ -1002,7 +1002,7 @@ void rollback_Kernel_Test_GPU(
             //gpuErr(cudaPeekAtLastError());
         }
 
-        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
         rollback_Control_5(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, a_h, b_h, c_h);
@@ -1054,7 +1054,7 @@ void rollback_Kernel_Test_GPU(
                     numY,
                     sgm_size,
                     &myResult_p[((o * numX) + i) * numY],
-                    &yy_p[((o * numZ) + j) * numZ]
+                    &yy_p[((o * numZ) + i) * numZ]
                 );
                 cudaDeviceSynchronize();
                 gpuErr(cudaPeekAtLastError());
