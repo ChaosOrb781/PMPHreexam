@@ -1159,9 +1159,9 @@ void rollback_Distributed_3_Final(
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
-        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[0 * numX + i]);
-        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[1 * numX + i]);
-        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numY + i]*myDxxT[2 * numX + i]);
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[2 * numX + i]);
     }
 }
 
