@@ -2442,7 +2442,7 @@ int   run_Distributed_Final(
     }
 
     vector<REAL> myDxx(numX * 4);
-    matTransposeDist(myDxxT, myDxx, 4, numX);
+    matTransposeDist(myDxxT, myDxx, 0, 4, numX);
     initOperator_Interchanged(numX, TestmyX, TestmyDxx);
     for (int i = 0; i < numX; i ++) {
         for (int j = 0; j < 4; j ++) {
@@ -2454,7 +2454,7 @@ int   run_Distributed_Final(
     }
 
     vector<REAL> myDyy(numY * 4);
-    matTransposeDist(myDyyT, myDyy, 4, numY);
+    matTransposeDist(myDyyT, myDyy, 0, 4, numY);
     initOperator_Interchanged(numY, TestmyY, TestmyDyy);
     for (int i = 0; i < numY; i ++) {
         for (int j = 0; j < 4; j ++) {
