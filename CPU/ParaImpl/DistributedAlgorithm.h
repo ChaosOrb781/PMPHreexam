@@ -2358,6 +2358,18 @@ int   run_Distributed_Final(
 
     //cout << "Test2" << endl;
     initOperator_Distributed_T_Final(numX, myX, myDxxT);
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> testMyDxx(numX * 4);
+    matTransposeDist(myDxxT, testMyDxx, 0, 4, numX);
+    for (int i = 0; i < numX; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (testMyDxx[i * 4 + j] != myDxxT[j * numX + i]) {
+                cout << "Transpose failed; myDxx[" << i << "][" << j << "] did not match! was " << testMyDxx[i * 4 + j] << " expected " << myDxxT[j * numX + i] << endl;
+                return 1;
+            }
+        }
+    }
+#endif
 
     //cout << "Test3" << endl;
     initOperator_Distributed_T_Final(numY, myY, myDyyT);
