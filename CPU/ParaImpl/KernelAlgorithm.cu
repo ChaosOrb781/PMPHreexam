@@ -723,7 +723,6 @@ void rollback_Kernel_Test_CPU(
         }
 
 
-        uint num_blocks2 = (outer + blocksize - 1) / blocksize;
         if((blocksize % sgm_size)!=0) {
             printf("Invalid segment or block size. Exiting!\n\n!");
             exit(0);
@@ -1147,8 +1146,7 @@ int run_CPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test6" << endl;
-    //rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
-    rollback_Kernel_Test(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
