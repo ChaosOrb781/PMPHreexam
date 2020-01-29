@@ -2411,6 +2411,7 @@ int   run_Distributed_Final(
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_u(outer * numY * numX);
+        updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
         rollback_Distributed_1(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_u, myResultInit);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
@@ -2425,7 +2426,7 @@ int   run_Distributed_Final(
         }
 #endif
         //cout << "Test6.2" << endl;
-        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarX, u, v, myResult);
+        rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarY, u, v, myResult);
         //cout << "Test6.3" << endl;
         matTransposeDistPlane(u, uT, outer, numY, numX);
         //cout << "Test6.5" << endl;
