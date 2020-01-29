@@ -2296,7 +2296,7 @@ int   run_Distributed_Separation_Parallel(
     return procs;
 }
 
-void matTransposeDist(vector<REAL> A, vector<REAL> trA, uint planeIndex, int rowsA, int colsA) {
+void matTransposeDist(vector<REAL> A&, vector<REAL>& trA, uint planeIndex, int rowsA, int colsA) {
     for(int i = 0; i < rowsA; i++) {
         for(int j = 0; j < colsA; j++) {
             trA[planeIndex + j*rowsA + i] = A[planeIndex + i*colsA + j];
@@ -2304,7 +2304,7 @@ void matTransposeDist(vector<REAL> A, vector<REAL> trA, uint planeIndex, int row
     }
 }
 
-void matTransposeDistPlane(vector<REAL> A, vector<REAL> trA, int planes, int rowsA, int colsA) {
+void matTransposeDistPlane(vector<REAL>& A, vector<REAL>& trA, int planes, int rowsA, int colsA) {
     for (unsigned i = 0; i < planes; i++) {
         matTransposeDist(A, trA, i * rowsA * colsA, rowsA, colsA);
     }
@@ -2364,7 +2364,7 @@ int   run_Distributed_Final(
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 4; j++) {
             testA[i * 4 + j] = i * j;
-            cout << "testA[" << i << "][" << j << "] = " << i * j << endl;
+            cout << "testA[" << i << "][" << j << "] = " << (i+1) * (j+1) << endl;
         }
     }
 
