@@ -616,7 +616,7 @@ void rollback_Kernel_GPU(
 }
 
 //Do some individual tests of each kernel against sequential solution!
-void rollback_Kernel_Test(
+void rollback_Kernel_Test_CPU(
     const int blocksize, 
     const int sgm_size, 
     const uint outer, 
@@ -676,7 +676,7 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp(u);
         for (int i = 0; i < outer * numY * numX; i++) {
             if (std::abs(temp[i] - u_h[i]) > 0.0001) {
-                cout << "Rollback 1 index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                cout << "Rollback 1 index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i]  << endl;
                 exit(0);
             }
         }
@@ -690,11 +690,11 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp2(v);
         for (int i = 0; i < outer * numX * numY; i++) {
             if (std::abs(temp2[i] - v_h[i]) > 0.0001) {
-                cout << "Rollback 2(v) index [" << i / (numX * numY) << "][" << (i % (numX * numY)) / numY << "][" << (i % (numX * numY)) % numY << "] failed to be equal, got " << v_h[i] << " expected " << temp2[i];
+                cout << "Rollback 2(v) index [" << i / (numX * numY) << "][" << (i % (numX * numY)) / numY << "][" << (i % (numX * numY)) % numY << "] failed to be equal, got " << v_h[i] << " expected " << temp2[i]  << endl;
                 exit(0);
             }
             if (std::abs(temp[i] - u_h[i]) > 0.0001) {
-                cout << "Rollback 2(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                cout << "Rollback 2(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i]  << endl;
                 exit(0);
             }
         }
@@ -709,15 +709,249 @@ void rollback_Kernel_Test(
         host_vector<REAL> temp3(c);
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
-                cout << "Rollback 3(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                cout << "Rollback 3(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i]  << endl;
                 exit(0);
             }
             if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
-                cout << "Rollback 3(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                cout << "Rollback 3(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i]  << endl;
                 exit(0);
             }
             if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
-                cout << "Rollback 3(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                cout << "Rollback 3(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i]  << endl;
+                exit(0);
+            }
+        }
+
+
+        uint num_blocks2 = (outer + blocksize - 1) / blocksize;
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numX % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
+        host_vector<REAL> a_h_k(a);
+        host_vector<REAL> b_h_k(b);
+        host_vector<REAL> c_h_k(c);
+        host_vector<REAL> u_h_k(u);
+        host_vector<REAL> yy_h_k(yy);
+        for (int j = 0; j < numY; j++) {
+            for (int o = 0; o < outer; o++) {
+                tridagPar(
+                    a_h_k, ((o * numZ) + j) * numZ,
+                    b_h_k, ((o * numZ) + j) * numZ,
+                    c_h_k, ((o * numZ) + j) * numZ,
+                    u_h_k, ((o * numY) + j) * numX,
+                    numX,
+                    u_h_k, ((o * numY) + j) * numX,
+                    yy_h_k, o * numZ
+                );
+            }
+            rollback_Control_4(t, j, outer, numX, numY, u_h, a_h, b_h, c_h, yy_h);
+            temp = u_h_k;
+            temp2 = yy_h_k;
+            for (int i = 0; i < outer * numY * numX; i++) {
+                if (std::abs(temp[i] - u_h_k[i]) > 0.0001 ) {
+                    cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i] << endl;
+                    //exit(0);
+                }
+            }
+            for (int i = 0; i < outer * numZ; i++) {
+                if (std::abs(temp2[i] - yy_h[i]) > 0.0001) {
+                    cout << "Rollback 4(yy) index [" << i / numZ << "][" << i % numZ << "] failed to be equal, got " << yy_h[i] << " expected " << temp2[i] << endl;
+                    exit(0);
+                }
+            }
+            //cudaDeviceSynchronize();
+            //gpuErr(cudaPeekAtLastError());
+        }
+        thrust::copy(a_h_k.begin(), a_h_k.end(), a.begin());
+        thrust::copy(b_h_k.begin(), b_h_k.end(), b.begin());
+        thrust::copy(c_h_k.begin(), c_h_k.end(), c.begin());
+        thrust::copy(u_h_k.begin(), u_h_k.end(), u.begin());
+        thrust::copy(yy_h_k.begin(), yy_h_k.end(), yy.begin());
+
+        Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+        rollback_Control_5(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, a_h, b_h, c_h);
+        temp = a;
+        temp2 = b;
+        temp3 = c;
+        for (int i = 0; i < outer * numZ * numZ; i++) {
+            if (std::abs(temp[i] - a_h[i]) > 0.0001) {
+                cout << "Rollback 5(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i] << endl;
+                exit(0);
+            }
+            if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
+                cout << "Rollback 5(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i] << endl;
+                exit(0);
+            }
+            if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
+                cout << "Rollback 5(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i] << endl;
+                exit(0);
+            }
+        }
+
+        Rollback_6<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, u_p, v_p, y_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+        rollback_Control_6(t, outer, numX, numY, myTimeline_h, u_h, v_h, y_h);
+        temp = y;
+        for (int i = 0; i < outer * numZ * numZ; i++) {
+            if (std::abs(temp[i] - y_h[i]) > 0.0001) {
+                cout << "Rollback 6 index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << y_h[i] << " expected " << temp[i] << endl;
+                exit(0);
+            }
+        }
+
+        if((blocksize % sgm_size)!=0) {
+            printf("Invalid segment or block size. Exiting!\n\n!");
+            exit(0);
+        }
+        if((numY % sgm_size)!=0) {
+            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
+            exit(0);
+        }
+        thrust::copy(a.begin(), a.end(), a_h_k.begin());
+        thrust::copy(b.begin(), b.end(), b_h_k.begin());
+        thrust::copy(c.begin(), c.end(), c_h_k.begin());
+        host_vector<REAL> y_h_k(y);
+        host_vector<REAL> myResult_h_k(myResult);
+        thrust::copy(yy.begin(), yy.end(), yy_h_k.begin());
+        for (int i = 0; i < numX; i++) {
+            for (int o = 0; o < outer; o++) {
+                tridagPar(
+                    a_h_k, ((o * numZ) + i) * numZ, 
+                    b_h_k, ((o * numZ) + i) * numZ, 
+                    c_h_k, ((o * numZ) + i) * numZ,
+                    y_h_k, ((o * numZ) + i) * numZ,   numY,
+                    myResult_h_k, ((o * numX) + i) * numY,
+                    yy_h_k, o * numZ
+                );
+            }
+            rollback_Control_7(t, i, outer, numX, numY, a_h, b_h, c_h, y_h, yy_h, myResult_h);
+            temp = myResult_h_k;
+            for (int j = 0; j < outer * numX * numY; j++) {
+                if (std::abs(temp[j] - myResult_h[j]) > 0.0001) {
+                    cout << "Rollback 7 index [" << j / (numX * numY) << "][" << (j % (numX * numY)) / numY << "][" << (j % (numX * numY)) % numY << "] failed to be equal, got " << myResult_h[j] << " expected " << temp[j]  << endl;
+                    exit(0);
+                }
+            }
+        } 
+        thrust::copy(a_h_k.begin(), a_h_k.end(), a.begin());
+        thrust::copy(b_h_k.begin(), b_h_k.end(), b.begin());
+        thrust::copy(c_h_k.begin(), c_h_k.end(), c.begin());
+        thrust::copy(y_h_k.begin(), y_h_k.end(), y.begin());
+        thrust::copy(myResult_h_k.begin(), myResult_h_k.end(), myResult.begin());
+        thrust::copy(yy_h_k.begin(), yy_h_k.end(), yy.begin());
+    }
+}
+
+void rollback_Kernel_Test_GPU(
+    const int blocksize, 
+    const int sgm_size, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    device_vector<REAL>& myTimeline, 
+    device_vector<REAL>& myDxx,
+    device_vector<REAL>& myDyy,
+    device_vector<REAL>& myVarX,
+    device_vector<REAL>& myVarY,
+    device_vector<REAL>& u,
+    device_vector<REAL>& v,
+    device_vector<REAL>& a,
+    device_vector<REAL>& b,
+    device_vector<REAL>& c,
+    device_vector<REAL>& y,
+    device_vector<REAL>& yy,
+    device_vector<REAL>& myResult
+) {
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    REAL* myDxx_p = raw_pointer_cast(&myDxx[0]);
+    REAL* myDyy_p = raw_pointer_cast(&myDyy[0]);
+    REAL* myVarX_p = raw_pointer_cast(&myVarX[0]);
+    REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
+    REAL* u_p = raw_pointer_cast(&u[0]);
+    REAL* v_p = raw_pointer_cast(&v[0]);
+    REAL* a_p = raw_pointer_cast(&a[0]);
+    REAL* b_p = raw_pointer_cast(&b[0]);
+    REAL* c_p = raw_pointer_cast(&c[0]);
+    REAL* y_p = raw_pointer_cast(&y[0]);
+    REAL* yy_p = raw_pointer_cast(&yy[0]);
+    REAL* myResult_p = raw_pointer_cast(&myResult[0]);
+
+    host_vector<REAL> myTimeline_h = myTimeline;
+    host_vector<REAL> myDxx_h      = myDxx;
+    host_vector<REAL> myDyy_h      = myDyy;
+    host_vector<REAL> myVarX_h     = myVarX;
+    host_vector<REAL> myVarY_h     = myVarY;
+    host_vector<REAL> u_h          = u;
+    host_vector<REAL> v_h          = v;
+    host_vector<REAL> a_h          = a;
+    host_vector<REAL> b_h          = b;
+    host_vector<REAL> c_h          = c;
+    host_vector<REAL> y_h          = y;
+    host_vector<REAL> yy_h         = yy;
+    host_vector<REAL> myResult_h   = myResult;
+
+    uint numZ = numX > numY ? numX : numY;
+
+    for (int t = 0; t <= numT - 2; t++) {
+        uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
+        Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+        rollback_Control_1(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, u_h, myResult_h);
+        host_vector<REAL> temp(u);
+        for (int i = 0; i < outer * numY * numX; i++) {
+            if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+                cout << "Rollback 1 index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i]  << endl;
+                exit(0);
+            }
+        }
+
+
+        Rollback_2<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, myResult_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+        rollback_Control_2(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, myResult_h);
+        temp = u;
+        host_vector<REAL> temp2(v);
+        for (int i = 0; i < outer * numX * numY; i++) {
+            if (std::abs(temp2[i] - v_h[i]) > 0.0001) {
+                cout << "Rollback 2(v) index [" << i / (numX * numY) << "][" << (i % (numX * numY)) / numY << "][" << (i % (numX * numY)) % numY << "] failed to be equal, got " << v_h[i] << " expected " << temp2[i]  << endl;
+                exit(0);
+            }
+            if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+                cout << "Rollback 2(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i]  << endl;
+                exit(0);
+            }
+        }
+
+
+        Rollback_3<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+        rollback_Control_3(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, a_h, b_h, c_h);
+        temp = a;
+        temp2 = b;
+        host_vector<REAL> temp3(c);
+        for (int i = 0; i < outer * numZ * numZ; i++) {
+            if (std::abs(temp[i] - a_h[i]) > 0.0001) {
+                cout << "Rollback 3(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i]  << endl;
+                exit(0);
+            }
+            if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
+                cout << "Rollback 3(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i]  << endl;
+                exit(0);
+            }
+            if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
+                cout << "Rollback 3(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i]  << endl;
                 exit(0);
             }
         }
@@ -753,13 +987,13 @@ void rollback_Kernel_Test(
             temp2 = yy;
             for (int i = 0; i < outer * numY * numX; i++) {
                 if (std::abs(temp[i] - u_h[i]) > 0.0001 ) {
-                    cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                    cout << "Rollback 4(u) index [" << i / (numY * numX) << "][" << (i % (numY * numX)) / numX << "][" << (i % (numY * numX)) % numX << "] failed to be equal, got " << u_h[i] << " expected " << temp[i] << endl;
                     //exit(0);
                 }
             }
             for (int i = 0; i < outer * numZ; i++) {
                 if (std::abs(temp2[i] - yy_h[i]) > 0.0001) {
-                    cout << "Rollback 4(yy) index [" << i / numZ << "][" << i % numZ << "] failed to be equal, got " << yy_h[i] << " expected " << temp2[i];
+                    cout << "Rollback 4(yy) index [" << i / numZ << "][" << i % numZ << "] failed to be equal, got " << yy_h[i] << " expected " << temp2[i] << endl;
                     exit(0);
                 }
             }
@@ -776,15 +1010,15 @@ void rollback_Kernel_Test(
         temp3 = c;
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - a_h[i]) > 0.0001) {
-                cout << "Rollback 5(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                cout << "Rollback 5(a) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << a_h[i] << " expected " << temp[i] << endl;
                 exit(0);
             }
             if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
-                cout << "Rollback 5(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                cout << "Rollback 5(b) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << b_h[i] << " expected " << temp2[i] << endl;
                 exit(0);
             }
             if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
-                cout << "Rollback 5(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                cout << "Rollback 5(c) index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << c_h[i] << " expected " << temp3[i] << endl;
                 exit(0);
             }
         }
@@ -796,7 +1030,7 @@ void rollback_Kernel_Test(
         temp = y;
         for (int i = 0; i < outer * numZ * numZ; i++) {
             if (std::abs(temp[i] - y_h[i]) > 0.0001) {
-                cout << "Rollback 6 index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << y_h[i] << " expected " << temp[i];
+                cout << "Rollback 6 index [" << i / (numZ * numZ) << "][" << (i % (numZ * numZ)) / numZ << "][" << (i % (numZ * numZ)) % numZ << "] failed to be equal, got " << y_h[i] << " expected " << temp[i] << endl;
                 exit(0);
             }
         }
@@ -828,7 +1062,7 @@ void rollback_Kernel_Test(
             temp = myResult;
             for (int j = 0; j < outer * numX * numY; j++) {
                 if (std::abs(temp[j] - myResult_h[j]) > 0.0001) {
-                    cout << "Rollback 7 index [" << j / (numX * numY) << "][" << (j % (numX * numY)) / numY << "][" << (j % (numX * numY)) % numY << "] failed to be equal, got " << myResult_h[j] << " expected " << temp[j];
+                    cout << "Rollback 7 index [" << j / (numX * numY) << "][" << (j % (numX * numY)) / numY << "][" << (j % (numX * numY)) % numY << "] failed to be equal, got " << myResult_h[j] << " expected " << temp[j]  << endl;
                     exit(0);
                 }
             }
@@ -1094,6 +1328,346 @@ int run_GPUKernel(
     thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
 
     cout << "Test7" << endl;
+	for(uint i = 0; i < outer; i++) {
+        res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
+    }
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL>                   TestmyX(numX);       // [numX]
+    vector<REAL>                   TestmyY(numY);       // [numY]
+    vector<REAL>                   TestmyTimeline(numT);// [numT]
+    vector<vector<REAL> >          TestmyDxx(numX, vector<REAL>(4));     // [numX][4]
+    vector<vector<REAL> >          TestmyDyy(numY, vector<REAL>(4));     // [numY][4]
+    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL> >(numX, vector<REAL>(numY))); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+
+    initGrid_Control(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    for (int i = 0; i < numX; i ++) {
+        if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
+            cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
+            return procs;
+        }
+    }
+    for (int i = 0; i < numY; i ++) {
+        if (abs(myY[i] - TestmyY[i]) > 0.00001f) {
+            cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
+            return procs;
+        }
+    }
+    for (int i = 0; i < numT; i ++) {
+        if (abs(myTimeline[i] - TestmyTimeline[i]) > 0.00001f) {
+            cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
+            return procs;
+        }
+    }
+
+    initOperator_Control(numX, TestmyX, TestmyDxx);
+    for (int i = 0; i < numX; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
+                cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
+                return procs;
+            }
+        }
+    }
+
+    initOperator_Control(numY, TestmyY, TestmyDyy);
+    for (int i = 0; i < numY; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
+                cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
+                return procs;
+            }
+        }
+    }
+
+    setPayoff_Control(TestmyX, outer, numX, numY, TestmyResult);
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myResultCopy[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResultCopy[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                    return procs;
+                }
+            }
+        }
+    }
+
+    updateParams_Control(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    for (int t = 0; t < numT; t ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) > 0.00001f) {
+                    cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
+                    return procs;
+                }
+                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) > 0.00001f) {
+                    cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
+                    return procs;
+                }
+            }
+        }
+    }
+#endif
+    return procs;
+}
+
+int run_CPUKernel_Test(
+                const uint   outer,
+                const uint   numX,
+                const uint   numY,
+                const uint   numT,
+                const REAL   s0,
+                const REAL   t, 
+                const REAL   alpha, 
+                const REAL   nu, 
+                const REAL   beta,
+                const uint   blocksize,
+                      REAL*  res   // [outer] RESULT
+) {
+    int procs = blocksize;
+
+    int sgm_size = 8;
+
+	device_vector<REAL> myX(numX);       // [numX]
+    device_vector<REAL> myY(numY);       // [numY]
+    device_vector<REAL> myTimeline(numT);// [numT]
+    device_vector<REAL> myDxx(numX * 4);     // [numX][4]
+    device_vector<REAL> myDyy(numY * 4);     // [numY][4]
+    device_vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
+    device_vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    device_vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
+    uint numZ = std::max(numX, numY);
+    device_vector<REAL> u(outer * numY * numX);
+    device_vector<REAL> v(outer * numX * numY);
+    device_vector<REAL> a(outer * numZ * numZ);
+    device_vector<REAL> b(outer * numZ * numZ);
+    device_vector<REAL> c(outer * numZ * numZ);
+    device_vector<REAL> y(outer * numZ * numZ);
+    device_vector<REAL> yy(outer * numZ);
+
+    uint myXindex = 0;
+    uint myYindex = 0;
+
+    //cout << "Test1" << endl;
+    initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test2" << endl;
+    initOperator_Kernel(blocksize, numX, myX, myDxx);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test3" << endl;
+    initOperator_Kernel(blocksize, numY, myY, myDyy);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test4" << endl;
+    setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+#if TEST_INIT_CORRECTNESS
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+            }
+        }
+    }
+#endif
+
+    //cout << "Test5" << endl;
+    updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test6" << endl;
+    rollback_Kernel_Test_CPU(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    host_vector<REAL> myResult_h(outer*numX*numY);
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
+
+    //cout << "Test7" << endl;
+	for(uint i = 0; i < outer; i++) {
+        res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
+    }
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL>                   TestmyX(numX);       // [numX]
+    vector<REAL>                   TestmyY(numY);       // [numY]
+    vector<REAL>                   TestmyTimeline(numT);// [numT]
+    vector<vector<REAL> >          TestmyDxx(numX, vector<REAL>(4));     // [numX][4]
+    vector<vector<REAL> >          TestmyDyy(numY, vector<REAL>(4));     // [numY][4]
+    vector<vector<vector<REAL> > > TestmyResult(outer, vector<vector<REAL> >(numX, vector<REAL>(numY))); // [outer][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarX(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+    vector<vector<vector<REAL> > > TestmyVarY(numT, vector<vector<REAL> >(numX, vector<REAL>(numY)));    // [numT][numX][numY]
+
+    initGrid_Control(s0, alpha, nu, t, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, myXindex, myYindex);
+    for (int i = 0; i < numX; i ++) {
+        if (abs(myX[i] - TestmyX[i]) > 0.00001f) {
+            cout << "myX[" << i << "] did not match! was " << myX[i] << " expected " << TestmyX[i] << endl;
+            return procs;
+        }
+    }
+    for (int i = 0; i < numY; i ++) {
+        if (abs(myY[i] - TestmyY[i]) > 0.00001f) {
+            cout << "myY[" << i << "] did not match! was " << myY[i] << " expected " << TestmyY[i] << endl;
+            return procs;
+        }
+    }
+    for (int i = 0; i < numT; i ++) {
+        if (abs(myTimeline[i] - TestmyTimeline[i]) > 0.00001f) {
+            cout << "myTimeline[" << i << "] did not match! was " << myTimeline[i] << " expected " << TestmyTimeline[i] << endl;
+            return procs;
+        }
+    }
+
+    initOperator_Control(numX, TestmyX, TestmyDxx);
+    for (int i = 0; i < numX; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDxx[i * 4 + j] - TestmyDxx[i][j]) > 0.00001f) {
+                cout << "myDxx[" << i << "][" << j << "] did not match! was " << myDxx[i * 4 + j] << " expected " << TestmyDxx[i][j] << endl;
+                return procs;
+            }
+        }
+    }
+
+    initOperator_Control(numY, TestmyY, TestmyDyy);
+    for (int i = 0; i < numY; i ++) {
+        for (int j = 0; j < 4; j ++) {
+            if (abs(myDyy[i * 4 + j] - TestmyDyy[i][j]) > 0.00001f) {
+                cout << "myDyy[" << i << "][" << j << "] did not match! was " << myDyy[i * 4 + j] << " expected " << TestmyDyy[i][j] << endl;
+                return procs;
+            }
+        }
+    }
+
+    setPayoff_Control(TestmyX, outer, numX, numY, TestmyResult);
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myResultCopy[((o * numX) + i) * numY + j] - TestmyResult[o][i][j]) > 0.00001f) {
+                    cout << "myResult[" << o << "][" << i << "][" << j << "] did not match! was " << myResultCopy[((o * numX) + i) * numY + j] << " expected " << TestmyResult[o][i][j] << endl;
+                    return procs;
+                }
+            }
+        }
+    }
+
+    updateParams_Control(alpha, beta, nu, numX, numY, numT, TestmyX, TestmyY, TestmyTimeline, TestmyVarX, TestmyVarY);
+    for (int t = 0; t < numT; t ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                if (abs(myVarX[((t * numX) + i) * numY + j] - TestmyVarX[t][i][j]) > 0.00001f) {
+                    cout << "myVarX[" << t << "][" << i << "][" << j << "] did not match! was " << myVarX[((t * numX) + i) * numY + j] << " expected " << TestmyVarX[t][i][j] << endl;
+                    return procs;
+                }
+                if (abs(myVarY[((t * numX) + i) * numY + j] - TestmyVarY[t][i][j]) > 0.00001f) {
+                    cout << "myVarY[" << t << "][" << i << "][" << j << "] did not match! was " << myVarY[((t * numX) + i) * numY + j] << " expected " << TestmyVarY[t][i][j] << endl;
+                    return procs;
+                }
+            }
+        }
+    }
+#endif
+    return procs;
+}
+
+int run_GPUKernel_Test(
+                const uint   outer,
+                const uint   numX,
+                const uint   numY,
+                const uint   numT,
+                const REAL   s0,
+                const REAL   t, 
+                const REAL   alpha, 
+                const REAL   nu, 
+                const REAL   beta,
+                const uint   blocksize,
+                      REAL*  res   // [outer] RESULT
+) {
+    int procs = blocksize;
+
+    int sgm_size = 8;
+
+	device_vector<REAL> myX(numX);       // [numX]
+    device_vector<REAL> myY(numY);       // [numY]
+    device_vector<REAL> myTimeline(numT);// [numT]
+    device_vector<REAL> myDxx(numX * 4);     // [numX][4]
+    device_vector<REAL> myDyy(numY * 4);     // [numY][4]
+    device_vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
+    device_vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    device_vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
+
+#if TEST_INIT_CORRECTNESS
+    vector<REAL> myResultCopy(outer * numX * numY);
+#endif
+
+    uint numZ = std::max(numX, numY);
+    device_vector<REAL> u(outer * numY * numX);
+    device_vector<REAL> v(outer * numX * numY);
+    device_vector<REAL> a(outer * numZ * numZ);
+    device_vector<REAL> b(outer * numZ * numZ);
+    device_vector<REAL> c(outer * numZ * numZ);
+    device_vector<REAL> y(outer * numZ * numZ);
+    device_vector<REAL> yy(outer * numZ);
+
+    uint myXindex = 0;
+    uint myYindex = 0;
+
+    //cout << "Test1" << endl;
+    initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test2" << endl;
+    initOperator_Kernel(blocksize, numX, myX, myDxx);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test3" << endl;
+    initOperator_Kernel(blocksize, numY, myY, myDyy);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test4" << endl;
+    setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+#if TEST_INIT_CORRECTNESS
+    for (int o = 0; o < outer; o ++) {
+        for (int i = 0; i < numX; i ++) {
+            for (int j = 0; j < numY; j ++) {
+                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+            }
+        }
+    }
+#endif
+
+    //cout << "Test5" << endl;
+    updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    //cout << "Test6" << endl;
+    rollback_Kernel_Test_GPU(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+	cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+
+    host_vector<REAL> myResult_h(outer*numX*numY);
+    thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
+
+    //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
     }
