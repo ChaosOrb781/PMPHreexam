@@ -2415,12 +2415,26 @@ int   run_Distributed_Final(
     updateParams_Distributed_VarY_Final(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarY);
 
 #if TEST_INIT_CORRECTNESS
+    vector<REAL> test_myResult(outer * numX * numY);
     updateParams_Distributed(alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
 #endif
 
     //cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
         cout << "t: " << t << "/" << numT - 3 << endl;
+#if TEST_INIT_CORRECTNESS
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_myResult[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
+                        cout << "myresult3 failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
+                        return 1;
+                    }
+                }
+            }
+        }
+#endif
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
 #if TEST_INIT_CORRECTNESS
         vector<REAL> test_u(outer * numY * numX);
@@ -2553,7 +2567,6 @@ int   run_Distributed_Final(
         rollback_Distributed_7_Final(t, outer, numX, numY, a, b, c, y, yy, myResult);
         //cout << "Test6.12" << endl;
 #if TEST_INIT_CORRECTNESS
-        vector<REAL> test_myResult(outer * numX * numY);
         rollback_Distributed_7(t, outer, numX, numY, test_a, test_b, test_c, test_y, yy, test_myResult);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
