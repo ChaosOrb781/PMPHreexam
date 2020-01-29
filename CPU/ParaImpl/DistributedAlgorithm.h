@@ -2370,9 +2370,9 @@ int   run_Distributed_Final(
 
     matTransposeDist(testA, testB, 0, 3, 4);
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 4; j++) {
-            cout << "testB[" << j << "][" << i << "] = " << testB[j * 3 + i] << endl;
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 3; i++) {
+            cout << "testB[" << j << "][" << i << "] = " << testB[j * 3 + i] << "?= testA[" << i << "][" << j << "] =" << testA[i * 4 + j] << endl;
         }
     }
 #endif
