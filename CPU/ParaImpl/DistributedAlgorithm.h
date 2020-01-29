@@ -1249,7 +1249,7 @@ void rollback_Distributed_7_Final(
         for (int gidx = 0; gidx < outer; gidx++) {
             // here yy should have size [numY]
             uint numZ = max(numX,numY);
-            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,((gidx * numZ) * i) * numZ);
+            tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,((gidx * numZ) + i) * numZ);
         }
     }
 }
