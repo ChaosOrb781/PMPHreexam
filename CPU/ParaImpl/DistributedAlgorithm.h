@@ -2492,10 +2492,7 @@ int   run_Distributed_Final(
         //cout << "Test6.9" << endl;
         rollback_Distributed_5_Final(t, outer, numX, numY, myTimeline, myDyyT, myVarY, a, b, c);
 #if TEST_INIT_CORRECTNESS
-        vector<REAL> test_a2(outer * numZ * numZ);
-        vector<REAL> test_b2(outer * numZ * numZ);
-        vector<REAL> test_c2(outer * numZ * numZ);
-        rollback_Distributed_5(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_a2, test_b2, test_c2);
+        rollback_Distributed_5(t, outer, numX, numY, myTimeline, testMyDyy, myVarY, test_a, test_b, test_c);
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
