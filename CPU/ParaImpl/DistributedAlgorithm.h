@@ -2415,6 +2415,20 @@ int   run_Distributed_Final(
 	for (int t = 0; t <= numT - 2; t++) {
         //cout << "Test6.1" << endl;
 	    rollback_Distributed_1_Final(t, outer, numX, numY, myTimeline, myDxxT, myVarXT, myResultT, u);
+#if TEST_INIT_CORRECTNESS
+        vector<REAL> test_u(outer * numY * numX);
+        rollback_Distributed_1(t, outer, numX, numY, myTimeline, testMyDxx, myVarX, test_u, myResult);
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.00001f) {
+                        cout << "u failed! myDxx[" << i << "][" << j << "] did not match! was " << myDxxT[j * numX + i] << " expected " << testMyDxx[i * 4 + j] << endl;
+                        return 1;
+                    }
+                }
+            }   
+        }
+#endif
         //cout << "Test6.2" << endl;
         rollback_Distributed_2_Final1(t, outer, numX, numY, myTimeline, myDyyT, myVarX, u, v, myResult);
         //cout << "Test6.3" << endl;
