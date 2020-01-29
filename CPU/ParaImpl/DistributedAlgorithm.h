@@ -2565,6 +2565,19 @@ int   run_Distributed_Final(
 #endif
         cout << "Test6.13" << endl;
         matTransposeDistPlane(myResult, myResultT, outer, numX, numY);
+#if TEST_INIT_CORRECTNESS
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < numX; i++) {
+                for (int j = 0; j < numY; j++) {
+                    //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
+                    if (test_myResult[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
+                        cout << "myresult2 failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
+                        return 1;
+                    }
+                }
+            }
+        }
+#endif
         cout << "Test6.14" << endl;
     }
 	
