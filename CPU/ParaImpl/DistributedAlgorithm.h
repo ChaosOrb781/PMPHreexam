@@ -1366,7 +1366,7 @@ void rollback_Distributed_2_Final1_para(
 }
 
 
-void rollback_Distributed_2_Final2(
+void rollback_Distributed_2_Final2_para(
     int t,
     const uint outer,
     const uint numX, 
