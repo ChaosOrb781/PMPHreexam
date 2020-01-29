@@ -88,8 +88,8 @@ int main()
         //Simple parallized programs
         RunTestOnProgram<funCPU>("Simple Parallel", (fun)run_SimpleParallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #if RUN_CPU_EXPERIMENTAL || RUN_ALL
-        RunTestOnProgram<funCPU>("Simple Parallel Static", (fun)run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
-		RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (fun)run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+        //RunTestOnProgram<funCPU>("Simple Parallel Static", (fun)run_SimpleParallelStatic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
+		//RunTestOnProgram<funCPU>("Simple Parallel Dynamic", (fun)run_SimpleParallelDynamic, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
 #endif
 		//RunTestOnProgram<funCPU>("Interchanged", (fun)run_Interchanged, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
         //RunTestOnProgram<funCPU>("Interchanged Optimized", (fun)run_InterchangedAlternative, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta);
@@ -105,8 +105,8 @@ int main()
         //RunTestOnProgram<funGPU>("Kernelized Dist 2 Parallel", (fun)run_Kernelized_Rollback_Dist_Alt_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Distributed Rollback", (fun)run_Distributed, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Distributed Parallel", (fun)run_Distributed_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Separation Rollback", (fun)run_Distributed_Separation, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Separation Rollback Parallel", (fun)run_Distributed_Separation_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        //RunTestOnProgram<funGPU>("Separation Rollback", (fun)run_Distributed_Separation, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        //RunTestOnProgram<funGPU>("Separation Rollback Parallel", (fun)run_Distributed_Separation_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Distributed Final", (fun)run_Distributed_Final, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Kernelized Dist 3", (fun)run_Kernelized_Rollback_Dist_Flat, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Simple Kernel", (fun)run_SimpleKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
