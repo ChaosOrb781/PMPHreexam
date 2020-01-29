@@ -2572,7 +2572,7 @@ int   run_Distributed_Final(
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
-                    if (test_myResult[((o * numX) + i) * numY + j] != myResult[((o * numX) + i) * numY + j]) {
+                    if (myResultInit[((o * numX) + i) * numY + j] != myResult[((o * numX) + i) * numY + j]) {
                         cout << "myresult failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
                         return 1;
                     }
@@ -2587,7 +2587,7 @@ int   run_Distributed_Final(
             for (int i = 0; i < numX; i++) {
                 for (int j = 0; j < numY; j++) {
                     //if (abs(test_u[((o * numY) + j) * numX + i] - u[((o * numY) + j) * numX + i]) > 0.0000001f) {
-                    if (test_myResult[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
+                    if (myResultInit[((o * numX) + i) * numY + j] != myResultT[((o * numY) + j) * numX + i]) {
                         cout << "myresult2 failed! myresult[" << o << "][" << i << "][" << j << "] did not match! was" << endl;
                         return 1;
                     }
