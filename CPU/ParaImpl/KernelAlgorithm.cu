@@ -113,92 +113,194 @@ void setPayoff_Control(const vector<REAL> myX, const uint outer,
     }
 }
 
-void rollback_Control(const uint outer, const uint numT, 
-    const uint numX, const uint numY, 
-    const vector<REAL> myTimeline, 
-    const vector<vector<REAL> > myDxx,
-    const vector<vector<REAL> > myDyy,
-    const vector<vector<vector<REAL> > > myVarX,
-    const vector<vector<vector<REAL> > > myVarY,
-    vector<vector< vector<REAL> > >& myResult 
+void rollback_Control_1(
+    int t,
+    const uint outer, 
+    const uint numX, 
+    const uint numY, 
+    const host_vector<REAL> myTimeline, 
+    const host_vector<REAL> myDxx,
+    const host_vector<REAL> myVarX,
+    host_vector<REAL>& u,
+    host_vector<REAL>& myResult
 ) {
-    for (int t = 0; t <= numT - 2; t++) {
-        for (int o = 0; o < outer; o++) {
-            uint numZ = max(numX,numY);
+    //cout << "test 1" << endl;
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = numX > numY ? numX : numY;
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        u[((o * numY) + j) * numX + i] = dtInv*myResult[((o * numX) + i) * numY + j];
 
-            uint i, j;
-
-            REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-
-            vector<vector<REAL> > u(numY, vector<REAL>(numX));   // [numY][numX]
-            vector<vector<REAL> > v(numX, vector<REAL>(numY));   // [numX][numY]
-            vector<REAL> a(numZ), b(numZ), c(numZ), y(numZ);     // [max(numX,numY)] 
-            vector<REAL> yy(numZ);  // temporary used in tridag  // [max(numX,numY)]
-
-            //	explicit x
-            for(i=0;i<numX;i++) {
-                for(j=0;j<numY;j++) {
-                    u[j][i] = dtInv*myResult[o][i][j];
-
-                    if(i > 0) { 
-                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][0] ) 
-                                    * myResult[o][i-1][j];
-                    }
-                    u[j][i]  +=  0.5*( 0.5*myVarX[t][i][j]*myDxx[i][1] )
-                                    * myResult[o][i][j];
-                    if(i < numX-1) {
-                    u[j][i] += 0.5*( 0.5*myVarX[t][i][j]*myDxx[i][2] )
-                                    * myResult[o][i+1][j];
-                    }
-                }
-            }
-
-            //	explicit y
-            for(j=0;j<numY;j++)
-            {
-                for(i=0;i<numX;i++) {
-                    v[i][j] = 0.0;
-
-                    if(j > 0) {
-                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][0] )
-                                *  myResult[o][i][j-1];
-                    }
-                    v[i][j]  +=   ( 0.5*myVarY[t][i][j]*myDyy[j][1] )
-                                *  myResult[o][i][j];
-                    if(j < numY-1) {
-                    v[i][j] +=  ( 0.5*myVarY[t][i][j]*myDyy[j][2] )
-                                *  myResult[o][i][j+1];
-                    }
-                    u[j][i] += v[i][j]; 
-                }
-            }
-
-            //	implicit x
-            for(j=0;j<numY;j++) {
-                for(i=0;i<numX;i++) {  // here a, b,c should have size [numX]
-                    a[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][0]);
-                    b[i] = dtInv - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][1]);
-                    c[i] =		 - 0.5*(0.5*myVarX[t][i][j]*myDxx[i][2]);
-                }
-                // here yy should have size [numX]
-                tridagPar(a,b,c,u[j],numX,u[j],yy);
-            }
-
-            //	implicit y
-            for(i=0;i<numX;i++) { 
-                for(j=0;j<numY;j++) {  // here a, b, c should have size [numY]
-                    a[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][0]);
-                    b[j] = dtInv - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][1]);
-                    c[j] =		 - 0.5*(0.5*myVarY[t][i][j]*myDyy[j][2]);
-                }
-
-                for(j=0;j<numY;j++)
-                    y[j] = dtInv*u[j][i] - 0.5*v[i][j];
-
-                // here yy should have size [numY]
-                tridagPar(a,b,c,y,numY,myResult[o][i],yy);
-            }
+        if(i > 0) { 
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 0] ) 
+                            * myResult[((o * numX) + (i-1)) * numY + j];
         }
+        u[((o * numY) + j) * numX + i]  +=  0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                        * myDxx[i * 4 + 1] )
+                        * myResult[((o * numX) + i) * numY + j];
+        if(i < numX-1) {
+            u[((o * numY) + j) * numX + i] += 0.5*( 0.5*myVarX[((t * numX) + i) * numY + j]
+                            * myDxx[i * 4 + 2] )
+                            * myResult[((o * numX) + (i+1)) * numY + j];
+        }
+    }
+}
+void rollback_Control_2(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const host_vector<REAL> myTimeline,
+    const host_vector<REAL> myDyy,
+    const host_vector<REAL> myVarY,
+    host_vector<REAL>& u,
+    host_vector<REAL>& v,
+    host_vector<REAL>& myResult
+) {
+    //cout << "test 2" << endl;
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = numX > numY ? numX : numY;
+        v[((o * numX) + i) * numY + j] = 0.0;
+
+        if(j > 0) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 0] )
+                            * myResult[((o * numX) + i) * numY + j - 1];
+        }
+        v[((o * numX) + i) * numY + j]  += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 1] )
+                            * myResult[((o * numX) + i) * numY + j];
+        if(j < numY-1) {
+            v[((o * numX) + i) * numY + j] += ( 0.5* myVarY[((t * numX) + i) * numY + j]
+                            * myDyy[j * 4 + 2] )
+                            * myResult[((o * numX) + i) * numY + j + 1];
+        }
+        u[((o * numY) + j) * numX + i] += v[((o * numX) + i) * numY + j];
+    }
+}
+
+void rollback_Control_3(
+    int t,
+    const uint outer,
+    const uint numX,
+    const uint numY,
+    const host_vector<REAL> myTimeline, 
+    const host_vector<REAL> myDxx,
+    const host_vector<REAL> myVarX,
+    host_vector<REAL>& a,
+    host_vector<REAL>& b,
+    host_vector<REAL>& c
+) {
+    //cout << "test 3" << endl;
+    for (int gidx = 0; gidx < outer * numY * numX; gidx++) {
+        uint o = gidx / (numY * numX);
+        uint plane_remain = gidx % (numY * numX);
+        uint j = plane_remain / numX;
+        uint i = plane_remain % numX;
+        uint numZ = numX > numY ? numX : numY;
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 0]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 1]);
+        c[((o * numZ) + j) * numZ + i] =		 - 0.5*(0.5*myVarX[((t * numX) + i) * numY + j]*myDxx[i * 4 + 2]);
+    }
+}
+
+
+void rollback_Control_4(
+    int t,
+    int j,
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    host_vector<REAL>& u,
+    host_vector<REAL>& a,
+    host_vector<REAL>& b,
+    host_vector<REAL>& c,
+    host_vector<REAL>& yy
+) {
+    //cout << "test 4" << endl;
+    for (int gidx = 0; gidx < outer; gidx++) {
+        uint numZ = numX > numY ? numX : numY;
+        // here yy should have size [numX]
+        tridagPar(a,((gidx * numZ) + j) * numZ,b,((gidx * numZ) + j) * numZ,c,((gidx * numZ) + j) * numZ,u,((gidx * numY) + j) * numX,numX,u,((gidx * numY) + j) * numX,yy,(gidx * numZ));
+    }
+}
+
+void rollback_Control_5(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const host_vector<REAL> myTimeline,
+    const host_vector<REAL> myDyy,
+    const host_vector<REAL> myVarY,
+    host_vector<REAL>& u,
+    host_vector<REAL>& v,
+    host_vector<REAL>& a,
+    host_vector<REAL>& b,
+    host_vector<REAL>& c
+) {
+    //cout << "test 5" << endl;
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = numX > numY ? numX : numY;
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        a[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 0]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 1]);
+        c[((o * numZ) + i) * numZ + j] =		 - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyy[j * 4 + 2]);
+    }
+}
+
+void rollback_Control_6(
+    int t,
+    const uint outer,
+    const uint numX, 
+    const uint numY, 
+    const host_vector<REAL> myTimeline,
+    host_vector<REAL>& u,
+    host_vector<REAL>& v,
+    host_vector<REAL>& y
+) {
+    //cout << "test 6" << endl;
+    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
+        uint o = gidx / (numX * numY);
+        uint plane_remain = gidx % (numX * numY);
+        uint i = plane_remain / numY;
+        uint j = plane_remain % numY;
+        uint numZ = numX > numY ? numX : numY;
+        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
+        y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
+    }
+}
+
+void rollback_Control_7(
+    int t,
+    int i,
+    const uint outer, 
+    const uint numX, 
+    const uint numY,
+    host_vector<REAL>& a,
+    host_vector<REAL>& b,
+    host_vector<REAL>& c,
+    host_vector<REAL>& y,
+    host_vector<REAL>& yy,
+    host_vector<REAL>& myResult
+) {
+    for (int gidx = 0; gidx < outer; gidx++) {
+        // here yy should have size [numY]
+        uint numZ = numX > numY ? numX : numY;
+        tridagPar(a,((gidx * numZ) + i) * numZ,b,((gidx * numZ) + i) * numZ,c,((gidx * numZ) + i) * numZ,y,((gidx * numZ) + i) * numZ,numY,myResult, (gidx * numX + i) * numY,yy,(gidx * numZ));
     }
 }
 
@@ -475,6 +577,7 @@ void rollback_Kernel_GPU(
             }
             //cudaDeviceSynchronize();
             //gpuErr(cudaPeekAtLastError());
+
         }
 
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
@@ -548,6 +651,20 @@ void rollback_Kernel_Test(
     REAL* yy_p = raw_pointer_cast(&yy[0]);
     REAL* myResult_p = raw_pointer_cast(&myResult[0]);
 
+    host_vector<REAL> myTimeline_h = myTimeline;
+    host_vector<REAL> myDxx_h      = myDxx;
+    host_vector<REAL> myDyy_h      = myDyy;
+    host_vector<REAL> myVarX_h     = myVarX;
+    host_vector<REAL> myVarY_h     = myVarY;
+    host_vector<REAL> u_h          = u;
+    host_vector<REAL> v_h          = v;
+    host_vector<REAL> a_h          = a;
+    host_vector<REAL> b_h          = b;
+    host_vector<REAL> c_h          = c;
+    host_vector<REAL> y_h          = y;
+    host_vector<REAL> yy_h         = yy;
+    host_vector<REAL> myResult_h   = myResult;
+
     uint numZ = numX > numY ? numX : numY;
 
     for (int t = 0; t <= numT - 2; t++) {
@@ -555,14 +672,56 @@ void rollback_Kernel_Test(
         Rollback_1<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, u_p, myResult_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        rollback_Control_1(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, u_h, myResult_h);
+        host_vector<REAL> temp(u);
+        for (int i = 0; i < outer * numY * numX) {
+            if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+                cout << "Rollback 1 index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                exit(0);
+            }
+        }
+
 
         Rollback_2<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, myResult_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        rollback_Control_2(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, myResult_h);
+        temp = u;
+        host_vector<REAL> temp2(v);
+        for (int i = 0; i < outer * numX * numY) {
+            if (std::abs(temp2[i] - v_h[i]) > 0.0001) {
+                cout << "Rollback 2(v) index " << i << " failed to be equal, got " << v_h[i] << " expected " << temp2[i];
+                exit(0);
+            }
+            if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+                cout << "Rollback 2(u) index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                exit(0);
+            }
+        }
+
 
         Rollback_3<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        rollback_Control_3(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, a_h, b_h, c_h);
+        temp = a;
+        temp2 = b;
+        temp3 = c;
+        for (int i = 0; i < outer * numZ * numZ) {
+            if (std::abs(temp[i] - a_h[i]) > 0.0001) {
+                cout << "Rollback 3(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                exit(0);
+            }
+            if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
+                cout << "Rollback 3(b) index " << i << " failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                exit(0);
+            }
+            if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
+                cout << "Rollback 3(c) index " << i << " failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                exit(0);
+            }
+        }
+
 
         uint num_blocks2 = (outer + blocksize - 1) / blocksize;
         if((blocksize % sgm_size)!=0) {
@@ -589,6 +748,21 @@ void rollback_Kernel_Test(
                 cudaDeviceSynchronize();
                 gpuErr(cudaPeekAtLastError());
             }
+            rollback_Control_4(t, j, outer, numX, numY, u_h, a_h, b_h, c_h, yy_h);
+            temp = u;
+            temp2 = yy;
+            for (int i = 0; i < outer * numZ * numZ) {
+                if (std::abs(temp[i] - u_h[i]) > 0.0001) {
+                    cout << "Rollback 2(u) index " << i << " failed to be equal, got " << u_h[i] << " expected " << temp[i];
+                    exit(0);
+                }
+            }
+            for (int i = 0; i < outer * numZ) {
+                if (std::abs(temp2[i] - yy_h[i]) > 0.0001) {
+                    cout << "Rollback 2(yy) index " << i << " failed to be equal, got " << yy_h[i] << " expected " << temp2[i];
+                    exit(0);
+                }
+            }
             //cudaDeviceSynchronize();
             //gpuErr(cudaPeekAtLastError());
         }
@@ -596,10 +770,36 @@ void rollback_Kernel_Test(
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, u_p, v_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        rollback_Control_5(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, a_h, b_h, c_h);
+        temp = a;
+        temp2 = b;
+        temp3 = c;
+        for (int i = 0; i < outer * numZ * numZ) {
+            if (std::abs(temp[i] - a_h[i]) > 0.0001) {
+                cout << "Rollback 5(a) index " << i << " failed to be equal, got " << a_h[i] << " expected " << temp[i];
+                exit(0);
+            }
+            if (std::abs(temp2[i] - b_h[i]) > 0.0001) {
+                cout << "Rollback 5(b) index " << i << " failed to be equal, got " << b_h[i] << " expected " << temp2[i];
+                exit(0);
+            }
+            if (std::abs(temp3[i] - c_h[i]) > 0.0001) {
+                cout << "Rollback 5(c) index " << i << " failed to be equal, got " << c_h[i] << " expected " << temp3[i];
+                exit(0);
+            }
+        }
 
         Rollback_6<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, u_p, v_p, y_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        rollback_Control_6(t, outer, numX, numY, myTimeline_h, u_h, v_h, y_h);
+        temp = y;
+        for (int i = 0; i < outer * numZ * numZ) {
+            if (std::abs(temp[i] - y_h[i]) > 0.0001) {
+                cout << "Rollback 6 index " << i << " failed to be equal, got " << y_h[i] << " expected " << temp[i];
+                exit(0);
+            }
+        }
 
         if((blocksize % sgm_size)!=0) {
             printf("Invalid segment or block size. Exiting!\n\n!");
@@ -623,6 +823,14 @@ void rollback_Kernel_Test(
                 );
                 cudaDeviceSynchronize();
                 gpuErr(cudaPeekAtLastError());
+            }
+            rollback_Control_7(t, i, outer, numX, numY, a_h, b_h, c_h, y_h, yy_h, myResult_h);
+            temp = myResult;
+            for (int i = 0; i < outer * numX * numY) {
+                if (std::abs(temp[i] - myResult_h[i]) > 0.0001) {
+                    cout << "Rollback 7 index " << i << " failed to be equal, got " << myResult_h[i] << " expected " << temp[i];
+                    exit(0);
+                }
             }
         }
     }
@@ -703,7 +911,8 @@ int run_CPUKernel(
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test6" << endl;
-	rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    //rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    rollback_Kernel_Test(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
