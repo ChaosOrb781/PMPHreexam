@@ -1084,7 +1084,7 @@ int run_CPUKernel(
 ) {
     int procs = blocksize;
 
-    int sgm_size = 8;
+    //int sgm_size = 8;
 
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
