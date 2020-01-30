@@ -219,7 +219,7 @@ __global__ void InitParamsVarXTCoalesced(
         REAL* myTimeline,
         REAL* myVarXT
     ) {
-    //size: sizeof(REAL) * numX * numT + sizeof(REAL) [buffer for staying in bounds]
+    //size: sizeof(REAL) * numY + sizeof(REAL) * numT + sizeof(REAL) [buffer for staying in bounds]
     extern __shared__ char sh_mem[];
     volatile REAL* myT_sh = (volatile REAL*) sh_mem;
     volatile REAL* myY_sh = (volatile REAL*) (myT_sh + numT);

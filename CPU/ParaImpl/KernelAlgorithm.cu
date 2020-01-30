@@ -1107,10 +1107,10 @@ void updateParams_KernelCoalesced(
     REAL* myVarXT_p = raw_pointer_cast(&myVarXT[0]);
     REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
 
-    InitParamsVarXTCoalesced<<<(numX + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numY * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarXT_p);
+    InitParamsVarXTCoalesced<<<(numX + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numY + sizeof(REAL) * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarXT_p);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
-    InitParamsVarYCoalesced<<<(numY + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numX * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarY_p);
+    InitParamsVarYCoalesced<<<(numY + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numX + sizeof(REAL) * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarY_p);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 }
