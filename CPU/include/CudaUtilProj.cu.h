@@ -68,6 +68,23 @@ void transpose( float*             inp_d,
    cudaThreadSynchronize();
 }
 
+template<class T, int tile>
+void transpose_nosync( T*             inp_d,  
+                T*             out_d, 
+                const unsigned int height, 
+                const unsigned int width
+) {
+   // 1. setup block and grid parameters
+   int  dimy = ceil( ((float)height)/tile ); 
+   int  dimx = ceil( ((float) width)/tile );
+   dim3 block(tile, tile, 1);
+   dim3 grid (dimx, dimy, 1);
+ 
+   //2. execute the kernel
+   matTransposeTiledKer<T,tile> <<< grid, block >>>
+                       (inp_d, out_d, height, width);
+}
+
 
 /***************************************************/
 /*********** Data-Structures for Scan **************/

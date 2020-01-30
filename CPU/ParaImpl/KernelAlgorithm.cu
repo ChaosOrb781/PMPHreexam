@@ -9,6 +9,8 @@
 
 using namespace thrust;
 
+#define TILE 16
+
 #define TEST_INIT_CORRECTNESS false
 
 #define gpuErr(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -389,6 +391,8 @@ void setPayoff_Kernel(
     uint num_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
     InitMyResult<<<num_blocks, blocksize>>>(outer, numX, numY, myX_p, myResult_p);
 }
+
+
 
 void rollback_Kernel_CPU(
     const int blocksize, 
@@ -1071,6 +1075,194 @@ void rollback_Kernel_Test_GPU(
     }
 }
 
+void initOperator_KernelCoalesced(
+    const int blocksize, 
+    const uint numZ, 
+    device_vector<REAL>& myZ, 
+    device_vector<REAL>& DzzT
+) {
+    REAL* myZ_p = raw_pointer_cast(&myZ[0]);
+    REAL* DzzT_p = raw_pointer_cast(&DzzT[0]);
+    uint num_blocks= (numZ + blocksize - 1) / blocksize;
+    InitMyDzzTCoalesced<<<num_blocks, blocksize>>>(numZ, myZ_p, DzzT_p);
+}
+
+void updateParams_KernelCoalesced(
+    const int blocksize, 
+    const REAL alpha, 
+    const REAL beta, 
+    const REAL nu,
+    const uint numX, 
+    const uint numY, 
+    const uint numT, 
+    device_vector<REAL>& myX, 
+    device_vector<REAL>& myY, 
+    device_vector<REAL>& myTimeline,
+    device_vector<REAL>& myVarXT, 
+    device_vector<REAL>& myVarY
+){
+    REAL* myX_p = raw_pointer_cast(&myX[0]);
+    REAL* myY_p = raw_pointer_cast(&myY[0]);
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    REAL* myVarXT_p = raw_pointer_cast(&myVarXT[0]);
+    REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
+    uint num_blocks = (numX + blocksize - 1) / blocksize;
+    InitParamsVarXTCoalesced<<<num_blocks, blocksize>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarXT_p);
+    num_blocks = (numY + blocksize - 1) / blocksize;
+    InitParamsVarYCoalesced<<<num_blocks, blocksize>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarY_p);
+}
+
+void setPayoff_KernelCoalesced(
+    const int blocksize, 
+    device_vector<REAL>& myX, 
+    const uint outer,
+    const uint numX, 
+    const uint numY,
+    device_vector<REAL>& myResultT)
+{
+    REAL* myX_p = raw_pointer_cast(&myX[0]);
+    REAL* myResultT_p = raw_pointer_cast(&myResultT[0]);
+    uint num_blocks = (numX + blocksize - 1) / blocksize;
+    InitMyResultTCoalesced<<<num_blocks, blocksize>>>(outer, numX, numY, myX_p, myResultT_p);
+}
+
+void matTransposeKernelPlane(REAL* A, REAL* trA, uint planes, uint row, uint col) {
+    for (int o = 0; o < planes; o++) {
+        transpose_nosync<REAL, TILE> (&A[o * row * col], &trA[o * row * col], row, col);
+    }
+}
+
+void matTransposeKernel(REAL* A, REAL* trA, uint row, uint col) {
+    transpose_nosync<REAL, TILE> (A, trA, row, col);
+}
+
+void rollback_Kernel_CPUCoalesced(
+    const int blocksize, 
+    const uint outer, 
+    const uint numT, 
+    const uint numX, 
+    const uint numY, 
+    device_vector<REAL>& myTimeline, 
+    device_vector<REAL>& myDxxT,
+    device_vector<REAL>& myDyyT,
+    device_vector<REAL>& myVarXT,
+    device_vector<REAL>& myVarY,
+    device_vector<REAL>& u,
+    device_vector<REAL>& v,
+    device_vector<REAL>& a,
+    device_vector<REAL>& b,
+    device_vector<REAL>& c,
+    device_vector<REAL>& y,
+    device_vector<REAL>& yy,
+    device_vector<REAL>& myResultT
+) {
+    REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
+    REAL* myDxxT_p = raw_pointer_cast(&myDxxT[0]);
+    REAL* myDyyT_p = raw_pointer_cast(&myDyyT[0]);
+    REAL* myVarXT_p = raw_pointer_cast(&myVarXT[0]);
+    REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
+    REAL* u_p = raw_pointer_cast(&u[0]);
+    REAL* v_p = raw_pointer_cast(&v[0]);
+    REAL* a_p = raw_pointer_cast(&a[0]);
+    REAL* b_p = raw_pointer_cast(&b[0]);
+    REAL* c_p = raw_pointer_cast(&c[0]);
+    REAL* y_p = raw_pointer_cast(&y[0]);
+    REAL* yy_p = raw_pointer_cast(&yy[0]);
+    REAL* myResultT_p = raw_pointer_cast(&myResultT[0]);
+
+    //internally used arrays
+    device_vector<REAL> myResult(outer * numX * numY);
+    REAL* myResult_p = raw_pointer_cast(&myResult[0]);
+    device_vector<REAL> uT(outer * numX * numY);
+    REAL* uT_p = raw_pointer_cast(&uT[0]);
+
+    uint numZ = numX > numY ? numX : numY;
+
+    uint numX_blocks = (numX + blocksize - 1) / blocksize;
+    uint numY_blocks = (numY + blocksize - 1) / blocksize;
+    uint OXY_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
+
+    for (int t = 0; t <= numT - 2; t++) {
+        Rollback_1Coalesced<<<numX_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, u_p, myResultT_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        matTransposeKernelPlane(myResultT_p, myResult_p, outer, numY, numX);
+        matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
+
+        Rollback_2Coalesced<<<numY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, uT_p, v_p, myResult_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        matTransposeKernelPlane(uT_p, u_p, outer, numX, numY);
+
+        Rollback_3Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        host_vector<REAL> a_h(a);
+        host_vector<REAL> b_h(b);
+        host_vector<REAL> c_h(c);
+        host_vector<REAL> u_h(u);
+        host_vector<REAL> yy_h(yy);
+        for (int j = 0; j < numY; j++) {
+            for (int o = 0; o < outer; o++) {
+                tridagPar(
+                    a_h, ((o * numZ) + j) * numZ,
+                    b_h, ((o * numZ) + j) * numZ,
+                    c_h, ((o * numZ) + j) * numZ,
+                    u_h, ((o * numY) + j) * numX,
+                    numX,
+                    u_h, ((o * numY) + j) * numX,
+                    yy_h, ((o * numZ) + j) * numZ
+                );
+            };
+        }
+        thrust::copy(a_h.begin(), a_h.end(), a.begin());
+        thrust::copy(b_h.begin(), b_h.end(), b.begin());
+        thrust::copy(c_h.begin(), c_h.end(), c.begin());
+        thrust::copy(u_h.begin(), u_h.end(), u.begin());
+        thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
+
+        Rollback_5Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, a_p, b_p, c_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
+
+        Rollback_6Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, uT_p, v_p, y_p);
+        cudaDeviceSynchronize();
+        gpuErr(cudaPeekAtLastError());
+
+        thrust::copy(a.begin(), a.end(), a_h.begin());
+        thrust::copy(b.begin(), b.end(), b_h.begin());
+        thrust::copy(c.begin(), c.end(), c_h.begin());
+        host_vector<REAL> y_h(y);
+        host_vector<REAL> myResult_h(myResult);
+        thrust::copy(yy.begin(), yy.end(), yy_h.begin());
+        for (int i = 0; i < numX; i++) {
+            for (int o = 0; o < outer; o++) {
+                tridagPar(
+                    a_h, ((o * numZ) + i) * numZ, 
+                    b_h, ((o * numZ) + i) * numZ, 
+                    c_h, ((o * numZ) + i) * numZ,
+                    y_h, ((o * numZ) + i) * numZ,   numY,
+                    myResult_h, ((o * numX) + i) * numY,
+                    yy_h, ((o * numZ) + i) * numZ
+                );
+            }
+        } 
+        thrust::copy(a_h.begin(), a_h.end(), a.begin());
+        thrust::copy(b_h.begin(), b_h.end(), b.begin());
+        thrust::copy(c_h.begin(), c_h.end(), c.begin());
+        thrust::copy(y_h.begin(), y_h.end(), y.begin());
+        thrust::copy(myResult_h.begin(), myResult_h.end(), myResult.begin());
+        thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
+
+        matTransposeKernelPlane(myResult_p, myResultT_p, outer, numX, numY);
+    }
+}
+
 int run_CPUKernel(
                 const uint   outer,
                 const uint   numX,
@@ -1433,10 +1625,10 @@ int run_Coalesced_CPUKernel(
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
     device_vector<REAL> myTimeline(numT);// [numT]
-    device_vector<REAL> myDxx(numX * 4);     // [numX][4]
-    device_vector<REAL> myDyy(numY * 4);     // [numY][4]
-    device_vector<REAL> myResult(outer * numX * numY); // [outer][numX][numY]
-    device_vector<REAL> myVarX(numT * numX * numY);    // [numT][numX][numY]
+    device_vector<REAL> myDxxT(4 * numX);     // [4][numX]
+    device_vector<REAL> myDyyT(4 * numY);     // [4][numY]
+    device_vector<REAL> myResultT(outer * numY * numX); // [outer][numX][numY]
+    device_vector<REAL> myVarXT(numT * numY * numX);    // [numT][numX][numY]
     device_vector<REAL> myVarY(numT * numX * numY);    // [numT][numX][numY]
 
 #if TEST_INIT_CORRECTNESS
@@ -1455,42 +1647,44 @@ int run_Coalesced_CPUKernel(
     uint myXindex = 0;
     uint myYindex = 0;
 
+
     //cout << "Test1" << endl;
+    //already coalesced
     initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test2" << endl;
-    initOperator_Kernel(blocksize, numX, myX, myDxx);
+    initOperator_KernelCoalesced(blocksize, numX, myX, myDxxT);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test3" << endl;
-    initOperator_Kernel(blocksize, numY, myY, myDyy);
+    initOperator_KernelCoalesced(blocksize, numY, myY, myDyyT);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test4" << endl;
-    setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
+    setPayoff_KernelCoalesced(blocksize, myX, outer, numX, numY, myResultT);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 #if TEST_INIT_CORRECTNESS
     for (int o = 0; o < outer; o ++) {
         for (int i = 0; i < numX; i ++) {
             for (int j = 0; j < numY; j ++) {
-                myResultCopy[((o * numX) + i) * numY + j] = myResult[((o * numX) + i) * numY + j]; 
+                myResultCopy[((o * numX) + i) * numY + j] = myResultT[((o * numY) + j) * numX + i]; 
             }
         }
     }
 #endif
 
     //cout << "Test5" << endl;
-    updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
+    updateParams_KernelCoalesced(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarXT, myVarY);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
     //cout << "Test6" << endl;
-    rollback_Kernel_CPU(blocksize, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
+    rollback_Kernel_CPUCoalesced(blocksize, outer, numT, numX, numY, myTimeline, myDxxT, myDyyT, myVarXT, myVarY, u, v, a, b, c, y, yy, myResultT);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 

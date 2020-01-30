@@ -400,11 +400,9 @@ __global__ void Rollback_1Coalesced (
         https://devtalk.nvidia.com/default/topic/1043273/cuda-programming-and-performance/accessing-same-global-memory-address-within-warps/
         */
         __syncthreads();
-        //Just 2 reads, should not require shared memory to spare one memory 1 cycle
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
-
 
         for (int o = 0; o < outer; o++) {
             for (int j = 0; j < numY; j++) {
@@ -419,26 +417,24 @@ __global__ void Rollback_1Coalesced (
                 __syncthreads();
                 REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
 
-                __syncthreads();
-                u[((o * numY) + j) * numX + gidx] = dtInv * myResultT_mid;
+                REAL temp = dtInv * myResultT_mid;
 
-                __syncthreads();
                 if(gidx > 0) { 
+                    __syncthreads();
                     REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
-                    u[((o * numY) + j) * numX + gidx] += 
-                        0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
+                    temp += 0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
                 }
 
-                __syncthreads();
-                u[((o * numY) + j) * numX + gidx]  +=  
-                    0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
+                temp += 0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
 
-                __syncthreads();
                 if(gidx < numX-1) {
+                    __syncthreads();
                     REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
-                    u[((o * numY) + j) * numX + gidx] += 
-                        0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
+                    temp += 0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
                 }
+                
+                __syncthreads();
+                u[((o * numY) + j) * numX + gidx] = temp;
             }
         }
     }
@@ -509,7 +505,7 @@ __global__ void Rollback_2 (
     }
 }
 
-__global__ void Rollback_2Coalesced1 (
+__global__ void Rollback_2Coalesced (
     int t,
     const uint outer,
     const uint numX, 
@@ -517,6 +513,7 @@ __global__ void Rollback_2Coalesced1 (
     REAL* myTimeline,
     REAL* myDyyT,
     REAL* myVarY,
+    REAL* uT,
     REAL* v,
     REAL* myResult
 ){
@@ -536,47 +533,26 @@ __global__ void Rollback_2Coalesced1 (
                 __syncthreads();
                 REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
 
-                __syncthreads();
-                v[((o * numX) + i) * numY + gidx] = 0.0;
+                REAL temp = 0.0;
 
-                __syncthreads();
                 if(gidx > 0) { 
+                    __syncthreads();
                     REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
-                    v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarY_val * myDyyT0 ) * myResult_low;
+                    temp += ( myVarY_val * myDyyT0 ) * myResult_low;
                 }
 
-                __syncthreads();
-                v[((o * numX) + i) * numY + gidx]  +=  
-                    0.5*( myVarY_val * myDyyT1 ) * myResult_mid;
+                temp += ( myVarY_val * myDyyT1 ) * myResult_mid;
 
-                __syncthreads();
                 if(gidx < numY-1) {
+                    __syncthreads();
                     REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
-                    v[((o * numX) + i) * numY + gidx] += 
-                        0.5*( myVarY_val * myDyyT2 ) * myResult_high;
+                    temp += ( myVarY_val * myDyyT2 ) * myResult_high;
                 }
-            }
-        }
-    }
-}
 
-__global__ void Rollback_2Coalesced2 (
-    int t,
-    const uint outer,
-    const uint numX, 
-    const uint numY,
-    REAL* uT,
-    REAL* v,
-    REAL* myResult
-){
-    uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
-
-    if (gidx < numY) {
-        for (int o = 0; o < outer; o++) {
-            for (int i = 0; i < numX; i++) {
                 __syncthreads();
-                uT[((o * numX) + i) * numY + gidx] += v[((o * numX) + i) * numY + gidx];
+                v[((o * numX) + i) * numY + gidx] = temp;
+                __syncthreads();
+                uT[((o * numX) + i) * numY + gidx] += temp;
             }
         }
     }
@@ -647,16 +623,17 @@ __global__ void Rollback_3Coalesced (
         uint numZ = max(numX,numY);
 
         __syncthreads();
-        //Just 2 reads, should not require shared memory to spare one memory 1 cycle
-        //Could also just have two threads read at once? then put into shared?
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
         __syncthreads();
-        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[0 * numX + i]);
-        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[1 * numX + i]);
-        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i]*myDxxT[2 * numX + i]);
+        REAL varX = myVarXT[((t * numY) + j) * numX + i];
+
+        __syncthreads();
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5* varX * myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5* varX * myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5* varX * myDxxT[2 * numX + i]);
     }
 }
 
@@ -709,16 +686,17 @@ __global__ void Rollback_5Coalesced (
         uint numZ = max(numX,numY);
 
         __syncthreads();
-        //Just 2 reads, should not require shared memory to spare one memory 1 cycle
-        //Could also just have two threads read at once? then put into shared?
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
         __syncthreads();
-        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[0 * numY + j]);
-        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[1 * numY + j]);
-        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[2 * numY + j]);
+        REAL varY = myVarY[((t * numX) + i) * numY + j];
+
+        __syncthreads();
+        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*varY*myDyyT[0 * numY + j]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*varY*myDyyT[1 * numY + j]);
+        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*varY*myDyyT[2 * numY + j]);
     }
 }
 
@@ -768,17 +746,6 @@ __global__ void Rollback_6Coalesced (
     REAL* y
 ){
     //cout << "test 6" << endl;
-    /*
-    for (int gidx = 0; gidx < outer * numX * numY; gidx++) {
-        uint o = gidx / (numX * numY);
-        uint plane_remain = gidx % (numX * numY);
-        uint i = plane_remain / numY;
-        uint j = plane_remain % numY;
-        uint numZ = max(numX,numY);
-        REAL dtInv = 1.0/(myTimeline[t+1]-myTimeline[t]);
-        y[((o * numZ) + i) * numZ + j] = dtInv*u[((o * numY) + j) * numX + i] - 0.5*v[((o * numX) + i) * numY + j];
-    }
-    */
     uint gidx = blockIdx.x*blockDim.x + threadIdx.x;
 
     if (gidx < outer * numX * numY) {
@@ -788,14 +755,10 @@ __global__ void Rollback_6Coalesced (
         uint j = plane_remain % numY;
         uint numZ = max(numX,numY);
 
-        __syncthreads();
-        //Just 2 reads, should not require shared memory to spare one memory 1 cycle
-        //Could also just have two threads read at once? then put into shared?
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
-        __syncthreads();
         y[((o * numZ) + i) * numZ + j] = dtInv*uT[((o * numX) + i) * numY + j] - 0.5*v[((o * numX) + i) * numY + j];
     }
 }
