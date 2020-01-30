@@ -1072,11 +1072,6 @@ void rollback_Distributed_2_Final(
 ) {
     //cout << "test 2" << endl;
     for (int gidx = 0; gidx < numY; gidx++) {
-        REAL dtInv1 = myTimeline[t];
-        REAL dtInv2 = myTimeline[t+1];
-        REAL dtInv = 1.0/(dtInv2-dtInv1);
-
-
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 REAL myDyyT0 = myDyyT[0 * numY + gidx];
@@ -1302,11 +1297,6 @@ void rollback_Distributed_2_Final_para(
     //cout << "test 2" << endl;
 #pragma omp parallel for schedule(static)
     for (int gidx = 0; gidx < numY; gidx++) {
-        REAL dtInv1 = myTimeline[t];
-        REAL dtInv2 = myTimeline[t+1];
-        REAL dtInv = 1.0/(dtInv2-dtInv1);
-
-
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
                 REAL myDyyT0 = myDyyT[0 * numY + gidx];
@@ -1363,10 +1353,12 @@ void rollback_Distributed_3_Final_para(
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
+        
+        REAL varX = myVarXT[((t * numY) + j) * numX + i];
 
-        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[0 * numX + i]);
-        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[1 * numX + i]);
-        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5*myVarXT[((t * numY) + j) * numX + i] * myDxxT[2 * numX + i]);
+        a[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5* varX * myDxxT[0 * numX + i]);
+        b[((o * numZ) + j) * numZ + i] = dtInv - 0.5*(0.5* varX * myDxxT[1 * numX + i]);
+        c[((o * numZ) + j) * numZ + i] =       - 0.5*(0.5* varX * myDxxT[2 * numX + i]);
     }
 }
 
@@ -1418,9 +1410,11 @@ void rollback_Distributed_5_Final_para(
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
-        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[0 * numY + j]);
-        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[1 * numY + j]);
-        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*myVarY[((t * numX) + i) * numY + j]*myDyyT[2 * numY + j]);
+        REAL varY = myVarY[((t * numX) + i) * numY + j];
+
+        a[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*varY*myDyyT[0 * numY + j]);
+        b[((o * numZ) + i) * numZ + j] = dtInv - 0.5*(0.5*varY*myDyyT[1 * numY + j]);
+        c[((o * numZ) + i) * numZ + j] =       - 0.5*(0.5*varY*myDyyT[2 * numY + j]);
     }
 }
 
@@ -2802,7 +2796,6 @@ int   run_Distributed_Final_para(
 
     //cout << "Test6" << endl;
 	for (int t = 0; t <= numT - 2; t++) {
-        cout << "t: " << t << endl;
 #if TEST_INIT_CORRECTNESS
         for (int o = 0; o < outer; o++) {
             for (int i = 0; i < numX; i++) {
