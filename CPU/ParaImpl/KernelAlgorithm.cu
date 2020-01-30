@@ -1106,10 +1106,13 @@ void updateParams_KernelCoalesced(
     REAL* myTimeline_p = raw_pointer_cast(&myTimeline[0]);
     REAL* myVarXT_p = raw_pointer_cast(&myVarXT[0]);
     REAL* myVarY_p = raw_pointer_cast(&myVarY[0]);
-    uint num_blocks = (numX + blocksize - 1) / blocksize;
-    InitParamsVarXTCoalesced<<<num_blocks, blocksize, sizeof(REAL) * numY * numT + sizeof(REAL)>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarXT_p);
-    num_blocks = (numY + blocksize - 1) / blocksize;
-    InitParamsVarYCoalesced<<<num_blocks, blocksize, sizeof(REAL) * numX * numT + sizeof(REAL)>>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarY_p);
+
+    InitParamsVarXTCoalesced<<<(numX + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numY * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarXT_p);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
+    InitParamsVarYCoalesced<<<(numY + blocksize - 1) / blocksize, blocksize, sizeof(REAL) * numX * numT + sizeof(REAL) >>>(numT, numX, numY, alpha, beta, nu, myX_p, myY_p, myTimeline_p, myVarY_p);
+    cudaDeviceSynchronize();
+    gpuErr(cudaPeekAtLastError());
 }
 
 void setPayoff_KernelCoalesced(
