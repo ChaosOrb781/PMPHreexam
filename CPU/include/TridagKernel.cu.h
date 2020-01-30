@@ -211,6 +211,71 @@ T sgmScanIncBlock(volatile T* ptr, volatile F* flg, const unsigned int idx) {
     return val;
 }
 
+template <class T, int TILE> 
+__global__ void matTransposeTiledKer(T* A, T* B, int heightA, int widthA) {
+
+  __shared__ T shtileTR[TILE][TILE+1];
+
+  int x = blockIdx.x * TILE + threadIdx.x;
+  int y = blockIdx.y * TILE + threadIdx.y;
+
+  if( x < widthA && y < heightA )
+      shtileTR[threadIdx.y][threadIdx.x] = A[y*widthA + x];
+
+  __syncthreads();
+
+  x = blockIdx.y * TILE + threadIdx.x; 
+  y = blockIdx.x * TILE + threadIdx.y;
+
+  if( x < heightA && y < widthA )
+      B[y*heightA + x] = shtileTR[threadIdx.x][threadIdx.y];
+}
+
+/**
+ * Matrix Transposition CPU Stub:
+ * INPUT:
+ *    `inp_d'  input matrix (already in device memory) 
+ *    `height' number of rows    of input matrix `inp_d'
+ *    `width'  number of columns of input matrix `inp_d'
+ * OUTPUT:
+ *    `out_d'  the transposed matrix with 
+ *                 `width' rows and `height' columns!
+ */
+template<class T, int tile>
+void transpose( float*             inp_d,  
+                float*             out_d, 
+                const unsigned int height, 
+                const unsigned int width
+) {
+   // 1. setup block and grid parameters
+   int  dimy = ceil( ((float)height)/tile ); 
+   int  dimx = ceil( ((float) width)/tile );
+   dim3 block(tile, tile, 1);
+   dim3 grid (dimx, dimy, 1);
+ 
+   //2. execute the kernel
+   matTransposeTiledKer<float,tile> <<< grid, block >>>
+                       (inp_d, out_d, height, width);    
+   cudaThreadSynchronize();
+}
+
+template<class T, int tile>
+void transpose_nosync( T*             inp_d,  
+                T*             out_d, 
+                const unsigned int height, 
+                const unsigned int width
+) {
+   // 1. setup block and grid parameters
+   int  dimy = ceil( ((float)height)/tile ); 
+   int  dimx = ceil( ((float) width)/tile );
+   dim3 block(tile, tile, 1);
+   dim3 grid (dimx, dimy, 1);
+ 
+   //2. execute the kernel
+   matTransposeTiledKer<T,tile> <<< grid, block >>>
+                       (inp_d, out_d, height, width);
+}
+
 /*********************/
 /*** Tridag Kernel ***/
 /*********************/
