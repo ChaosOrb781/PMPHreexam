@@ -399,28 +399,28 @@ __global__ void Rollback_1Coalesced (
         result in additional transactions to service the request from multiple threads in this scenario.
         https://devtalk.nvidia.com/default/topic/1043273/cuda-programming-and-performance/accessing-same-global-memory-address-within-warps/
         */
-        __syncthreads();
+        //__syncthreads();
         REAL dtInv1 = myTimeline[t];
         REAL dtInv2 = myTimeline[t+1];
         REAL dtInv = 1.0/(dtInv2-dtInv1);
 
         for (int o = 0; o < outer; o++) {
             for (int j = 0; j < numY; j++) {
-                __syncthreads();
+                //__syncthreads();
                 REAL myDxxT0 = myDxxT[0 * numX + gidx];
                 REAL myDxxT1 = myDxxT[1 * numX + gidx];
                 REAL myDxxT2 = myDxxT[2 * numX + gidx];
 
-                __syncthreads();
+                //__syncthreads();
                 REAL myResultT_mid  = myResultT[((o * numY) + j) * numX + gidx];
 
-                __syncthreads();
+                //__syncthreads();
                 REAL myVarXT_val = 0.5 * myVarXT[((t * numY) + j) * numX + gidx];
 
                 REAL temp = dtInv * myResultT_mid;
 
                 if(gidx > 0) { 
-                    __syncthreads();
+                    //__syncthreads();
                     REAL myResultT_low  = myResultT[((o * numY) + j) * numX + gidx - 1];
                     temp += 0.5*( myVarXT_val * myDxxT0 ) * myResultT_low;
                 }
@@ -428,12 +428,12 @@ __global__ void Rollback_1Coalesced (
                 temp += 0.5*( myVarXT_val * myDxxT1 ) * myResultT_mid;
 
                 if(gidx < numX-1) {
-                    __syncthreads();
+                    //__syncthreads();
                     REAL myResultT_high = myResultT[((o * numY) + j) * numX + gidx + 1];
                     temp += 0.5*( myVarXT_val * myDxxT2 ) * myResultT_high;
                 }
                 
-                __syncthreads();
+                //__syncthreads();
                 u[((o * numY) + j) * numX + gidx] = temp;
             }
         }
