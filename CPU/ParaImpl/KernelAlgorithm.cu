@@ -3,6 +3,7 @@
 #include "CUDAKernels.cu"
 #include "Constants.h"
 #include "TridagPar.h"
+#include "CudaUtilProj.cu.h"
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/copy.h>
@@ -1687,6 +1688,11 @@ int run_Coalesced_CPUKernel(
     rollback_Kernel_CPUCoalesced(blocksize, outer, numT, numX, numY, myTimeline, myDxxT, myDyyT, myVarXT, myVarY, u, v, a, b, c, y, yy, myResultT);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
+
+    device_vector<REAL> myResult(outer * numX * numY);
+    REAL* myResultT_p = raw_pointer_cast(&myResultT[0]);
+    REAL* myResult_p = raw_pointer_cast(&myResult[0]);
+    matTransposeKernelPlane(myResultT_p, myResult_p, outer, numX, numY);
 
     host_vector<REAL> myResult_h(outer*numX*numY);
     thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
