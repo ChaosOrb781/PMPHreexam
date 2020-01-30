@@ -106,12 +106,12 @@ int main()
         //RunTestOnProgram<funGPU>("Separation Rollback", (fun)run_Distributed_Separation, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Separation Rollback Parallel", (fun)run_Distributed_Separation_Parallel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Simple Kernel CPU", (fun)run_CPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Simple Kernel GPU", (fun)run_GPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         RunTestOnProgram<funGPU>("Coalesced Kernel CPU", (fun)run_Coalesced_CPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        RunTestOnProgram<funGPU>("Simple Kernel GPU", (fun)run_GPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //RunTestOnProgram<funGPU>("Coalesced Kernel GPU", (fun)run_Coalesced_GPUKernel, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
         //Provides correct
         //RunTestOnProgram<funGPU>("Kernel CPU Correct-Test", (fun)run_CPUKernel_Test, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
-        RunTestOnProgram<funGPU>("Kernel GPU Correct-Test", (fun)run_GPUKernel_Test, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
+        //RunTestOnProgram<funGPU>("Kernel GPU Correct-Test", (fun)run_GPUKernel_Test, res_original, originalStat, outer, numX, numY, numT, s0, t, alpha, nu, beta, Block);
     }
 
     return 0;

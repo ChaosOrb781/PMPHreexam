@@ -1458,7 +1458,7 @@ int run_GPUKernel(
 
     int sgm_size = 8;
 
-    cout << "initializing device memory" << endl;
+    //cout << "initializing device memory" << endl;
 	device_vector<REAL> myX(numX);       // [numX]
     device_vector<REAL> myY(numY);       // [numY]
     device_vector<REAL> myTimeline(numT);// [numT]
@@ -1472,7 +1472,7 @@ int run_GPUKernel(
     vector<REAL> myResultCopy(outer * numX * numY);
 #endif
 
-    cout << "initializing rollback memory" << endl;
+    //cout << "initializing rollback memory" << endl;
     uint numZ = std::max(numX, numY);
     device_vector<REAL> u(outer * numY * numX);
     device_vector<REAL> v(outer * numX * numY);
@@ -1485,22 +1485,22 @@ int run_GPUKernel(
     uint myXindex = 0;
     uint myYindex = 0;
 
-    cout << "Test1" << endl;
+    //cout << "Test1" << endl;
     initGrid_Kernel(blocksize, s0, alpha, nu, t, numX, numY, numT, myX, myY, myTimeline, myXindex, myYindex);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
-    cout << "Test2" << endl;
+    //cout << "Test2" << endl;
     initOperator_Kernel(blocksize, numX, myX, myDxx);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
-    cout << "Test3" << endl;
+    //cout << "Test3" << endl;
     initOperator_Kernel(blocksize, numY, myY, myDyy);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
-    cout << "Test4" << endl;
+    //cout << "Test4" << endl;
     setPayoff_Kernel(blocksize, myX, outer, numX, numY, myResult);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
@@ -1514,12 +1514,12 @@ int run_GPUKernel(
     }
 #endif
 
-    cout << "Test5" << endl;
+    //cout << "Test5" << endl;
     updateParams_Kernel(blocksize, alpha, beta, nu, numX, numY, numT, myX, myY, myTimeline, myVarX, myVarY);
     cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
 
-    cout << "Test6" << endl;
+    //cout << "Test6" << endl;
 	rollback_Kernel_GPU(blocksize, sgm_size, outer, numT, numX, numY, myTimeline, myDxx, myDyy, myVarX, myVarY, u, v, a, b, c, y, yy, myResult);
 	cudaDeviceSynchronize();
     gpuErr(cudaPeekAtLastError());
@@ -1527,7 +1527,7 @@ int run_GPUKernel(
     host_vector<REAL> myResult_h(outer*numX*numY);
     thrust::copy(myResult.begin(), myResult.end(), myResult_h.begin());
 
-    cout << "Test7" << endl;
+    //cout << "Test7" << endl;
 	for(uint i = 0; i < outer; i++) {
         res[i] = myResult_h[((i * numX) + myXindex) * numY + myYindex];
     }
