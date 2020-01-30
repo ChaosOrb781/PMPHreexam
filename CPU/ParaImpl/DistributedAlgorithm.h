@@ -896,7 +896,7 @@ void updateParams_Distributed_VarY_Final(
     const vector<REAL> myTimeline,
     vector<REAL>& myVarY
 ){
-    //load myTimeline and myY into shared memory (entire)
+    //load myTimeline and myX into shared memory (entire)
     vector<REAL> myT_sh(myTimeline);
     vector<REAL> myX_sh(myX);
     
