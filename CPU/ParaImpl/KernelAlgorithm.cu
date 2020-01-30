@@ -708,6 +708,8 @@ void rollback_Kernel_Test_CPU(
         Rollback_3<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxx_p, myVarX_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+        
+#if TEST_INIT_CORRECTNESS
         rollback_Control_3(t, outer, numX, numY, myTimeline_h, myDxx_h, myVarX_h, a_h, b_h, c_h);
         temp = a;
         temp2 = b;
@@ -726,16 +728,8 @@ void rollback_Kernel_Test_CPU(
                 exit(0);
             }
         }
+#endif
 
-
-        if((blocksize % sgm_size)!=0) {
-            printf("Invalid segment or block size. Exiting!\n\n!");
-            exit(0);
-        }
-        if((numX % sgm_size)!=0) {
-            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
-            exit(0);
-        }
         host_vector<REAL> a_h_k(a);
         host_vector<REAL> b_h_k(b);
         host_vector<REAL> c_h_k(c);
@@ -753,6 +747,7 @@ void rollback_Kernel_Test_CPU(
                     yy_h_k, ((o * numZ) + j) * numZ
                 );
             }
+#if TEST_INIT_CORRECTNESS
             rollback_Control_4(t, j, outer, numX, numY, u_h, a_h, b_h, c_h, yy_h);
             temp = u_h_k;
             temp2 = yy_h_k;
@@ -768,6 +763,7 @@ void rollback_Kernel_Test_CPU(
                     exit(0);
                 }
             }
+#endif
             //cudaDeviceSynchronize();
             //gpuErr(cudaPeekAtLastError());
         }
@@ -780,6 +776,7 @@ void rollback_Kernel_Test_CPU(
         Rollback_5<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyy_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+#if TEST_INIT_CORRECTNESS
         rollback_Control_5(t, outer, numX, numY, myTimeline_h, myDyy_h, myVarY_h, u_h, v_h, a_h, b_h, c_h);
         temp = a;
         temp2 = b;
@@ -798,10 +795,12 @@ void rollback_Kernel_Test_CPU(
                 exit(0);
             }
         }
+#endif
 
         Rollback_6<<<num_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, u_p, v_p, y_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
+#if TEST_INIT_CORRECTNESS
         rollback_Control_6(t, outer, numX, numY, myTimeline_h, u_h, v_h, y_h);
         temp = y;
         for (int i = 0; i < outer * numZ * numZ; i++) {
@@ -810,15 +809,8 @@ void rollback_Kernel_Test_CPU(
                 exit(0);
             }
         }
+#endif
 
-        if((blocksize % sgm_size)!=0) {
-            printf("Invalid segment or block size. Exiting!\n\n!");
-            exit(0);
-        }
-        if((numY % sgm_size)!=0) {
-            printf("Invalid total size (not a multiple of segment size). Exiting!\n\n!");
-            exit(0);
-        }
         thrust::copy(a.begin(), a.end(), a_h_k.begin());
         thrust::copy(b.begin(), b.end(), b_h_k.begin());
         thrust::copy(c.begin(), c.end(), c_h_k.begin());
@@ -836,6 +828,7 @@ void rollback_Kernel_Test_CPU(
                     yy_h_k, ((o * numZ) + i) * numZ
                 );
             }
+#if TEST_INIT_CORRECTNESS
             rollback_Control_7(t, i, outer, numX, numY, a_h, b_h, c_h, y_h, yy_h, myResult_h);
             temp = myResult_h_k;
             for (int j = 0; j < outer * numX * numY; j++) {
@@ -844,6 +837,7 @@ void rollback_Kernel_Test_CPU(
                     exit(0);
                 }
             }
+#endif
         } 
         thrust::copy(a_h_k.begin(), a_h_k.end(), a.begin());
         thrust::copy(b_h_k.begin(), b_h_k.end(), b.begin());
@@ -1186,29 +1180,29 @@ void rollback_Kernel_CPUCoalesced(
     uint OXY_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
 
     for (int t = 0; t <= numT - 2; t++) {
-        cout << "t: " << t << endl;
+        //cout << "t: " << t << endl;
         Rollback_1Coalesced<<<numX_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, u_p, myResultT_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        cout << "test 1" << endl;
+        //cout << "test 1" << endl;
         matTransposeKernelPlane(myResultT_p, myResult_p, outer, numY, numX);
         matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
 
-        cout << "test 2" << endl;
+        //cout << "test 2" << endl;
         Rollback_2Coalesced<<<numY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, uT_p, v_p, myResult_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        cout << "test 3" << endl;
+        //cout << "test 3" << endl;
         matTransposeKernelPlane(uT_p, u_p, outer, numX, numY);
 
-        cout << "test 4" << endl;
+        //cout << "test 4" << endl;
         Rollback_3Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        cout << "test 5" << endl;
+        //cout << "test 5" << endl;
         host_vector<REAL> a_h(a);
         host_vector<REAL> b_h(b);
         host_vector<REAL> c_h(c);
@@ -1233,20 +1227,20 @@ void rollback_Kernel_CPUCoalesced(
         thrust::copy(u_h.begin(), u_h.end(), u.begin());
         thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
-        cout << "test 6" << endl;
+        //cout << "test 6" << endl;
         Rollback_5Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        cout << "test 7" << endl;
+        //cout << "test 7" << endl;
         matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
 
-        cout << "test 8" << endl;
+        //cout << "test 8" << endl;
         Rollback_6Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, uT_p, v_p, y_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
-        cout << "test 9" << endl;
+        //cout << "test 9" << endl;
         thrust::copy(a.begin(), a.end(), a_h.begin());
         thrust::copy(b.begin(), b.end(), b_h.begin());
         thrust::copy(c.begin(), c.end(), c_h.begin());
@@ -1272,7 +1266,7 @@ void rollback_Kernel_CPUCoalesced(
         thrust::copy(myResult_h.begin(), myResult_h.end(), myResult.begin());
         thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
-        cout << "test 10" << endl;
+        //cout << "test 10" << endl;
         matTransposeKernelPlane(myResult_p, myResultT_p, outer, numX, numY);
     }
 }
