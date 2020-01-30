@@ -406,7 +406,7 @@ __global__ void Rollback_1Coalesced (
 
         for (int o = 0; o < outer; o++) {
             for (int j = 0; j < numY; j++) {
-                //__syncthreads();
+                __syncthreads();
                 REAL myDxxT0 = myDxxT[0 * numX + gidx];
                 REAL myDxxT1 = myDxxT[1 * numX + gidx];
                 REAL myDxxT2 = myDxxT[2 * numX + gidx];
@@ -527,16 +527,16 @@ __global__ void Rollback_2Coalesced (
                 REAL myDyyT1 = myDyyT[1 * numY + gidx];
                 REAL myDyyT2 = myDyyT[2 * numY + gidx];
 
-                __syncthreads();
+                //__syncthreads();
                 REAL myResult_mid  = myResult[((o * numX) + i) * numY + gidx];
 
-                __syncthreads();
+                //__syncthreads();
                 REAL myVarY_val = 0.5 * myVarY[((t * numX) + i) * numY + gidx];
 
                 REAL temp = 0.0;
 
                 if(gidx > 0) { 
-                    __syncthreads();
+                    //__syncthreads();
                     REAL myResult_low  = myResult[((o * numX) + i) * numY + gidx - 1];
                     temp += ( myVarY_val * myDyyT0 ) * myResult_low;
                 }
@@ -544,14 +544,14 @@ __global__ void Rollback_2Coalesced (
                 temp += ( myVarY_val * myDyyT1 ) * myResult_mid;
 
                 if(gidx < numY-1) {
-                    __syncthreads();
+                    //__syncthreads();
                     REAL myResult_high = myResult[((o * numX) + i) * numY + gidx + 1];
                     temp += ( myVarY_val * myDyyT2 ) * myResult_high;
                 }
 
-                __syncthreads();
+                //__syncthreads();
                 v[((o * numX) + i) * numY + gidx] = temp;
-                __syncthreads();
+                //__syncthreads();
                 uT[((o * numX) + i) * numY + gidx] += temp;
             }
         }
