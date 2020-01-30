@@ -1191,19 +1191,24 @@ void rollback_Kernel_CPUCoalesced(
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "test 1" << endl;
         matTransposeKernelPlane(myResultT_p, myResult_p, outer, numY, numX);
         matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
 
+        cout << "test 2" << endl;
         Rollback_2Coalesced<<<numY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, uT_p, v_p, myResult_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "test 3" << endl;
         matTransposeKernelPlane(uT_p, u_p, outer, numX, numY);
 
+        cout << "test 4" << endl;
         Rollback_3Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "test 5" << endl;
         host_vector<REAL> a_h(a);
         host_vector<REAL> b_h(b);
         host_vector<REAL> c_h(c);
@@ -1228,16 +1233,20 @@ void rollback_Kernel_CPUCoalesced(
         thrust::copy(u_h.begin(), u_h.end(), u.begin());
         thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
+        cout << "test 6" << endl;
         Rollback_5Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDyyT_p, myVarY_p, a_p, b_p, c_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "test 7" << endl;
         matTransposeKernelPlane(u_p, uT_p, outer, numY, numX);
 
+        cout << "test 8" << endl;
         Rollback_6Coalesced<<<OXY_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, uT_p, v_p, y_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
 
+        cout << "test 9" << endl;
         thrust::copy(a.begin(), a.end(), a_h.begin());
         thrust::copy(b.begin(), b.end(), b_h.begin());
         thrust::copy(c.begin(), c.end(), c_h.begin());
@@ -1263,6 +1272,7 @@ void rollback_Kernel_CPUCoalesced(
         thrust::copy(myResult_h.begin(), myResult_h.end(), myResult.begin());
         thrust::copy(yy_h.begin(), yy_h.end(), yy.begin());
 
+        cout << "test 10" << endl;
         matTransposeKernelPlane(myResult_p, myResultT_p, outer, numX, numY);
     }
 }

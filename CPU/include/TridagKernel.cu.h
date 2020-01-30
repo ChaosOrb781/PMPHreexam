@@ -256,7 +256,7 @@ void transpose( float*             inp_d,
    //2. execute the kernel
    matTransposeTiledKer<float,tile> <<< grid, block >>>
                        (inp_d, out_d, height, width);    
-   cudaThreadSynchronize();
+   cudaDeviceSynchronize();
 }
 
 template<class T, int tile>
