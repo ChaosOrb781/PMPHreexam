@@ -1186,6 +1186,7 @@ void rollback_Kernel_CPUCoalesced(
     uint OXY_blocks = (outer * numX * numY + blocksize - 1) / blocksize;
 
     for (int t = 0; t <= numT - 2; t++) {
+        cout << "t: " << t << endl;
         Rollback_1Coalesced<<<numX_blocks, blocksize>>>(t, outer, numX, numY, myTimeline_p, myDxxT_p, myVarXT_p, u_p, myResultT_p);
         cudaDeviceSynchronize();
         gpuErr(cudaPeekAtLastError());
